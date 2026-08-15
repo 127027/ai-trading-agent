@@ -31,9 +31,12 @@ Put local work in `src/local_trader/`, `runtime/`, `local-prompts/`, `research/`
 
 ## Verbindlicher STARTBOT-Bedienvertrag
 
-Vor Änderungen an `STARTBOT.bat`, FreqUI, lokaler Authentifizierung oder dem Paper-Launcher ist
-der Abschnitt **„Verbindlicher Bedienvertrag für den lokalen Paper-Bot“** in
-`C:\Dev\DaviddTech\deep-research-report.md` sowie `TESTBOT_ANLEITUNG.md` zu lesen und zu erhalten.
+Vor größeren Umbauten am lokalen Bot sowie vor Änderungen an `STARTBOT.bat`, FreqUI, lokaler
+Authentifizierung, dem Backtest-Bereich oder dem Paper-Launcher ist
+`deep-research-report.md` im Repository vollständig zu prüfen.
+Besonders verbindlich sind dort **„Verbindlicher Bedienvertrag für den lokalen Paper-Bot“** und
+**„Verbindlicher Leitfaden für kommende Umbauten und die Backtest-UI“**. Zusätzlich ist
+`TESTBOT_ANLEITUNG.md` zu lesen und zu erhalten.
 
 - Ein Doppelklick auf `STARTBOT.bat` ist der normale und vollständige Startweg.
 - Bei jedem normalen Start müssen Adresse, Botname, Benutzer und das aktuell gültige lokale
