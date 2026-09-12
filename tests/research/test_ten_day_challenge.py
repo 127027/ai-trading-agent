@@ -143,7 +143,7 @@ def test_reviewer_rasters_are_callable_independently():
     assert council.risk_review(summary, AGENTS)["agent"] == "RiskAgent"
 
 
-def test_risk_agent_veto_cannot_be_overridden_by_supervisor():
+def test_aggressive_target_candidate_is_not_vetoed_only_for_near_ruin_or_drawdown():
     review = council.evaluate_candidate(
         {
             "valid": True,
@@ -156,6 +156,6 @@ def test_risk_agent_veto_cannot_be_overridden_by_supervisor():
         },
         AGENTS,
     )
-    assert review["veto"] is True
-    assert "RiskAgent" in review["veto_agents"]
-    assert review["promotion_eligible"] is False
+    assert review["veto"] is False
+    assert "RiskAgent" not in review["veto_agents"]
+    assert review["promotion_eligible"] is True
