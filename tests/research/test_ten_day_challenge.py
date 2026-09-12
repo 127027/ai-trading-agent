@@ -36,8 +36,9 @@ def test_validation_step_is_search_acceleration_only():
     assert all((b.start - a.start).days == 2 for a, b in pairwise(windows))
 
 
-def test_backtest_command_resets_wallet_and_disables_cache(tmp_path):
+def test_backtest_command_resets_wallet_and_uses_isolated_export_directory(tmp_path):
     window = rolling.Window(date(2025, 9, 1), date(2025, 9, 11))
+    export_directory = tmp_path / "exports"
     command = rolling.build_backtest_command(
         "freqtrade",
         tmp_path / "config.json",
@@ -46,7 +47,7 @@ def test_backtest_command_resets_wallet_and_disables_cache(tmp_path):
         tmp_path / "data",
         "TenDayMomentumV1",
         window,
-        tmp_path / "result.zip",
+        export_directory,
         100.0,
         0.0015,
         "5m",
@@ -56,8 +57,37 @@ def test_backtest_command_resets_wallet_and_disables_cache(tmp_path):
     assert command[command.index("--timerange") + 1] == "20250901-20250911"
     assert command[command.index("--fee") + 1] == "0.0015"
     assert command[command.index("--cache") + 1] == "none"
+    assert command[command.index("--backtest-directory") + 1] == str(export_directory)
+    assert "--backtest-filename" not in command
     assert "--enable-protections" in command
     assert command[command.index("--timeframe-detail") + 1] == "5m"
+
+
+def test_newest_export_prefers_zip_and_ignores_meta_json(tmp_path):
+    (tmp_path / "backtest-result.meta.json").write_text("{}", encoding="utf-8")
+    plain = tmp_path / "backtest-result.json"
+    plain.write_text("{}", encoding="utf-8")
+    assert rolling.newest_export(tmp_path) == plain
+    zipped = tmp_path / "backtest-result.zip"
+    zipped.write_bytes(b"not-a-real-zip")
+    assert rolling.newest_export(tmp_path) == zipped
+
+
+def test_six_research_roles_are_explicit():
+    names = {
+        AGENTS["supervisor"]["name"],
+        AGENTS["research_agent"]["name"],
+        AGENTS["operations_agent"]["name"],
+        *(agent["name"] for agent in AGENTS["agents"]),
+    }
+    assert names == {
+        "TenDaySupervisor",
+        "ResearchAgent",
+        "OpsWatchdog",
+        "QuantAgent",
+        "ValidationCritic",
+        "RiskAgent",
+    }
 
 
 def test_agent_council_allows_complete_low_risk_candidate():
