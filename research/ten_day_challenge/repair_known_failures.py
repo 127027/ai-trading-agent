@@ -58,10 +58,6 @@ def harden_public_only(config: dict[str, Any]) -> bool:
         if capabilities.get("fetchCurrencies") is not False:
             capabilities["fetchCurrencies"] = False
             changed = True
-        urls = section.setdefault("urls", {}).setdefault("api", {})
-        if urls.get("public") != PUBLIC_SPOT_API:
-            urls["public"] = PUBLIC_SPOT_API
-            changed = True
 
     if config.get("dry_run") is not True:
         config["dry_run"] = True
@@ -69,6 +65,23 @@ def harden_public_only(config: dict[str, Any]) -> bool:
     if config.get("trading_mode") != "spot":
         config["trading_mode"] = "spot"
         changed = True
+    return changed
+
+
+def remove_custom_public_url(config: dict[str, Any]) -> bool:
+    """Let CCXT use its built-in public Binance metadata endpoints as a safe fallback."""
+    changed = False
+    exchange = config.get("exchange", {})
+    if exchange.get("name") != "binance":
+        return False
+    for name in ("ccxt_config", "ccxt_async_config"):
+        section = exchange.get(name, {})
+        urls = section.get("urls")
+        if isinstance(urls, dict) and "api" in urls:
+            urls.pop("api", None)
+            if not urls:
+                section.pop("urls", None)
+            changed = True
     return changed
 
 
@@ -97,8 +110,11 @@ def repair_config(path: Path, log_text: str) -> list[str]:
         or "http 451" in log_text.lower()
         or "status code 451" in log_text.lower()
     )
-    if keyless_failure and harden_public_only(config):
-        actions.append(f"hardened spot-only public Binance metadata access in {path.name}")
+    if keyless_failure:
+        if harden_public_only(config):
+            actions.append(f"hardened spot-only public Binance metadata access in {path.name}")
+        elif remove_custom_public_url(config):
+            actions.append(f"restored CCXT built-in public Binance metadata routing in {path.name}")
 
     if actions:
         write_json(path, config)
