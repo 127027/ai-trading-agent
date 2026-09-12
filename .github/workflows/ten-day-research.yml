@@ -17,7 +17,7 @@ permissions:
 
 concurrency:
   group: autonomous-10day-${{ github.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   research:
@@ -70,7 +70,7 @@ jobs:
             --timeframes 15m 5m \
             --start 2025-09-01 --end "$END" --data-dir "$DATA_DIR"
 
-      - name: Search challenger generations
+      - name: Supervisor runs challenger council
         run: |
           BUDGET=250
           if [ "$SEGMENT" = "2" ]; then BUDGET=120; fi
