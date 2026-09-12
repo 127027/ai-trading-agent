@@ -28,9 +28,13 @@ def patch_binance_class(exchange_class: type[Any]) -> None:
         options = payload.setdefault("options", {})
         options["fetchMargins"] = False
         options["fetchMarkets"] = {"types": ["spot"]}
-        api = payload.setdefault("urls", {}).setdefault("api", {})
+        urls = payload.setdefault("urls", {})
+        api = urls.setdefault("api", {})
         api["public"] = PUBLIC_SPOT_API
         api["v1"] = PUBLIC_SPOT_API_V1
+        # CCXT's Binance fetch_currencies() explicitly returns {} when
+        # apiBackup is present, avoiding the authenticated SAPI currency call.
+        urls["apiBackup"] = dict(api)
         return payload
 
     describe._ten_day_public_only = True  # type: ignore[attr-defined]
