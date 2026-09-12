@@ -13,11 +13,12 @@ import statistics
 import subprocess
 import tempfile
 import zipfile
+from collections.abc import Iterable
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import asdict, dataclass
 from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
-from typing import Any, Iterable
+from typing import Any
 
 
 @dataclass(frozen=True)
