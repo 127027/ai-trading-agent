@@ -35,6 +35,7 @@ def run(command: list[str], log_path: Path) -> None:
 
 def exact_validation(
     python: str,
+    freqtrade: str,
     root: Path,
     data_dir: Path,
     start: str,
@@ -47,6 +48,8 @@ def exact_validation(
     command = [
         python,
         str(root / "research/ten_day_challenge/rolling_windows.py"),
+        "--freqtrade",
+        freqtrade,
         "--config",
         str(root / "runtime/user_data/config-10day-research.json"),
         "--userdir",
@@ -123,6 +126,7 @@ def main() -> int:
             shutil.copy2(champion, parameter_file)
         summary = exact_validation(
             args.python,
+            args.freqtrade,
             root,
             args.data_dir,
             challenge["dataset_start"],
@@ -196,10 +200,12 @@ def main() -> int:
             "--random-state",
             str(1000 + generation),
             "--enable-protections",
+            "--analyze-per-epoch",
         ]
         run(command, out / "hyperopt.log")
         summary = exact_validation(
             args.python,
+            args.freqtrade,
             root,
             args.data_dir,
             challenge["train_end"],
