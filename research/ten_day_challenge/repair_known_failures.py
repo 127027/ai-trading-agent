@@ -140,7 +140,9 @@ def repair_config(path: Path, log_text: str) -> list[str]:
         if harden_public_only(config):
             actions.append(f"hardened spot-only public Binance metadata access in {path.name}")
         if set_public_data_url(config):
-            actions.append(f"routed Binance Spot metadata through public data endpoint in {path.name}")
+            actions.append(
+                f"routed Binance Spot metadata through public data endpoint in {path.name}"
+            )
     elif credential_failure:
         if harden_public_only(config):
             actions.append(f"hardened spot-only public Binance metadata access in {path.name}")
