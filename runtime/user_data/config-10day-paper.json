@@ -16,16 +16,37 @@
   "margin_mode": "",
   "position_adjustment_enable": false,
   "max_entry_position_adjustment": 0,
-  "unfilledtimeout": {"entry": 5, "exit": 5, "exit_timeout_count": 2, "unit": "minutes"},
+  "unfilledtimeout": {
+    "entry": 5,
+    "exit": 5,
+    "exit_timeout_count": 2,
+    "unit": "minutes"
+  },
   "order_types": {
-    "entry": "limit", "exit": "limit", "force_entry": "market",
-    "force_exit": "market", "emergency_exit": "market", "stoploss": "limit",
-    "stoploss_on_exchange": true, "stoploss_on_exchange_interval": 60,
+    "entry": "limit",
+    "exit": "limit",
+    "force_entry": "market",
+    "force_exit": "market",
+    "emergency_exit": "market",
+    "stoploss": "limit",
+    "stoploss_on_exchange": true,
+    "stoploss_on_exchange_interval": 60,
     "stoploss_on_exchange_limit_ratio": 0.99
   },
-  "order_time_in_force": {"entry": "GTC", "exit": "GTC"},
-  "entry_pricing": {"price_side": "same", "use_order_book": true, "order_book_top": 1},
-  "exit_pricing": {"price_side": "same", "use_order_book": true, "order_book_top": 1},
+  "order_time_in_force": {
+    "entry": "GTC",
+    "exit": "GTC"
+  },
+  "entry_pricing": {
+    "price_side": "same",
+    "use_order_book": true,
+    "order_book_top": 1
+  },
+  "exit_pricing": {
+    "price_side": "same",
+    "use_order_book": true,
+    "order_book_top": 1
+  },
   "exchange": {
     "name": "binance",
     "key": "",
@@ -36,9 +57,15 @@
         "defaultType": "spot",
         "fetchCurrencies": false,
         "fetchMargins": false,
-        "fetchMarkets": {"types": ["spot"]}
+        "fetchMarkets": {
+          "types": [
+            "spot"
+          ]
+        }
       },
-      "has": {"fetchCurrencies": false},
+      "has": {
+        "fetchCurrencies": false
+      },
       "urls": {
         "api": {
           "public": "https://data-api.binance.vision/api/v3",
@@ -53,9 +80,15 @@
         "defaultType": "spot",
         "fetchCurrencies": false,
         "fetchMargins": false,
-        "fetchMarkets": {"types": ["spot"]}
+        "fetchMarkets": {
+          "types": [
+            "spot"
+          ]
+        }
       },
-      "has": {"fetchCurrencies": false},
+      "has": {
+        "fetchCurrencies": false
+      },
       "urls": {
         "api": {
           "public": "https://data-api.binance.vision/api/v3",
@@ -65,11 +98,20 @@
       }
     },
     "pair_whitelist": [
-      "BTC/USDT", "ETH/USDT", "SOL/USDT", "BNB/USDT", "XRP/USDT", "ADA/USDT"
+      "BTC/USDT",
+      "ETH/USDT",
+      "SOL/USDT",
+      "BNB/USDT",
+      "XRP/USDT",
+      "ADA/USDT"
     ],
     "pair_blacklist": []
   },
-  "pairlists": [{"method": "StaticPairList"}],
+  "pairlists": [
+    {
+      "method": "StaticPairList"
+    }
+  ],
   "initial_state": "running",
   "force_entry_enable": false,
   "db_url": "sqlite:///user_data/tradesv3.ten-day-paper-v1.sqlite",
