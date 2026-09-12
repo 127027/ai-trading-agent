@@ -29,14 +29,14 @@ def patch_binance_class(exchange_class: type[Any]) -> None:
         api["v1"] = PUBLIC_SPOT_API_V1
         return payload
 
-    setattr(describe, "_ten_day_public_only", True)
+    describe._ten_day_public_only = True  # type: ignore[attr-defined]
     exchange_class.describe = describe
 
 
 def patch_ccxt() -> None:
     """Patch the sync, async and websocket Binance classes used by Freqtrade."""
-    from ccxt.binance import binance as sync_binance
     from ccxt.async_support.binance import binance as async_binance
+    from ccxt.binance import binance as sync_binance
 
     patch_binance_class(sync_binance)
     patch_binance_class(async_binance)
