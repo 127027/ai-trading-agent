@@ -1,0 +1,149 @@
+name: Autonomous 10-day research
+
+on:
+  push:
+    branches: [autonomous-10day-v1]
+  workflow_dispatch:
+    inputs:
+      segment:
+        description: Research segment
+        required: true
+        default: "1"
+        type: choice
+        options: ["1", "2"]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: autonomous-10day-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  research:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      contains(github.event.head_commit.message, '[10day-bootstrap]') ||
+      contains(github.event.head_commit.message, '[10day-segment-2]')
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    env:
+      PYTHONUTF8: "1"
+      PYTHONDONTWRITEBYTECODE: "1"
+      DATA_DIR: ${{ github.workspace }}/.research-data/binance
+      SEGMENT: ${{ github.event_name == 'workflow_dispatch' && inputs.segment || (contains(github.event.head_commit.message, '[10day-segment-2]') && '2' || '1') }}
+
+    steps:
+      - name: Check out research branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: "3.12"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          version: "0.11.28"
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+
+      - name: Install frozen environment
+        run: uv sync --frozen --all-extras --python 3.12
+
+      - name: Deterministic tests and lint
+        run: |
+          .venv/bin/python -m pytest tests/research/test_ten_day_challenge.py
+          .venv/bin/ruff check research/ten_day_challenge tests/research/test_ten_day_challenge.py runtime/user_data/strategies/candidates/TenDayMomentumV1.py runtime/user_data/hyperopts/TenDayChallengeLoss.py
+
+      - name: Download public Binance data available to search
+        run: |
+          rm -rf "$DATA_DIR"
+          END=2026-07-01
+          if [ "$SEGMENT" = "2" ]; then END=2026-09-01; fi
+          .venv/bin/python research/ten_day_challenge/binance_vision.py \
+            --pairs BTC/USDT ETH/USDT SOL/USDT BNB/USDT XRP/USDT ADA/USDT \
+            --timeframes 15m 5m \
+            --start 2025-09-01 --end "$END" --data-dir "$DATA_DIR"
+
+      - name: Search challenger generations
+        run: |
+          BUDGET=250
+          if [ "$SEGMENT" = "2" ]; then BUDGET=120; fi
+          .venv/bin/python research/ten_day_challenge/evolve.py \
+            --root "$GITHUB_WORKSPACE" --data-dir "$DATA_DIR" \
+            --budget-minutes "$BUDGET" --workers 3 \
+            --python .venv/bin/python --freqtrade .venv/bin/freqtrade --mode search
+
+      - name: Freeze champion and execute full-year proof
+        if: env.SEGMENT == '2'
+        run: |
+          .venv/bin/python research/ten_day_challenge/evolve.py \
+            --root "$GITHUB_WORKSPACE" --data-dir "$DATA_DIR" --workers 4 \
+            --python .venv/bin/python --freqtrade .venv/bin/freqtrade --mode finalize
+
+      - name: Anti-lookahead diagnostic
+        if: env.SEGMENT == '2'
+        run: |
+          mkdir -p research/ten_day_challenge/results/quality-gates
+          set +e
+          .venv/bin/freqtrade lookahead-analysis \
+            --config runtime/user_data/config-10day-research.json \
+            --userdir runtime/user_data \
+            --strategy-path runtime/user_data/strategies/candidates \
+            --data-dir "$DATA_DIR" --strategy TenDayMomentumV1 \
+            --timerange 20260701-20260901 \
+            > research/ten_day_challenge/results/quality-gates/lookahead.log 2>&1
+          LOOKAHEAD=$?
+          .venv/bin/freqtrade recursive-analysis \
+            --config runtime/user_data/config-10day-research.json \
+            --userdir runtime/user_data \
+            --strategy-path runtime/user_data/strategies/candidates \
+            --data-dir "$DATA_DIR" --strategy TenDayMomentumV1 \
+            --timerange 20260701-20260901 \
+            > research/ten_day_challenge/results/quality-gates/recursive.log 2>&1
+          RECURSIVE=$?
+          set -e
+          printf '{"lookahead_exit_code":%s,"recursive_exit_code":%s}\n' \
+            "$LOOKAHEAD" "$RECURSIVE" \
+            > research/ten_day_challenge/results/quality-gates/status.json
+
+      - name: Smoke-test frozen paper class
+        if: env.SEGMENT == '2'
+        run: |
+          mkdir -p research/ten_day_challenge/results/paper-smoke
+          .venv/bin/freqtrade backtesting \
+            --config runtime/user_data/config-10day-paper.json \
+            --userdir runtime/user_data \
+            --strategy-path runtime/user_data/strategies/candidates \
+            --data-dir "$DATA_DIR" --strategy TenDayMomentumPaperV1 \
+            --timerange 20260801-20260811 --dry-run-wallet 100 \
+            --fee 0.0015 --cache none --enable-protections --timeframe-detail 5m \
+            > research/ten_day_challenge/results/paper-smoke/backtest.log 2>&1
+          echo '{"paper_backtest_load":"passed"}' \
+            > research/ten_day_challenge/results/paper-smoke/status.json
+
+      - name: Persist compact checkpoint
+        run: |
+          git config user.name "ten-day-research-agent"
+          git config user.email "ten-day-research-agent@users.noreply.github.com"
+          for file in \
+            research/ten_day_challenge/state.json \
+            research/ten_day_challenge/champion/TenDayMomentumV1.json \
+            research/ten_day_challenge/champion/summary.json \
+            runtime/user_data/strategies/candidates/TenDayMomentumV1.json \
+            runtime/user_data/strategies/candidates/TenDayMomentumPaperV1.json; do
+            if [ -f "$file" ]; then git add -f "$file"; fi
+          done
+          if [ -d research/ten_day_challenge/results ]; then
+            find research/ten_day_challenge/results -type f ! -name '*.log' -print0 \
+              | xargs -0 -r git add -f
+          fi
+          if ! git diff --cached --quiet; then
+            git commit -m "research: checkpoint autonomous 10-day segment ${SEGMENT} [skip ci]"
+            git push origin "HEAD:${GITHUB_REF_NAME}"
+          fi
