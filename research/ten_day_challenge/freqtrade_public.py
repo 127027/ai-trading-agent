@@ -16,6 +16,17 @@ PUBLIC_SPOT_API = "https://data-api.binance.vision/api/v3"
 PUBLIC_SPOT_API_V1 = "https://data-api.binance.vision/api/v1"
 
 
+def enforce_public_market_state(instance: Any) -> None:
+    """Re-apply public-only market settings at the actual CCXT call boundary."""
+    instance.has["fetchCurrencies"] = False
+    instance.options["fetchMargins"] = False
+    instance.options["fetchMarkets"] = {"types": ["spot"]}
+    api = instance.urls.setdefault("api", {})
+    api["public"] = PUBLIC_SPOT_API
+    api["v1"] = PUBLIC_SPOT_API_V1
+    instance.urls["apiBackup"] = dict(api)
+
+
 def patch_binance_class(exchange_class: type[Any]) -> None:
     """Force one CCXT Binance class to use public-only Spot metadata."""
     original: Callable[..., dict[str, Any]] = exchange_class.describe
@@ -32,13 +43,31 @@ def patch_binance_class(exchange_class: type[Any]) -> None:
         api = urls.setdefault("api", {})
         api["public"] = PUBLIC_SPOT_API
         api["v1"] = PUBLIC_SPOT_API_V1
-        # CCXT's Binance fetch_currencies() explicitly returns {} when
-        # apiBackup is present, avoiding the authenticated SAPI currency call.
         urls["apiBackup"] = dict(api)
         return payload
 
     describe._ten_day_public_only = True  # type: ignore[attr-defined]
     exchange_class.describe = describe
+
+    original_fetch_markets = exchange_class.fetch_markets
+    if inspect.iscoroutinefunction(original_fetch_markets):
+
+        async def fetch_markets(
+            self: Any, params: dict[str, Any] | None = None
+        ) -> list[dict[str, Any]]:
+            enforce_public_market_state(self)
+            return await original_fetch_markets(self, params or {})
+
+    else:
+
+        def fetch_markets(
+            self: Any, params: dict[str, Any] | None = None
+        ) -> list[dict[str, Any]]:
+            enforce_public_market_state(self)
+            return original_fetch_markets(self, params or {})
+
+    fetch_markets._ten_day_public_only = True  # type: ignore[attr-defined]
+    exchange_class.fetch_markets = fetch_markets
 
     original_fetch_currencies = exchange_class.fetch_currencies
     if inspect.iscoroutinefunction(original_fetch_currencies):
