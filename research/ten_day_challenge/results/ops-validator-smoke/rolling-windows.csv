@@ -1,0 +1,21 @@
+start,end,timerange,starting_balance,target_balance,final_balance,return_pct,target_hit,target_hit_at,trades,profit_factor,max_drawdown_pct,near_ruin,error
+2026-05-01,2026-05-11,20260501-20260511,100.0,200.0,100.0,0.0,False,,0,,,False,"    return wrapper(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/runner/work/ai-trading-agent/ai-trading-agent/.venv/lib/python3.12/site-packages/freqtrade/exchange/common.py"", line 193, in wrapper
+    return wrapper(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/home/runner/work/ai-trading-agent/ai-trading-agent/.venv/lib/python3.12/site-packages/freqtrade/exchange/common.py"", line 196, in wrapper
+    raise ex
+  File ""/home/runner/work/ai-trading-agent/ai-trading-agent/.venv/lib/python3.12/site-packages/freqtrade/exchange/common.py"", line 181, in wrapper
+    return f(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^
+  File ""/home/runner/work/ai-trading-agent/ai-trading-agent/.venv/lib/python3.12/site-packages/freqtrade/exchange/exchange.py"", line 698, in _load_async_markets
+    markets = self.loop.run_until_complete(self._api_reload_markets(reload=reload))
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File ""/opt/hostedtoolcache/Python/3.12.14/x64/lib/python3.12/asyncio/base_events.py"", line 691, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File ""/home/runner/work/ai-trading-agent/ai-trading-agent/.venv/lib/python3.12/site-packages/freqtrade/exchange/exchange.py"", line 689, in _api_reload_markets
+    raise TemporaryError(
+freqtrade.exceptions.TemporaryError: Error in reload_markets due to AuthenticationError. Message: binance requires ""apiKey"" credential
+2026-09-12 13:29:19,160 - freqtrade - ERROR - Could not load markets, therefore cannot start. Please investigate the above error for more details."

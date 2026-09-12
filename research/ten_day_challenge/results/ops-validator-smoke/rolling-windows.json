@@ -1,0 +1,48 @@
+{
+  "metadata": {
+    "detail_timeframe": "5m",
+    "end": "2026-05-11",
+    "fee_per_side": 0.0015,
+    "start": "2026-05-01",
+    "starting_balance": 100.0,
+    "step_days": 10,
+    "strategy": "TenDayMomentumV1",
+    "target_balance": 200.0,
+    "window_days": 10
+  },
+  "summary": {
+    "max_final_balance": null,
+    "mean_final_balance": null,
+    "mean_return_pct": null,
+    "median_final_balance": null,
+    "median_max_drawdown_pct": null,
+    "median_return_pct": null,
+    "min_final_balance": null,
+    "near_ruin_count": 0,
+    "near_ruin_rate": 0.0,
+    "target_hit_count": 0,
+    "target_hit_rate": 0.0,
+    "valid": false,
+    "windows_completed": 0,
+    "windows_failed": 1,
+    "windows_requested": 1
+  },
+  "windows": [
+    {
+      "end": "2026-05-11",
+      "error": "    return wrapper(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/work/ai-trading-agent/ai-trading-agent/.venv/lib/python3.12/site-packages/freqtrade/exchange/common.py\", line 193, in wrapper\n    return wrapper(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/work/ai-trading-agent/ai-trading-agent/.venv/lib/python3.12/site-packages/freqtrade/exchange/common.py\", line 196, in wrapper\n    raise ex\n  File \"/home/runner/work/ai-trading-agent/ai-trading-agent/.venv/lib/python3.12/site-packages/freqtrade/exchange/common.py\", line 181, in wrapper\n    return f(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/work/ai-trading-agent/ai-trading-agent/.venv/lib/python3.12/site-packages/freqtrade/exchange/exchange.py\", line 698, in _load_async_markets\n    markets = self.loop.run_until_complete(self._api_reload_markets(reload=reload))\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.14/x64/lib/python3.12/asyncio/base_events.py\", line 691, in run_until_complete\n    return future.result()\n           ^^^^^^^^^^^^^^^\n  File \"/home/runner/work/ai-trading-agent/ai-trading-agent/.venv/lib/python3.12/site-packages/freqtrade/exchange/exchange.py\", line 689, in _api_reload_markets\n    raise TemporaryError(\nfreqtrade.exceptions.TemporaryError: Error in reload_markets due to AuthenticationError. Message: binance requires \"apiKey\" credential\n2026-09-12 13:29:19,160 - freqtrade - ERROR - Could not load markets, therefore cannot start. Please investigate the above error for more details.",
+      "final_balance": 100.0,
+      "max_drawdown_pct": null,
+      "near_ruin": false,
+      "profit_factor": null,
+      "return_pct": 0.0,
+      "start": "2026-05-01",
+      "starting_balance": 100.0,
+      "target_balance": 200.0,
+      "target_hit": false,
+      "target_hit_at": null,
+      "timerange": "20260501-20260511",
+      "trades": 0
+    }
+  ]
+}
