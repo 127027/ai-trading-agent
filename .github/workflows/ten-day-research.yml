@@ -61,7 +61,11 @@ jobs:
       - name: Deterministic tests and lint
         run: |
           .venv/bin/python -m pytest tests/research/test_ten_day_challenge.py
-          .venv/bin/ruff check research/ten_day_challenge tests/research/test_ten_day_challenge.py runtime/user_data/strategies/candidates/TenDayMomentumV1.py runtime/user_data/hyperopts/TenDayChallengeLoss.py
+          .venv/bin/ruff check \
+            research/ten_day_challenge \
+            tests/research/test_ten_day_challenge.py \
+            runtime/user_data/strategies/candidates/TenDayMomentumV1.py \
+            runtime/user_data/hyperopts/TenDayChallengeLoss.py
 
       - name: Download public Binance data available to search
         run: |
@@ -80,10 +84,17 @@ jobs:
             --python .venv/bin/python --freqtrade .venv/bin/freqtrade \
             --output research/ten_day_challenge/results/ops-watchdog-preflight.json
 
-      - name: OpsWatchdog validator smoke test
+      - name: OpsWatchdog validator self-heal loop
         run: |
           rm -rf research/ten_day_challenge/results/ops-validator-smoke
-          .venv/bin/python research/ten_day_challenge/rolling_windows.py \
+          mkdir -p research/ten_day_challenge/results/self-heal
+          .venv/bin/python research/ten_day_challenge/guarded_command.py \
+            --root "$GITHUB_WORKSPACE" \
+            --attempts 4 \
+            --log research/ten_day_challenge/results/self-heal/validator.log \
+            --report research/ten_day_challenge/results/self-heal/validator.json \
+            -- \
+            .venv/bin/python research/ten_day_challenge/rolling_windows.py \
             --freqtrade .venv/bin/freqtrade \
             --config runtime/user_data/config-10day-research.json \
             --userdir runtime/user_data \
@@ -95,11 +106,18 @@ jobs:
             --detail-timeframe 5m --workers 1 \
             --output-dir research/ten_day_challenge/results/ops-validator-smoke
 
-      - name: ResearchAgent generates challengers and Supervisor runs council
+      - name: ResearchAgent self-heal loop and Supervisor council
         run: |
           BUDGET=250
           if [ "$SEGMENT" = "2" ]; then BUDGET=120; fi
-          .venv/bin/python research/ten_day_challenge/evolve.py \
+          mkdir -p research/ten_day_challenge/results/self-heal
+          .venv/bin/python research/ten_day_challenge/guarded_command.py \
+            --root "$GITHUB_WORKSPACE" \
+            --attempts 3 \
+            --log research/ten_day_challenge/results/self-heal/research-agent.log \
+            --report research/ten_day_challenge/results/self-heal/research-agent.json \
+            -- \
+            .venv/bin/python research/ten_day_challenge/evolve.py \
             --root "$GITHUB_WORKSPACE" --data-dir "$DATA_DIR" \
             --budget-minutes "$BUDGET" --workers 3 \
             --python .venv/bin/python --freqtrade .venv/bin/freqtrade --mode search
@@ -107,7 +125,14 @@ jobs:
       - name: Freeze champion and execute full-year proof
         if: env.SEGMENT == '2'
         run: |
-          .venv/bin/python research/ten_day_challenge/evolve.py \
+          mkdir -p research/ten_day_challenge/results/self-heal
+          .venv/bin/python research/ten_day_challenge/guarded_command.py \
+            --root "$GITHUB_WORKSPACE" \
+            --attempts 2 \
+            --log research/ten_day_challenge/results/self-heal/finalize.log \
+            --report research/ten_day_challenge/results/self-heal/finalize.json \
+            -- \
+            .venv/bin/python research/ten_day_challenge/evolve.py \
             --root "$GITHUB_WORKSPACE" --data-dir "$DATA_DIR" --workers 4 \
             --python .venv/bin/python --freqtrade .venv/bin/freqtrade --mode finalize
 
@@ -141,22 +166,31 @@ jobs:
         if: env.SEGMENT == '2'
         run: |
           mkdir -p research/ten_day_challenge/results/paper-smoke
-          .venv/bin/freqtrade backtesting \
+          mkdir -p research/ten_day_challenge/results/self-heal
+          .venv/bin/python research/ten_day_challenge/guarded_command.py \
+            --root "$GITHUB_WORKSPACE" \
+            --attempts 3 \
+            --log research/ten_day_challenge/results/self-heal/paper-smoke.log \
+            --report research/ten_day_challenge/results/self-heal/paper-smoke.json \
+            -- \
+            .venv/bin/freqtrade backtesting \
             --config runtime/user_data/config-10day-paper.json \
             --userdir runtime/user_data \
             --strategy-path runtime/user_data/strategies/candidates \
             --data-dir "$DATA_DIR" --strategy TenDayMomentumPaperV1 \
             --timerange 20260801-20260811 --dry-run-wallet 100 \
-            --fee 0.0015 --cache none --enable-protections --timeframe-detail 5m \
-            > research/ten_day_challenge/results/paper-smoke/backtest.log 2>&1
+            --fee 0.0015 --cache none --enable-protections --timeframe-detail 5m
           echo '{"paper_backtest_load":"passed"}' \
             > research/ten_day_challenge/results/paper-smoke/status.json
 
-      - name: Persist compact checkpoint
+      - name: Persist compact checkpoint and self-heal changes
+        if: always()
         run: |
           git config user.name "ten-day-research-agent"
           git config user.email "ten-day-research-agent@users.noreply.github.com"
           for file in \
+            runtime/user_data/config-10day-research.json \
+            runtime/user_data/config-10day-paper.json \
             research/ten_day_challenge/state.json \
             research/ten_day_challenge/champion/TenDayMomentumV1.json \
             research/ten_day_challenge/champion/summary.json \
@@ -170,6 +204,6 @@ jobs:
               | xargs -0 -r git add -f
           fi
           if ! git diff --cached --quiet; then
-            git commit -m "research: checkpoint autonomous 10-day segment ${SEGMENT} [skip ci]"
+            git commit -m "research: checkpoint/self-heal segment ${SEGMENT} [skip ci]"
             git push origin "HEAD:${GITHUB_REF_NAME}"
           fi
