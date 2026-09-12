@@ -394,6 +394,8 @@ def main() -> int:
             results.append(result)
             status = "HIT" if result.target_hit else ("ERROR" if result.error else "MISS")
             print(f"{result.timerange}: {status} final={result.final_balance:.2f}")
+            if result.error:
+                print(f"{result.timerange} diagnostic:\n{result.error}")
     results.sort(key=lambda item: item.start)
     summary = write_reports(
         results,
