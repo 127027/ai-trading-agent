@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Any
 
 PUBLIC_SPOT_API = "https://data-api.binance.vision/api/v3"
+PUBLIC_SPOT_API_V1 = "https://data-api.binance.vision/api/v1"
 
 
 def load_json(path: Path) -> dict[str, Any]:
@@ -68,6 +69,28 @@ def harden_public_only(config: dict[str, Any]) -> bool:
     return changed
 
 
+def set_public_data_url(config: dict[str, Any]) -> bool:
+    """Route Binance public Spot metadata to the keyless public data endpoint."""
+    changed = False
+    exchange = config.get("exchange", {})
+    if exchange.get("name") != "binance":
+        return False
+    for name in ("ccxt_config", "ccxt_async_config"):
+        section = exchange.setdefault(name, {})
+        urls = section.setdefault("urls", {})
+        api = urls.setdefault("api", {})
+        desired = {
+            "public": PUBLIC_SPOT_API,
+            "private": PUBLIC_SPOT_API,
+            "v1": PUBLIC_SPOT_API_V1,
+        }
+        for key, value in desired.items():
+            if api.get(key) != value:
+                api[key] = value
+                changed = True
+    return changed
+
+
 def remove_custom_public_url(config: dict[str, Any]) -> bool:
     """Let CCXT use its built-in public Binance metadata endpoints as a safe fallback."""
     changed = False
@@ -104,16 +127,24 @@ def repair_config(path: Path, log_text: str) -> list[str]:
         config.pop("api_server", None)
         actions.append(f"removed disabled api_server block from {path.name}")
 
-    keyless_failure = (
-        'requires "apikey" credential' in log_text.lower()
-        or "restricted location" in log_text.lower()
-        or "http 451" in log_text.lower()
-        or "status code 451" in log_text.lower()
+    lower_log = log_text.lower()
+    restricted_location = (
+        "restricted location" in lower_log
+        or "http 451" in lower_log
+        or "status code 451" in lower_log
+        or " 451 " in lower_log
     )
-    if keyless_failure:
+    credential_failure = 'requires "apikey" credential' in lower_log
+
+    if restricted_location:
         if harden_public_only(config):
             actions.append(f"hardened spot-only public Binance metadata access in {path.name}")
-        elif remove_custom_public_url(config):
+        if set_public_data_url(config):
+            actions.append(f"routed Binance Spot metadata through public data endpoint in {path.name}")
+    elif credential_failure:
+        if harden_public_only(config):
+            actions.append(f"hardened spot-only public Binance metadata access in {path.name}")
+        if remove_custom_public_url(config):
             actions.append(f"restored CCXT built-in public Binance metadata routing in {path.name}")
 
     if actions:
