@@ -39,13 +39,17 @@ def patch_binance_class(exchange_class: type[Any]) -> None:
     original_fetch_currencies = exchange_class.fetch_currencies
     if inspect.iscoroutinefunction(original_fetch_currencies):
 
-        async def fetch_currencies(self: Any, params: dict[str, Any] | None = None) -> dict[str, Any]:
+        async def fetch_currencies(
+            self: Any, params: dict[str, Any] | None = None
+        ) -> dict[str, Any]:
             del self, params
             return {}
 
     else:
 
-        def fetch_currencies(self: Any, params: dict[str, Any] | None = None) -> dict[str, Any]:
+        def fetch_currencies(
+            self: Any, params: dict[str, Any] | None = None
+        ) -> dict[str, Any]:
             del self, params
             return {}
 
