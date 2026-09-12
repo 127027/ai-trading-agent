@@ -17,14 +17,14 @@ import json
 import shutil
 import subprocess
 import time
+from collections.abc import Callable
 from datetime import UTC, date, datetime
+from functools import partial
 from pathlib import Path
-from typing import Any, Callable, TypeVar
+from typing import Any
 
 from council import assemble_council, quant_review, risk_review, validation_review
 from repair_known_failures import repair
-
-T = TypeVar("T")
 
 RASTER_NAMES = {
     1: "OpsWatchdog",
@@ -223,8 +223,8 @@ def run_raster(
     state: dict[str, Any],
     generation: int,
     raster: int,
-    callback: Callable[[], T],
-) -> T:
+    callback: Callable[[], Any],
+) -> Any:
     set_raster(state_path, state, raster, generation)
     result = callback()
     state.setdefault("raster_history", []).append(
@@ -259,7 +259,8 @@ def finalize(
         state,
         generation,
         1,
-        lambda: raster_1_health_gate(
+        partial(
+            raster_1_health_gate,
             args.python,
             args.freqtrade,
             root,
@@ -405,19 +406,21 @@ def main() -> int:
             )
             failed_raster = 1
             try:
+                health_callback = partial(
+                    raster_1_health_gate,
+                    args.python,
+                    args.freqtrade,
+                    root,
+                    args.data_dir,
+                    results_root,
+                    f"generation-{generation:04d}-attempt-{restart_attempt:02d}",
+                )
                 health = run_raster(
                     state_path,
                     state,
                     generation,
                     1,
-                    lambda: raster_1_health_gate(
-                        args.python,
-                        args.freqtrade,
-                        root,
-                        args.data_dir,
-                        results_root,
-                        f"generation-{generation:04d}-attempt-{restart_attempt:02d}",
-                    ),
+                    health_callback,
                 )
 
                 failed_raster = 2
@@ -456,32 +459,35 @@ def main() -> int:
                     "--enable-protections",
                     "--analyze-per-epoch",
                 ]
+                hyperopt_callback = partial(run, hyperopt_command, out / "hyperopt.log")
                 run_raster(
                     state_path,
                     state,
                     generation,
                     2,
-                    lambda: run(hyperopt_command, out / "hyperopt.log"),
+                    hyperopt_callback,
                 )
 
                 failed_raster = 3
+                validation_callback = partial(
+                    exact_validation,
+                    args.python,
+                    args.freqtrade,
+                    root,
+                    args.data_dir,
+                    challenge["train_end"],
+                    challenge["validation_end"],
+                    int(challenge["validation_step_days_during_search"]),
+                    out / "validation",
+                    args.workers,
+                    challenge,
+                )
                 summary = run_raster(
                     state_path,
                     state,
                     generation,
                     3,
-                    lambda: exact_validation(
-                        args.python,
-                        args.freqtrade,
-                        root,
-                        args.data_dir,
-                        challenge["train_end"],
-                        challenge["validation_end"],
-                        int(challenge["validation_step_days_during_search"]),
-                        out / "validation",
-                        args.workers,
-                        challenge,
-                    ),
+                    validation_callback,
                 )
                 quant = quant_review(summary)
                 state["last_quant_review"] = quant
@@ -493,7 +499,7 @@ def main() -> int:
                     state,
                     generation,
                     4,
-                    lambda: validation_review(summary, council_config),
+                    partial(validation_review, summary, council_config),
                 )
 
                 failed_raster = 5
@@ -502,7 +508,7 @@ def main() -> int:
                     state,
                     generation,
                     5,
-                    lambda: risk_review(summary, council_config),
+                    partial(risk_review, summary, council_config),
                 )
 
                 failed_raster = 6
@@ -511,7 +517,7 @@ def main() -> int:
                     state,
                     generation,
                     6,
-                    lambda: assemble_council(quant, critic, risk, council_config),
+                    partial(assemble_council, quant, critic, risk, council_config),
                 )
                 score = float(council["council_score"])
                 accepted = (
