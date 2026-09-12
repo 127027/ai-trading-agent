@@ -211,7 +211,11 @@ def main() -> int:
         )
         council = evaluate_candidate(summary, council_config)
         score = float(council["council_score"])
-        accepted = bool(council["promotion_eligible"]) and score > best_score and parameter_file.exists()
+        accepted = (
+            bool(council["promotion_eligible"])
+            and score > best_score
+            and parameter_file.exists()
+        )
         record = {
             "generation": generation,
             "score": score,
