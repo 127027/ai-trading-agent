@@ -90,6 +90,22 @@ def test_six_research_roles_are_explicit():
     }
 
 
+def test_raster_order_starts_with_ops_and_returns_to_ops_on_failure():
+    policy = AGENTS["raster_policy"]
+    rasters = policy["ordered_rasters"]
+    assert [item["raster"] for item in rasters] == [1, 2, 3, 4, 5, 6]
+    assert [item["agent"] for item in rasters] == [
+        "OpsWatchdog",
+        "ResearchAgent",
+        "QuantAgent",
+        "ValidationCritic",
+        "RiskAgent",
+        "TenDaySupervisor",
+    ]
+    assert policy["on_failure"] == "return_to_raster_1"
+    assert policy["manual_stop_only"] is True
+
+
 def test_agent_council_allows_complete_low_risk_candidate():
     review = council.evaluate_candidate(
         {
