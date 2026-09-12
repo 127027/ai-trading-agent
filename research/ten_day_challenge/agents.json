@@ -1,39 +1,40 @@
 {
-  "schema_version": 4,
+  "schema_version": 5,
   "raster_policy": {
-    "rule": "Every generation starts at raster 1. Any technical failure in a later raster returns to raster 1 after a whitelisted repair before work may continue.",
-    "on_failure": "return_to_raster_1",
+    "rule": "Every generation starts at raster 1. Any technical failure in rasters 2-6 is handed to raster 1. Raster 1 diagnoses and applies only safe whitelisted infrastructure repairs, then the same generation restarts from raster 1 and proceeds again through raster 2 onward.",
+    "on_failure": "handoff_to_raster_1_and_restart_generation",
     "manual_stop_only": true,
+    "generation_completes_only_after_raster": 6,
     "ordered_rasters": [
       {
         "raster": 1,
         "agent": "OpsWatchdog",
-        "purpose": "Verify executables, dependencies, public data, configs, checkpoints, safety boundaries and validator health before any research work."
+        "purpose": "Central health, diagnosis and recovery owner. Verify executables, dependencies, public data, configs, checkpoints and safety boundaries; diagnose failures from every later raster; apply only safe infrastructure repairs; then restart the same generation from raster 1."
       },
       {
         "raster": 2,
         "agent": "ResearchAgent",
-        "purpose": "Generate and optimize challenger hypotheses using training data only."
+        "purpose": "Generate and optimize challenger hypotheses using training data only. Any technical blocker is returned to raster 1."
       },
       {
         "raster": 3,
         "agent": "QuantAgent",
-        "purpose": "Backtest and score repeatable target hits, returns and trade evidence."
+        "purpose": "Backtest and score repeatable target hits, returns and trade evidence. Any technical blocker is returned to raster 1."
       },
       {
         "raster": 4,
         "agent": "ValidationCritic",
-        "purpose": "Reject incomplete, failed, cherry-picked or statistically fragile validation evidence."
+        "purpose": "Reject incomplete, failed, cherry-picked or statistically fragile validation evidence. Any technical blocker is returned to raster 1."
       },
       {
         "raster": 5,
         "agent": "RiskAgent",
-        "purpose": "Apply drawdown and near-ruin risk gates with veto authority."
+        "purpose": "Apply drawdown and near-ruin risk gates with veto authority. Any technical blocker is returned to raster 1."
       },
       {
         "raster": 6,
         "agent": "TenDaySupervisor",
-        "purpose": "Promote only a superior non-vetoed challenger, checkpoint state, then start the next generation at raster 1."
+        "purpose": "Promote only a superior non-vetoed challenger, checkpoint state, then start the next generation at raster 1. Any technical blocker is returned to raster 1."
       }
     ]
   },
@@ -52,9 +53,11 @@
   },
   "operations_agent": {
     "name": "OpsWatchdog",
-    "role": "Raster 1 gate: continuously verify research health, executables, dependencies, public data, configs, validator smoke tests, checkpoints and stalled or failed runs without influencing strategy scores",
+    "role": "Raster 1 central recovery owner: verify research health and safety, receive failures from every later raster, diagnose them, apply only whitelisted infrastructure repairs, and restart the same generation from raster 1 without user intervention",
     "writes_repository": false,
     "may_apply_whitelisted_repairs": true,
+    "owns_all_technical_failure_handoffs": true,
+    "restart_same_generation_after_repair": true,
     "votes_on_strategy": false,
     "may_enable_live": false,
     "may_use_exchange_secrets": false
