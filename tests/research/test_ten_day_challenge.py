@@ -1,6 +1,7 @@
 import sys
 from datetime import date
 from importlib.util import module_from_spec, spec_from_file_location
+from itertools import pairwise
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -22,7 +23,7 @@ def test_full_year_has_356_overlapping_ten_day_windows():
 def test_validation_step_is_search_acceleration_only():
     windows = list(rolling.iter_windows(date(2026, 5, 1), date(2026, 7, 1), 10, 2))
     assert windows[0].start == date(2026, 5, 1)
-    assert all((b.start - a.start).days == 2 for a, b in zip(windows, windows[1:], strict=False))
+    assert all((b.start - a.start).days == 2 for a, b in pairwise(windows))
 
 
 def test_backtest_command_resets_wallet_and_disables_cache(tmp_path):
