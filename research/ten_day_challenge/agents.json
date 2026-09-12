@@ -1,14 +1,21 @@
 {
-  "schema_version": 2,
+  "schema_version": 3,
   "supervisor": {
     "name": "TenDaySupervisor",
     "role": "Research manager and sole promotion authority",
     "writes_repository": true,
     "may_override_veto": false
   },
+  "research_agent": {
+    "name": "ResearchAgent",
+    "role": "Generate challenger parameter hypotheses through deterministic Hyperopt search using training data only",
+    "writes_repository": false,
+    "votes_on_strategy": false,
+    "may_use_blind_holdout": false
+  },
   "operations_agent": {
     "name": "OpsWatchdog",
-    "role": "Monitor research health, executables, dependencies, data, checkpoints and stalled/failed runs without influencing strategy scores",
+    "role": "Monitor research health, executables, dependencies, data, validator smoke tests, checkpoints and stalled or failed runs without influencing strategy scores",
     "writes_repository": false,
     "votes_on_strategy": false,
     "may_enable_live": false,
