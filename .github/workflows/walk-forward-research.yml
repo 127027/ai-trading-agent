@@ -1,0 +1,142 @@
+name: Autonomous blind walk-forward research
+
+on:
+  push:
+    branches: [autonomous-walkforward-v2]
+    paths:
+      - ".github/workflows/walk-forward-research.yml"
+      - "research/ten_day_challenge/RUN_CONTROL.md"
+  workflow_dispatch:
+    inputs:
+      segment:
+        description: Continuous research segment
+        required: true
+        default: "1"
+        type: choice
+        options: ["1", "2"]
+
+permissions:
+  contents: write
+  actions: write
+
+concurrency:
+  group: autonomous-walkforward-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  research:
+    runs-on: ubuntu-latest
+    timeout-minutes: 350
+    env:
+      PYTHONUTF8: "1"
+      PYTHONDONTWRITEBYTECODE: "1"
+      DATA_DIR: ${{ github.workspace }}/.research-data/binance
+      SEGMENT: ${{ github.event_name == 'workflow_dispatch' && inputs.segment || '1' }}
+
+    steps:
+      - name: Check out walk-forward branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          fetch-depth: 0
+          persist-credentials: true
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        with:
+          python-version: "3.12"
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          version: "0.11.28"
+          enable-cache: true
+          cache-dependency-glob: uv.lock
+
+      - name: Install frozen environment and Hyperopt extra
+        run: |
+          uv sync --frozen --all-extras --python 3.12
+          uv pip install --python .venv/bin/python "freqtrade[hyperopt]==2026.7"
+          .venv/bin/python -c "import cmaes, filelock; print('hyperopt dependencies ready')"
+
+      - name: Restore historical Binance cache
+        id: market-cache
+        uses: actions/cache@v4
+        with:
+          path: .research-data/binance
+          key: binance-spot-20220901-20260901-15m-5m-v1
+
+      - name: Download four years of public Binance data
+        if: steps.market-cache.outputs.cache-hit != 'true'
+        run: |
+          rm -rf "$DATA_DIR"
+          .venv/bin/python research/ten_day_challenge/binance_vision.py \
+            --pairs BTC/USDT ETH/USDT SOL/USDT BNB/USDT XRP/USDT ADA/USDT \
+            --timeframes 15m 5m \
+            --start 2022-09-01 --end 2026-09-01 --data-dir "$DATA_DIR"
+
+      - name: Validate walk-forward implementation
+        run: |
+          .venv/bin/python -m pytest \
+            tests/research/test_ten_day_challenge.py \
+            tests/research/test_walk_forward.py
+          .venv/bin/ruff check \
+            research/ten_day_challenge/walk_forward.py \
+            research/ten_day_challenge/rolling_windows.py \
+            research/ten_day_challenge/council.py \
+            tests/research/test_walk_forward.py
+
+      - name: Five autonomous blind 10-day runs
+        run: |
+          git config user.name "walk-forward-research-agent"
+          git config user.email "walk-forward-research-agent@users.noreply.github.com"
+
+          START_COUNT=$(.venv/bin/python - <<'PY'
+          import json
+          from pathlib import Path
+          path = Path('research/ten_day_challenge/walk-forward-state.json')
+          print(json.loads(path.read_text())['run_count'] if path.exists() else 0)
+          PY
+          )
+          echo "Starting autonomous proof batch at run count $START_COUNT"
+
+          for SLOT in 1 2 3 4 5; do
+            echo "=== autonomous blind run $SLOT/5 ==="
+            .venv/bin/python research/ten_day_challenge/walk_forward.py \
+              --root "$GITHUB_WORKSPACE" \
+              --data-dir "$DATA_DIR" \
+              --python .venv/bin/python \
+              --freqtrade .venv/bin/freqtrade \
+              --max-raster-restarts 6
+
+            git add -f \
+              research/ten_day_challenge/walk-forward-state.json \
+              research/ten_day_challenge/results/walk-forward \
+              research/ten_day_challenge/walk-forward-champion \
+              runtime/user_data/strategies/candidates/TenDayMomentumV1.json
+            if ! git diff --cached --quiet; then
+              git commit -m "research: blind walk-forward checkpoint segment ${SEGMENT} slot ${SLOT} [skip ci]"
+              git push origin "HEAD:${GITHUB_REF_NAME}"
+            fi
+          done
+
+          END_COUNT=$(.venv/bin/python - <<'PY'
+          import json
+          from pathlib import Path
+          path = Path('research/ten_day_challenge/walk-forward-state.json')
+          print(json.loads(path.read_text())['run_count'])
+          PY
+          )
+          EXPECTED=$((START_COUNT + 5))
+          echo "Completed run count: $END_COUNT; expected: $EXPECTED"
+          test "$END_COUNT" -eq "$EXPECTED"
+
+      - name: Continue next autonomous five-run batch
+        if: success()
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          .venv/bin/python research/ten_day_challenge/continue_research.py \
+            --repository "$GITHUB_REPOSITORY" \
+            --ref "$GITHUB_REF_NAME" \
+            --current-segment "$SEGMENT" \
+            --workflow walk-forward-research.yml
