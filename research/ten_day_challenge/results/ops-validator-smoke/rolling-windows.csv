@@ -1,9 +1,5 @@
 start,end,timerange,starting_balance,target_balance,final_balance,return_pct,target_hit,target_hit_at,trades,profit_factor,max_drawdown_pct,near_ruin,error
-2026-05-01,2026-05-11,20260501-20260511,100.0,200.0,100.0,0.0,False,,0,,,False,"    return wrapper(*args, **kwargs)
-           ^^^^^^^^^^^^^^^^^^^^^^^^
-  File ""/home/runner/work/ai-trading-agent/ai-trading-agent/.venv/lib/python3.12/site-packages/freqtrade/exchange/common.py"", line 193, in wrapper
-    return wrapper(*args, **kwargs)
-           ^^^^^^^^^^^^^^^^^^^^^^^^
+2026-05-01,2026-05-11,20260501-20260511,100.0,200.0,100.0,0.0,False,,0,,,False,"           ^^^^^^^^^^^^^^^^^^^^^^^^
   File ""/home/runner/work/ai-trading-agent/ai-trading-agent/.venv/lib/python3.12/site-packages/freqtrade/exchange/common.py"", line 196, in wrapper
     raise ex
   File ""/home/runner/work/ai-trading-agent/ai-trading-agent/.venv/lib/python3.12/site-packages/freqtrade/exchange/common.py"", line 181, in wrapper
@@ -17,5 +13,9 @@ start,end,timerange,starting_balance,target_balance,final_balance,return_pct,tar
            ^^^^^^^^^^^^^^^
   File ""/home/runner/work/ai-trading-agent/ai-trading-agent/.venv/lib/python3.12/site-packages/freqtrade/exchange/exchange.py"", line 689, in _api_reload_markets
     raise TemporaryError(
-freqtrade.exceptions.TemporaryError: Error in reload_markets due to AuthenticationError. Message: binance requires ""apiKey"" credential
-2026-09-12 17:21:27,486 - freqtrade - ERROR - Could not load markets, therefore cannot start. Please investigate the above error for more details."
+freqtrade.exceptions.TemporaryError: Error in reload_markets due to AuthenticationError. Message: binance requires ""apiKey"" credential; TEN_DAY_CREDENTIAL_FAILURE class=ccxt.pro.binance.binance 
+error=True has_api_key=False caller=base_events.py:678:run_until_complete > base_events.py:645:run_forever > base_events.py:1999:_run_once > events.py:88:_run > binance.py:12473:request > 
+exchange.py:1042:fetch2 > binance.py:12277:sign > freqtrade_public.py:121:check_required_credentials > freqtrade_public.py:123:check_required_credentials; TEN_DAY_CREDENTIAL_FAILURE 
+class=ccxt.pro.binance.binance error=True has_api_key=False caller=exchange.py:698:_load_async_markets > base_events.py:678:run_until_complete > base_events.py:645:run_forever > 
+base_events.py:1999:_run_once > events.py:88:_run > binance.py:12473:request > exchange.py:1042:fetch2 > binance.py:12277:sign > freqtrade_public.py:123:check_required_credentials
+2026-09-12 17:24:39,540 - freqtrade - ERROR - Could not load markets, therefore cannot start. Please investigate the above error for more details."
