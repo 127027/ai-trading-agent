@@ -67,13 +67,6 @@ def patch_binance_class(exchange_class: type[Any]) -> None:
             self: Any, params: dict[str, Any] | None = None
         ) -> list[dict[str, Any]]:
             enforce_public_market_state(self)
-            print(
-                "TEN_DAY_PUBLIC_FETCH_MARKETS "
-                f"class={type(self).__module__}.{type(self).__name__} "
-                f"types={self.options.get('fetchMarkets')} "
-                f"fetchMargins={self.options.get('fetchMargins')}",
-                file=sys.stderr,
-            )
             return await original_fetch_markets(self, params or {})
 
     else:
@@ -82,13 +75,6 @@ def patch_binance_class(exchange_class: type[Any]) -> None:
             self: Any, params: dict[str, Any] | None = None
         ) -> list[dict[str, Any]]:
             enforce_public_market_state(self)
-            print(
-                "TEN_DAY_PUBLIC_FETCH_MARKETS "
-                f"class={type(self).__module__}.{type(self).__name__} "
-                f"types={self.options.get('fetchMarkets')} "
-                f"fetchMargins={self.options.get('fetchMargins')}",
-                file=sys.stderr,
-            )
             return original_fetch_markets(self, params or {})
 
     fetch_markets._ten_day_public_only = True  # type: ignore[attr-defined]
@@ -113,6 +99,35 @@ def patch_binance_class(exchange_class: type[Any]) -> None:
 
     fetch_currencies._ten_day_public_only = True  # type: ignore[attr-defined]
     exchange_class.fetch_currencies = fetch_currencies
+
+    original_sign = exchange_class.sign
+
+    def sign(
+        self: Any,
+        path: str,
+        api: Any = "public",
+        method: str = "GET",
+        params: dict[str, Any] | None = None,
+        headers: dict[str, Any] | None = None,
+        body: Any = None,
+    ) -> Any:
+        try:
+            return original_sign(
+                self,
+                path,
+                api,
+                method,
+                params or {},
+                headers,
+                body,
+            )
+        except Exception as exc:
+            marker = f"TEN_DAY_SIGN_FAILURE path={path} api={api!r} method={method}"
+            print(marker, file=sys.stderr)
+            raise type(exc)(f"{exc}; {marker}") from exc
+
+    sign._ten_day_public_only = True  # type: ignore[attr-defined]
+    exchange_class.sign = sign
 
     original_check = exchange_class.check_required_credentials
 
