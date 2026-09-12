@@ -47,6 +47,13 @@ def harden_public_only(config: dict[str, Any]) -> bool:
         if options.get("fetchCurrencies") is not False:
             options["fetchCurrencies"] = False
             changed = True
+        if options.get("fetchMargins") is not False:
+            options["fetchMargins"] = False
+            changed = True
+        spot_markets = {"types": ["spot"]}
+        if options.get("fetchMarkets") != spot_markets:
+            options["fetchMarkets"] = spot_markets
+            changed = True
         capabilities = section.setdefault("has", {})
         if capabilities.get("fetchCurrencies") is not False:
             capabilities["fetchCurrencies"] = False
@@ -91,7 +98,7 @@ def repair_config(path: Path, log_text: str) -> list[str]:
         or "status code 451" in log_text.lower()
     )
     if keyless_failure and harden_public_only(config):
-        actions.append(f"hardened public-only Binance metadata access in {path.name}")
+        actions.append(f"hardened spot-only public Binance metadata access in {path.name}")
 
     if actions:
         write_json(path, config)
