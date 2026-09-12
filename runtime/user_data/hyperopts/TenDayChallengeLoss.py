@@ -1,4 +1,4 @@
-"""Hyperopt objective aimed at repeatable ten-day performance, not headline annual PnL."""
+"""Aggressive Hyperopt objective for the 100-to-200 ten-day research challenge."""
 
 from __future__ import annotations
 
@@ -25,7 +25,7 @@ class TenDayChallengeLoss(IHyperOptLoss):
         starting_balance: float,
         **kwargs: Any,
     ) -> float:
-        del config, processed, starting_balance, kwargs
+        del config, processed, backtest_stats, starting_balance, kwargs
         if trade_count <= 0 or results.empty:
             return 1000.0
         frame = results.loc[:, ["close_date", "profit_ratio"]].copy()
@@ -50,18 +50,31 @@ class TenDayChallengeLoss(IHyperOptLoss):
         returns = returns.dropna()
         if returns.empty:
             return 500.0
-        success_rate = float((returns >= 1.0).mean())
+
+        hit_150 = float((returns >= 0.50).mean())
+        hit_175 = float((returns >= 0.75).mean())
+        hit_200 = float((returns >= 1.00).mean())
+        hit_250 = float((returns >= 1.50).mean())
         median_return = float(returns.median())
-        p10_return = float(returns.quantile(0.10))
-        drawdown = abs(float(backtest_stats.get("max_drawdown_account") or 0.0))
+        mean_return = float(returns.mean())
+
+        # Dominant objective: maximize the probability of reaching >=200 USDT.
+        # Intermediate thresholds provide a learning gradient before the first true hit.
+        reward = (
+            120.0 * hit_200
+            + 18.0 * hit_250
+            + 8.0 * hit_175
+            + 3.0 * hit_150
+            + 0.8 * max(-1.0, min(3.0, median_return))
+            + 0.2 * max(-1.0, min(3.0, mean_return))
+        )
+
+        # Only punish a strategy for being effectively inactive. High trade frequency,
+        # drawdown and near-ruin are intentionally not penalized here; fees/slippage are
+        # already included by the backtest engine and risk remains reported separately.
         days = max((max_date - min_date).total_seconds() / 86400.0, 1.0)
         trades_per_day = trade_count / days
-        reward = (
-            8.0 * success_rate
-            + 1.5 * max(-1.0, min(2.0, median_return))
-            + 0.8 * max(-1.0, min(2.0, p10_return))
-        )
-        sparse_penalty = max(0.0, 0.25 - trades_per_day) * 4.0
-        overtrade_penalty = max(0.0, trades_per_day - 8.0) * 0.03
-        loss = -reward + 3.0 * drawdown + sparse_penalty + overtrade_penalty
+        inactivity_penalty = max(0.0, 0.10 - trades_per_day) * 10.0
+
+        loss = -reward + inactivity_penalty
         return float(loss) if math.isfinite(loss) else 1000.0
