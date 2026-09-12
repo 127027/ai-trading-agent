@@ -1,0 +1,115 @@
+{
+  "schema_version": 6,
+  "objective": {
+    "primary": "maximize_hit_rate_200",
+    "starting_balance": 100.0,
+    "target_balance": 200.0,
+    "window_days": 10,
+    "research_only": true,
+    "capital_preservation_is_primary": false,
+    "allow_aggressive_research": true,
+    "duplicate_challengers_should_be_avoided": true,
+    "preferred_metrics": [
+      "target_hit_rate",
+      "hit_rate_175",
+      "hit_rate_150",
+      "hit_rate_250",
+      "median_return_pct",
+      "trades_per_window"
+    ]
+  },
+  "raster_policy": {
+    "rule": "Every generation starts at raster 1. Any technical failure in rasters 2-6 is handed to raster 1. Raster 1 diagnoses and applies only safe whitelisted infrastructure repairs, then the same generation restarts from raster 1 and proceeds again through raster 2 onward.",
+    "on_failure": "handoff_to_raster_1_and_restart_generation",
+    "manual_stop_only": true,
+    "generation_completes_only_after_raster": 6,
+    "ordered_rasters": [
+      {
+        "raster": 1,
+        "agent": "OpsWatchdog",
+        "purpose": "Keep the autonomous research loop healthy without enabling live trading or exchange secrets. Preserve research memory and ensure failures return to raster 1 instead of silently stopping."
+      },
+      {
+        "raster": 2,
+        "agent": "ResearchAgent",
+        "purpose": "Generate materially different challenger hypotheses from prior evidence. Optimize for the probability of turning 100 USDT into at least 200 USDT inside 10 days; do not favor low drawdown or sparse trading for their own sake."
+      },
+      {
+        "raster": 3,
+        "agent": "QuantAgent",
+        "purpose": "Backtest and score repeatable 100-to-200 target hits across many independent 10-day windows. Reward useful micro-signals and high trade frequency when fees/slippage remain included."
+      },
+      {
+        "raster": 4,
+        "agent": "ValidationCritic",
+        "purpose": "Reject broken, incomplete, cherry-picked, look-ahead contaminated or non-reproducible evidence; do not reject merely because drawdown is high."
+      },
+      {
+        "raster": 5,
+        "agent": "RiskAgent",
+        "purpose": "Measure drawdown, near-ruin and failure modes as learning evidence. In research these are diagnostics, not automatic vetoes, unless the result is technically invalid or unrealistically modeled."
+      },
+      {
+        "raster": 6,
+        "agent": "TenDaySupervisor",
+        "purpose": "Promote the challenger that improves the primary 100-to-200 hit-rate objective while remaining technically valid, checkpoint the evidence, and start the next generation at raster 1."
+      }
+    ]
+  },
+  "supervisor": {
+    "name": "TenDaySupervisor",
+    "role": "Research manager and sole promotion authority; prioritize target-hit probability over capital preservation",
+    "writes_repository": true,
+    "may_override_veto": false
+  },
+  "research_agent": {
+    "name": "ResearchAgent",
+    "role": "Generate materially different challenger hypotheses through deterministic Hyperopt search using training data only; learn from prior generations and avoid identical parameter fingerprints",
+    "writes_repository": false,
+    "votes_on_strategy": false,
+    "may_use_blind_holdout": false
+  },
+  "operations_agent": {
+    "name": "OpsWatchdog",
+    "role": "Raster 1 central recovery owner: keep research progressing, preserve checkpoints and research memory, diagnose later-raster failures, apply only whitelisted infrastructure repairs, and restart without user intervention",
+    "writes_repository": false,
+    "may_apply_whitelisted_repairs": true,
+    "owns_all_technical_failure_handoffs": true,
+    "restart_same_generation_after_repair": true,
+    "votes_on_strategy": false,
+    "may_enable_live": false,
+    "may_use_exchange_secrets": false
+  },
+  "agents": [
+    {
+      "name": "QuantAgent",
+      "role": "Maximize repeatable >=200 USDT outcomes from 100 USDT in 10 days; use 150/175/250 thresholds and trade evidence as secondary learning signals",
+      "weight": 1.0,
+      "veto": false
+    },
+    {
+      "name": "ValidationCritic",
+      "role": "Reject incomplete, failed, cherry-picked, look-ahead contaminated or statistically unusable validation results",
+      "weight": 1.0,
+      "veto": true
+    },
+    {
+      "name": "RiskAgent",
+      "role": "Report drawdown, near-ruin and liquidation-style failure modes as research diagnostics without suppressing aggressive candidates solely for being risky",
+      "weight": 1.0,
+      "veto": false
+    }
+  ],
+  "gates": {
+    "require_all_windows_valid": true,
+    "max_near_ruin_rate": 1.0,
+    "max_median_drawdown_pct": 100.0,
+    "minimum_completed_windows": 20,
+    "minimum_trade_evidence": 1
+  },
+  "promotion": {
+    "rule": "No validation veto AND council score strictly exceeds current champion score; target_hit_rate is the dominant score component",
+    "blind_holdout_may_be_used_for_search": false,
+    "single_writer": "TenDaySupervisor"
+  }
+}

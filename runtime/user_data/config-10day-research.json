@@ -1,0 +1,101 @@
+{
+  "$schema": "https://schema.freqtrade.io/schema.json",
+  "bot_name": "ten-day-research-only",
+  "strategy": "TenDayMomentumV1",
+  "timeframe": "15m",
+  "max_open_trades": 1,
+  "stake_currency": "USDT",
+  "stake_amount": "unlimited",
+  "available_capital": 100,
+  "tradable_balance_ratio": 0.99,
+  "amount_reserve_percent": 0.05,
+  "dry_run": true,
+  "dry_run_wallet": 100,
+  "trading_mode": "spot",
+  "margin_mode": "",
+  "position_adjustment_enable": false,
+  "max_entry_position_adjustment": 0,
+  "entry_pricing": {
+    "price_side": "other",
+    "use_order_book": false
+  },
+  "exit_pricing": {
+    "price_side": "other",
+    "use_order_book": false
+  },
+  "exchange": {
+    "name": "binance",
+    "key": "",
+    "secret": "",
+    "ccxt_config": {
+      "enableRateLimit": true,
+      "options": {
+        "defaultType": "spot",
+        "fetchCurrencies": false,
+        "fetchMargins": false,
+        "fetchMarkets": {
+          "types": [
+            "spot"
+          ]
+        }
+      },
+      "has": {
+        "fetchCurrencies": false
+      },
+      "urls": {
+        "api": {
+          "public": "https://data-api.binance.vision/api/v3",
+          "v1": "https://data-api.binance.vision/api/v1"
+        },
+        "apiBackup": {
+          "public": "https://data-api.binance.vision/api/v3",
+          "v1": "https://data-api.binance.vision/api/v1"
+        }
+      }
+    },
+    "ccxt_async_config": {
+      "enableRateLimit": true,
+      "options": {
+        "defaultType": "spot",
+        "fetchCurrencies": false,
+        "fetchMargins": false,
+        "fetchMarkets": {
+          "types": [
+            "spot"
+          ]
+        }
+      },
+      "has": {
+        "fetchCurrencies": false
+      },
+      "urls": {
+        "api": {
+          "public": "https://data-api.binance.vision/api/v3",
+          "v1": "https://data-api.binance.vision/api/v1"
+        },
+        "apiBackup": {
+          "public": "https://data-api.binance.vision/api/v3",
+          "v1": "https://data-api.binance.vision/api/v1"
+        }
+      }
+    },
+    "pair_whitelist": [
+      "BTC/USDT",
+      "ETH/USDT",
+      "SOL/USDT",
+      "BNB/USDT",
+      "XRP/USDT",
+      "ADA/USDT"
+    ],
+    "pair_blacklist": []
+  },
+  "pairlists": [
+    {
+      "method": "StaticPairList"
+    }
+  ],
+  "initial_state": "stopped",
+  "force_entry_enable": false,
+  "dataformat_ohlcv": "feather",
+  "dataformat_trades": "feather"
+}

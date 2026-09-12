@@ -1,0 +1,116 @@
+{
+  "accepted": false,
+  "agent_council": {
+    "council_score": -0.16464936480000003,
+    "promotion_eligible": true,
+    "reviews": [
+      {
+        "agent": "QuantAgent",
+        "reason": "Rewards repeatable 10-day target hits and median return.",
+        "score": -0.05018288080000044,
+        "veto": false
+      },
+      {
+        "agent": "ValidationCritic",
+        "reason": "Validation evidence is complete enough to review.",
+        "score": 0.0,
+        "veto": false
+      },
+      {
+        "agent": "RiskAgent",
+        "reason": "Risk gates passed.",
+        "score": -0.11446648399999958,
+        "veto": false
+      }
+    ],
+    "supervisor": "TenDaySupervisor",
+    "veto": false,
+    "veto_agents": []
+  },
+  "generation": 3,
+  "raster_restart_attempts": 0,
+  "raster_trace": {
+    "1": {
+      "agent": "OpsWatchdog",
+      "health": {
+        "agent": "OpsWatchdog",
+        "checked_at_utc": "2026-09-12T17:42:09.022197+00:00",
+        "checkpoint": {
+          "champion_present": true,
+          "generation_records": 2,
+          "state_present": true
+        },
+        "data": {
+          "bytes": 20230776,
+          "files": 12
+        },
+        "failures": [],
+        "healthy": true,
+        "safety": {
+          "exchange_secrets_required": false,
+          "live_trading_enabled": false,
+          "public_market_metadata_only": true,
+          "strategy_voting": false
+        }
+      },
+      "status": "passed"
+    },
+    "2": {
+      "agent": "ResearchAgent",
+      "status": "challenger_generated"
+    },
+    "3": {
+      "agent": "QuantAgent",
+      "review": {
+        "agent": "QuantAgent",
+        "reason": "Rewards repeatable 10-day target hits and median return.",
+        "score": -0.05018288080000044,
+        "veto": false
+      },
+      "status": "scored"
+    },
+    "4": {
+      "agent": "ValidationCritic",
+      "review": {
+        "agent": "ValidationCritic",
+        "reason": "Validation evidence is complete enough to review.",
+        "score": 0.0,
+        "veto": false
+      },
+      "status": "reviewed"
+    },
+    "5": {
+      "agent": "RiskAgent",
+      "review": {
+        "agent": "RiskAgent",
+        "reason": "Risk gates passed.",
+        "score": -0.11446648399999958,
+        "veto": false
+      },
+      "status": "reviewed"
+    },
+    "6": {
+      "agent": "TenDaySupervisor",
+      "status": "rejected"
+    }
+  },
+  "score": -0.16464936480000003,
+  "seed": 1003,
+  "validation": {
+    "max_final_balance": 104.50046632,
+    "mean_final_balance": 99.43521349807693,
+    "mean_return_pct": -0.5647865019230767,
+    "median_final_balance": 99.37271399,
+    "median_max_drawdown_pct": 1.4308310499999948,
+    "median_return_pct": -0.6272860100000055,
+    "min_final_balance": 95.36462527,
+    "near_ruin_count": 0,
+    "near_ruin_rate": 0.0,
+    "target_hit_count": 0,
+    "target_hit_rate": 0.0,
+    "valid": true,
+    "windows_completed": 26,
+    "windows_failed": 0,
+    "windows_requested": 26
+  }
+}

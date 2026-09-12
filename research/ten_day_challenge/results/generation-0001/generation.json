@@ -1,0 +1,116 @@
+{
+  "accepted": true,
+  "agent_council": {
+    "council_score": -9.77359999978944e-06,
+    "promotion_eligible": true,
+    "reviews": [
+      {
+        "agent": "QuantAgent",
+        "reason": "Rewards repeatable 10-day target hits and median return.",
+        "score": 0.0,
+        "veto": false
+      },
+      {
+        "agent": "ValidationCritic",
+        "reason": "Validation evidence is complete enough to review.",
+        "score": 0.0,
+        "veto": false
+      },
+      {
+        "agent": "RiskAgent",
+        "reason": "Risk gates passed.",
+        "score": -9.77359999978944e-06,
+        "veto": false
+      }
+    ],
+    "supervisor": "TenDaySupervisor",
+    "veto": false,
+    "veto_agents": []
+  },
+  "generation": 1,
+  "raster_restart_attempts": 0,
+  "raster_trace": {
+    "1": {
+      "agent": "OpsWatchdog",
+      "health": {
+        "agent": "OpsWatchdog",
+        "checked_at_utc": "2026-09-12T17:31:42.233778+00:00",
+        "checkpoint": {
+          "champion_present": false,
+          "generation_records": 0,
+          "state_present": true
+        },
+        "data": {
+          "bytes": 16967968,
+          "files": 12
+        },
+        "failures": [],
+        "healthy": true,
+        "safety": {
+          "exchange_secrets_required": false,
+          "live_trading_enabled": false,
+          "public_market_metadata_only": true,
+          "strategy_voting": false
+        }
+      },
+      "status": "passed"
+    },
+    "2": {
+      "agent": "ResearchAgent",
+      "status": "challenger_generated"
+    },
+    "3": {
+      "agent": "QuantAgent",
+      "review": {
+        "agent": "QuantAgent",
+        "reason": "Rewards repeatable 10-day target hits and median return.",
+        "score": 0.0,
+        "veto": false
+      },
+      "status": "scored"
+    },
+    "4": {
+      "agent": "ValidationCritic",
+      "review": {
+        "agent": "ValidationCritic",
+        "reason": "Validation evidence is complete enough to review.",
+        "score": 0.0,
+        "veto": false
+      },
+      "status": "reviewed"
+    },
+    "5": {
+      "agent": "RiskAgent",
+      "review": {
+        "agent": "RiskAgent",
+        "reason": "Risk gates passed.",
+        "score": -9.77359999978944e-06,
+        "veto": false
+      },
+      "status": "reviewed"
+    },
+    "6": {
+      "agent": "TenDaySupervisor",
+      "status": "promoted"
+    }
+  },
+  "score": -9.77359999978944e-06,
+  "seed": 1001,
+  "validation": {
+    "max_final_balance": 103.65568727,
+    "mean_final_balance": 100.77014840692307,
+    "mean_return_pct": 0.7701484069230798,
+    "median_final_balance": 100.0,
+    "median_max_drawdown_pct": 0.000122169999997368,
+    "median_return_pct": 0.0,
+    "min_final_balance": 96.53956568,
+    "near_ruin_count": 0,
+    "near_ruin_rate": 0.0,
+    "target_hit_count": 0,
+    "target_hit_rate": 0.0,
+    "valid": true,
+    "windows_completed": 26,
+    "windows_failed": 0,
+    "windows_requested": 26
+  }
+}
