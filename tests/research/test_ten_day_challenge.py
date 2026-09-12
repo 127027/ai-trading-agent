@@ -90,7 +90,7 @@ def test_six_research_roles_are_explicit():
     }
 
 
-def test_raster_order_starts_with_ops_and_returns_to_ops_on_failure():
+def test_raster_order_uses_ops_as_central_recovery_owner():
     policy = AGENTS["raster_policy"]
     rasters = policy["ordered_rasters"]
     assert [item["raster"] for item in rasters] == [1, 2, 3, 4, 5, 6]
@@ -102,8 +102,12 @@ def test_raster_order_starts_with_ops_and_returns_to_ops_on_failure():
         "RiskAgent",
         "TenDaySupervisor",
     ]
-    assert policy["on_failure"] == "return_to_raster_1"
+    assert policy["on_failure"] == "handoff_to_raster_1_and_restart_generation"
+    assert policy["generation_completes_only_after_raster"] == 6
     assert policy["manual_stop_only"] is True
+    ops = AGENTS["operations_agent"]
+    assert ops["owns_all_technical_failure_handoffs"] is True
+    assert ops["restart_same_generation_after_repair"] is True
 
 
 def test_agent_council_allows_complete_low_risk_candidate():
@@ -122,6 +126,21 @@ def test_agent_council_allows_complete_low_risk_candidate():
     assert review["supervisor"] == "TenDaySupervisor"
     assert review["promotion_eligible"] is True
     assert review["veto_agents"] == []
+
+
+def test_reviewer_rasters_are_callable_independently():
+    summary = {
+        "valid": True,
+        "windows_completed": 26,
+        "windows_failed": 0,
+        "target_hit_rate": 0.25,
+        "median_return_pct": 8.0,
+        "near_ruin_rate": 0.0,
+        "median_max_drawdown_pct": 10.0,
+    }
+    assert council.quant_review(summary)["agent"] == "QuantAgent"
+    assert council.validation_review(summary, AGENTS)["agent"] == "ValidationCritic"
+    assert council.risk_review(summary, AGENTS)["agent"] == "RiskAgent"
 
 
 def test_risk_agent_veto_cannot_be_overridden_by_supervisor():
