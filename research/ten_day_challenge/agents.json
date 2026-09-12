@@ -1,10 +1,18 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "supervisor": {
     "name": "TenDaySupervisor",
     "role": "Research manager and sole promotion authority",
     "writes_repository": true,
     "may_override_veto": false
+  },
+  "operations_agent": {
+    "name": "OpsWatchdog",
+    "role": "Monitor research health, executables, dependencies, data, checkpoints and stalled/failed runs without influencing strategy scores",
+    "writes_repository": false,
+    "votes_on_strategy": false,
+    "may_enable_live": false,
+    "may_use_exchange_secrets": false
   },
   "agents": [
     {
