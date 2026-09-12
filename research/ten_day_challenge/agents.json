@@ -19,6 +19,8 @@
     "on_target_hit": "record_success_then_start_new_run_at_raster_1",
     "manual_stop_only": true,
     "run_completes_only_after_raster": 6,
+    "on_failure": "handoff_to_raster_1_and_restart_generation",
+    "generation_completes_only_after_raster": 6,
     "ordered_rasters": [
       {
         "raster": 1,
@@ -72,6 +74,7 @@
     "may_apply_whitelisted_repairs": true,
     "owns_all_technical_failure_handoffs": true,
     "restart_same_run_after_repair": true,
+    "restart_same_generation_after_repair": true,
     "votes_on_strategy": false,
     "may_enable_live": false,
     "may_use_exchange_secrets": false
