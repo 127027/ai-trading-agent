@@ -9,6 +9,8 @@ loading to public Spot exchange information from data-api.binance.vision.
 from __future__ import annotations
 
 import inspect
+import sys
+import traceback
 from collections.abc import Callable
 from typing import Any
 
@@ -56,6 +58,13 @@ def patch_binance_class(exchange_class: type[Any]) -> None:
             self: Any, params: dict[str, Any] | None = None
         ) -> list[dict[str, Any]]:
             enforce_public_market_state(self)
+            print(
+                "TEN_DAY_PUBLIC_FETCH_MARKETS "
+                f"class={type(self).__module__}.{type(self).__name__} "
+                f"types={self.options.get('fetchMarkets')} "
+                f"fetchMargins={self.options.get('fetchMargins')}",
+                file=sys.stderr,
+            )
             return await original_fetch_markets(self, params or {})
 
     else:
@@ -64,6 +73,13 @@ def patch_binance_class(exchange_class: type[Any]) -> None:
             self: Any, params: dict[str, Any] | None = None
         ) -> list[dict[str, Any]]:
             enforce_public_market_state(self)
+            print(
+                "TEN_DAY_PUBLIC_FETCH_MARKETS "
+                f"class={type(self).__module__}.{type(self).__name__} "
+                f"types={self.options.get('fetchMarkets')} "
+                f"fetchMargins={self.options.get('fetchMargins')}",
+                file=sys.stderr,
+            )
             return original_fetch_markets(self, params or {})
 
     fetch_markets._ten_day_public_only = True  # type: ignore[attr-defined]
@@ -89,6 +105,24 @@ def patch_binance_class(exchange_class: type[Any]) -> None:
     fetch_currencies._ten_day_public_only = True  # type: ignore[attr-defined]
     exchange_class.fetch_currencies = fetch_currencies
 
+    original_check = exchange_class.check_required_credentials
+
+    def check_required_credentials(self: Any, error: bool = True) -> bool:
+        try:
+            return bool(original_check(self, error))
+        except Exception:
+            print(
+                "TEN_DAY_CREDENTIAL_FAILURE "
+                f"class={type(self).__module__}.{type(self).__name__} "
+                f"error={error} has_api_key={bool(getattr(self, 'apiKey', None))}",
+                file=sys.stderr,
+            )
+            print("".join(traceback.format_stack(limit=12)), file=sys.stderr)
+            raise
+
+    check_required_credentials._ten_day_public_only = True  # type: ignore[attr-defined]
+    exchange_class.check_required_credentials = check_required_credentials
+
 
 def patch_ccxt() -> None:
     """Patch the sync, async and websocket Binance classes used by Freqtrade."""
@@ -107,6 +141,7 @@ def patch_ccxt() -> None:
 
 def main() -> int:
     patch_ccxt()
+    print("TEN_DAY_PUBLIC_ADAPTER_ACTIVE", file=sys.stderr)
     from freqtrade.main import main as freqtrade_main
 
     result = freqtrade_main()
