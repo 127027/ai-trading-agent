@@ -69,15 +69,20 @@ def repair_config(path: Path, log_text: str) -> list[str]:
     config = load_json(path)
     actions: list[str] = []
 
-    if "telegram" in log_text.lower() and "required" in log_text.lower():
-        if "telegram" in config:
-            config.pop("telegram", None)
-            actions.append(f"removed disabled telegram block from {path.name}")
+    if (
+        "telegram" in log_text.lower()
+        and "required" in log_text.lower()
+        and "telegram" in config
+    ):
+        config.pop("telegram", None)
+        actions.append(f"removed disabled telegram block from {path.name}")
 
-    if "listen_ip_address" in log_text or "api_server" in log_text.lower():
-        if "api_server" in config:
-            config.pop("api_server", None)
-            actions.append(f"removed disabled api_server block from {path.name}")
+    if (
+        ("listen_ip_address" in log_text or "api_server" in log_text.lower())
+        and "api_server" in config
+    ):
+        config.pop("api_server", None)
+        actions.append(f"removed disabled api_server block from {path.name}")
 
     keyless_failure = (
         'requires "apikey" credential' in log_text.lower()
