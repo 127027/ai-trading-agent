@@ -52,8 +52,11 @@ jobs:
           enable-cache: true
           cache-dependency-glob: uv.lock
 
-      - name: Install frozen environment
-        run: uv sync --frozen --all-extras --python 3.12
+      - name: Install frozen environment and Hyperopt extra
+        run: |
+          uv sync --frozen --all-extras --python 3.12
+          uv pip install --python .venv/bin/python "freqtrade[hyperopt]==2026.7"
+          .venv/bin/python -c "import cmaes, filelock; print('hyperopt dependencies ready')"
 
       - name: Deterministic tests and lint
         run: |
