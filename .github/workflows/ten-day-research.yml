@@ -78,20 +78,24 @@ jobs:
             --timeframes 15m 5m \
             --start 2025-09-01 --end "$END" --data-dir "$DATA_DIR"
 
-      - name: OpsWatchdog preflight
+      - name: Raster 1 - OpsWatchdog system health gate
         run: |
           .venv/bin/python research/ten_day_challenge/watchdog.py \
             --root "$GITHUB_WORKSPACE" --data-dir "$DATA_DIR" \
             --python .venv/bin/python --freqtrade .venv/bin/freqtrade \
             --output research/ten_day_challenge/results/ops-watchdog-preflight.json
 
-      - name: OpsWatchdog validator self-heal loop
+      - name: Raster 1 - Validator self-heal proof
         run: |
           rm -rf research/ten_day_challenge/results/ops-validator-smoke
           mkdir -p research/ten_day_challenge/results/self-heal
           .venv/bin/python research/ten_day_challenge/guarded_command.py \
             --root "$GITHUB_WORKSPACE" \
             --attempts 4 \
+            --health-data-dir "$DATA_DIR" \
+            --health-python .venv/bin/python \
+            --health-freqtrade .venv/bin/freqtrade \
+            --health-output research/ten_day_challenge/results/raster-1-health/validator.json \
             --log research/ten_day_challenge/results/self-heal/validator.log \
             --report research/ten_day_challenge/results/self-heal/validator.json \
             -- \
@@ -107,7 +111,7 @@ jobs:
             --detail-timeframe 5m --workers 1 \
             --output-dir research/ten_day_challenge/results/ops-validator-smoke
 
-      - name: ResearchAgent self-heal loop and Supervisor council
+      - name: Raster 2-6 - Research, Quant, Validation, Risk, Supervisor
         run: |
           BUDGET=250
           if [ "$SEGMENT" = "2" ]; then BUDGET=120; fi
@@ -115,6 +119,10 @@ jobs:
           .venv/bin/python research/ten_day_challenge/guarded_command.py \
             --root "$GITHUB_WORKSPACE" \
             --attempts 3 \
+            --health-data-dir "$DATA_DIR" \
+            --health-python .venv/bin/python \
+            --health-freqtrade .venv/bin/freqtrade \
+            --health-output research/ten_day_challenge/results/raster-1-health/research-loop.json \
             --log research/ten_day_challenge/results/self-heal/research-agent.log \
             --report research/ten_day_challenge/results/self-heal/research-agent.json \
             -- \
@@ -123,13 +131,17 @@ jobs:
             --budget-minutes "$BUDGET" --workers 3 \
             --python .venv/bin/python --freqtrade .venv/bin/freqtrade --mode search
 
-      - name: Freeze champion and execute full-year proof
+      - name: Raster 1 then 2-6 - Freeze champion and full-year proof
         if: env.SEGMENT == '2'
         run: |
           mkdir -p research/ten_day_challenge/results/self-heal
           .venv/bin/python research/ten_day_challenge/guarded_command.py \
             --root "$GITHUB_WORKSPACE" \
             --attempts 2 \
+            --health-data-dir "$DATA_DIR" \
+            --health-python .venv/bin/python \
+            --health-freqtrade .venv/bin/freqtrade \
+            --health-output research/ten_day_challenge/results/raster-1-health/finalize.json \
             --log research/ten_day_challenge/results/self-heal/finalize.log \
             --report research/ten_day_challenge/results/self-heal/finalize.json \
             -- \
@@ -163,7 +175,7 @@ jobs:
             "$LOOKAHEAD" "$RECURSIVE" \
             > research/ten_day_challenge/results/quality-gates/status.json
 
-      - name: Smoke-test frozen paper class
+      - name: Raster 1 then paper smoke-test
         if: env.SEGMENT == '2'
         run: |
           mkdir -p research/ten_day_challenge/results/paper-smoke
@@ -171,6 +183,10 @@ jobs:
           .venv/bin/python research/ten_day_challenge/guarded_command.py \
             --root "$GITHUB_WORKSPACE" \
             --attempts 3 \
+            --health-data-dir "$DATA_DIR" \
+            --health-python .venv/bin/python \
+            --health-freqtrade .venv/bin/freqtrade \
+            --health-output research/ten_day_challenge/results/raster-1-health/paper-smoke.json \
             --log research/ten_day_challenge/results/self-heal/paper-smoke.log \
             --report research/ten_day_challenge/results/self-heal/paper-smoke.json \
             -- \
