@@ -33,9 +33,15 @@ def install_public_freqtrade_launcher(
     if not adapter.is_file() or not freqtrade_executable.is_file():
         return
 
+    python_path = python_executable
+    if not python_path.is_absolute():
+        python_path = root / python_path
+    # Keep the virtualenv path in the shebang. Path.resolve() would follow the
+    # venv's python symlink to the host interpreter and lose venv site-packages.
+    python_path = python_path.absolute()
+
     launcher = (
-        f"#!{python_executable.resolve()}\n"
-        "from pathlib import Path\n"
+        f"#!{python_path}\n"
         "import runpy\n"
         f"runpy.run_path({str(adapter)!r}, run_name='__main__')\n"
     )
