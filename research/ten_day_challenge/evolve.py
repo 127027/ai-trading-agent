@@ -1,4 +1,10 @@
-"""Checkpointable champion/challenger loop for the ten-day challenge."""
+"""Checkpointable champion/challenger loop for the ten-day challenge.
+
+Every generation follows the ordered raster policy:
+1 OpsWatchdog -> 2 ResearchAgent -> 3 QuantAgent -> 4 ValidationCritic ->
+5 RiskAgent -> 6 TenDaySupervisor. A technical failure exits to the guarded
+self-heal wrapper, which returns through raster 1 before retrying.
+"""
 
 from __future__ import annotations
 
@@ -31,6 +37,37 @@ def run(command: list[str], log_path: Path) -> None:
         raise RuntimeError(
             f"command failed ({completed.returncode}): {' '.join(command)}\n{tail}"
         )
+
+
+def raster_1_health_gate(
+    python: str,
+    freqtrade: str,
+    root: Path,
+    data_dir: Path,
+    output_dir: Path,
+    label: str,
+) -> dict[str, Any]:
+    report_path = output_dir / "raster-1-health" / f"{label}.json"
+    log_path = output_dir / "raster-1-health" / f"{label}.log"
+    command = [
+        python,
+        str(root / "research/ten_day_challenge/watchdog.py"),
+        "--root",
+        str(root),
+        "--data-dir",
+        str(data_dir),
+        "--python",
+        python,
+        "--freqtrade",
+        freqtrade,
+        "--output",
+        str(report_path),
+    ]
+    run(command, log_path)
+    report = load_json(report_path)
+    if not bool(report.get("healthy")):
+        raise RuntimeError(f"raster 1 health gate failed: {report.get('failures', [])}")
+    return report
 
 
 def exact_validation(
@@ -112,15 +149,24 @@ def main() -> int:
         load_json(state_path)
         if state_path.exists()
         else {
-            "schema_version": 1,
+            "schema_version": 2,
             "generation": 0,
             "best_score": None,
             "best_generation": None,
             "supervisor": council_config["supervisor"]["name"],
+            "raster_policy": "1-ops 2-research 3-quant 4-validation 5-risk 6-supervisor",
         }
     )
 
     if args.mode == "finalize":
+        health = raster_1_health_gate(
+            args.python,
+            args.freqtrade,
+            root,
+            args.data_dir,
+            results_root,
+            "finalize",
+        )
         champion = champion_dir / "TenDayMomentumV1.json"
         if champion.exists():
             shutil.copy2(champion, parameter_file)
@@ -143,6 +189,14 @@ def main() -> int:
         state["final_full_year"] = summary
         state["final_agent_council"] = final_council
         state["finalized"] = True
+        state["last_raster_trace"] = {
+            "1": {"agent": "OpsWatchdog", "status": "passed", "health": health},
+            "2": {"agent": "ResearchAgent", "status": "champion_frozen"},
+            "3": {"agent": "QuantAgent", "status": "full_year_scored"},
+            "4": {"agent": "ValidationCritic", "status": "reviewed"},
+            "5": {"agent": "RiskAgent", "status": "reviewed"},
+            "6": {"agent": "TenDaySupervisor", "status": "final_checkpoint"},
+        }
         if champion.exists():
             payload = load_json(champion)
             if "strategy_name" in payload:
@@ -167,6 +221,16 @@ def main() -> int:
         generation += 1
         out = results_root / f"generation-{generation:04d}"
         out.mkdir(parents=True, exist_ok=True)
+
+        health = raster_1_health_gate(
+            args.python,
+            args.freqtrade,
+            root,
+            args.data_dir,
+            results_root,
+            f"generation-{generation:04d}",
+        )
+
         previous = out / "previous-params.json"
         if parameter_file.exists():
             shutil.copy2(parameter_file, previous)
@@ -203,6 +267,7 @@ def main() -> int:
             "--analyze-per-epoch",
         ]
         run(command, out / "hyperopt.log")
+
         summary = exact_validation(
             args.python,
             args.freqtrade,
@@ -222,12 +287,37 @@ def main() -> int:
             and score > best_score
             and parameter_file.exists()
         )
+        reviews = {review["agent"]: review for review in council["reviews"]}
+        raster_trace = {
+            "1": {"agent": "OpsWatchdog", "status": "passed", "health": health},
+            "2": {"agent": "ResearchAgent", "status": "challenger_generated"},
+            "3": {
+                "agent": "QuantAgent",
+                "status": "scored",
+                "review": reviews.get("QuantAgent"),
+            },
+            "4": {
+                "agent": "ValidationCritic",
+                "status": "reviewed",
+                "review": reviews.get("ValidationCritic"),
+            },
+            "5": {
+                "agent": "RiskAgent",
+                "status": "reviewed",
+                "review": reviews.get("RiskAgent"),
+            },
+            "6": {
+                "agent": "TenDaySupervisor",
+                "status": "promoted" if accepted else "rejected",
+            },
+        }
         record = {
             "generation": generation,
             "score": score,
             "accepted": accepted,
             "validation": summary,
             "agent_council": council,
+            "raster_trace": raster_trace,
             "seed": 1000 + generation,
         }
         (out / "generation.json").write_text(
@@ -252,6 +342,8 @@ def main() -> int:
                 "best_score": None if best_score == float("-inf") else best_score,
                 "supervisor": council_config["supervisor"]["name"],
                 "updated_at_utc": datetime.now(UTC).isoformat(),
+                "last_raster_trace": raster_trace,
+                "next_raster": 1,
             }
         )
         state_path.write_text(
