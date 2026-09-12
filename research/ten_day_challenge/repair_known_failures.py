@@ -90,6 +90,14 @@ def set_public_data_url(config: dict[str, Any]) -> bool:
         if "private" in api:
             api.pop("private", None)
             changed = True
+
+        # CCXT Binance fetch_currencies() treats apiBackup as a signal that
+        # authenticated SAPI currency metadata is unavailable and safely
+        # falls back to currencies inferred from public market metadata.
+        backup = dict(api)
+        if urls.get("apiBackup") != backup:
+            urls["apiBackup"] = backup
+            changed = True
     return changed
 
 
