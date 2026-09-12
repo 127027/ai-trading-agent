@@ -1,7 +1,8 @@
 """Independent reviewer roles for ten-day strategy promotion.
 
-Each reviewer is exposed separately so the raster controller can persist exactly
-which stage is active. The Supervisor may never override a veto.
+The primary research objective is the probability of turning 100 USDT into at
+least 200 USDT inside an independent 10-day window. Drawdown and near-ruin are
+reported as diagnostics but do not veto an otherwise valid research candidate.
 """
 
 from __future__ import annotations
@@ -10,13 +11,26 @@ from typing import Any
 
 
 def quant_review(summary: dict[str, Any]) -> dict[str, Any]:
-    hit_rate = float(summary.get("target_hit_rate") or 0.0)
+    hit_200 = float(summary.get("target_hit_rate") or 0.0)
+    hit_175 = float(summary.get("hit_rate_175") or 0.0)
+    hit_150 = float(summary.get("hit_rate_150") or 0.0)
+    hit_250 = float(summary.get("hit_rate_250") or 0.0)
     median_return = float(summary.get("median_return_pct") or 0.0) / 100.0
+    score = (
+        1000.0 * hit_200
+        + 120.0 * hit_250
+        + 40.0 * hit_175
+        + 15.0 * hit_150
+        + 2.0 * median_return
+    )
     return {
         "agent": "QuantAgent",
-        "score": 100.0 * hit_rate + 8.0 * median_return,
+        "score": score,
         "veto": False,
-        "reason": "Rewards repeatable 10-day target hits and median return.",
+        "reason": (
+            "Primary objective is repeatable >=200 USDT outcomes in 10 days; "
+            "150/175/250 thresholds are secondary learning signals."
+        ),
     }
 
 
@@ -41,23 +55,17 @@ def validation_review(
 
 
 def risk_review(summary: dict[str, Any], council_config: dict[str, Any]) -> dict[str, Any]:
-    gates = council_config["gates"]
+    del council_config
     near_ruin_rate = float(summary.get("near_ruin_rate") or 0.0)
     median_dd_pct = float(summary.get("median_max_drawdown_pct") or 0.0)
-    max_near_ruin = float(gates.get("max_near_ruin_rate", 0.0))
-    max_median_dd = float(gates.get("max_median_drawdown_pct", 100.0))
-    reasons: list[str] = []
-    if near_ruin_rate > max_near_ruin:
-        reasons.append(f"near-ruin rate {near_ruin_rate:.2%} exceeds {max_near_ruin:.2%}")
-    if median_dd_pct > max_median_dd:
-        reasons.append(
-            f"median drawdown {median_dd_pct:.2f}% exceeds {max_median_dd:.2f}%"
-        )
     return {
         "agent": "RiskAgent",
-        "score": -35.0 * near_ruin_rate - 8.0 * (median_dd_pct / 100.0),
-        "veto": bool(reasons),
-        "reason": "; ".join(reasons) or "Risk gates passed.",
+        "score": 0.0,
+        "veto": False,
+        "reason": (
+            f"Research diagnostic only: near-ruin={near_ruin_rate:.2%}, "
+            f"median drawdown={median_dd_pct:.2f}%. Aggressive valid candidates are not vetoed."
+        ),
     }
 
 
@@ -76,6 +84,7 @@ def assemble_council(
         "veto_agents": vetoes,
         "council_score": sum(float(review["score"]) for review in reviews),
         "promotion_eligible": not vetoes,
+        "primary_objective": "maximize_hit_rate_200",
     }
 
 
