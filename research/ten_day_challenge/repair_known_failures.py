@@ -81,29 +81,14 @@ def set_public_data_url(config: dict[str, Any]) -> bool:
         api = urls.setdefault("api", {})
         desired = {
             "public": PUBLIC_SPOT_API,
-            "private": PUBLIC_SPOT_API,
             "v1": PUBLIC_SPOT_API_V1,
         }
         for key, value in desired.items():
             if api.get(key) != value:
                 api[key] = value
                 changed = True
-    return changed
-
-
-def remove_custom_public_url(config: dict[str, Any]) -> bool:
-    """Let CCXT use its built-in public Binance metadata endpoints as a safe fallback."""
-    changed = False
-    exchange = config.get("exchange", {})
-    if exchange.get("name") != "binance":
-        return False
-    for name in ("ccxt_config", "ccxt_async_config"):
-        section = exchange.get(name, {})
-        urls = section.get("urls")
-        if isinstance(urls, dict) and "api" in urls:
-            urls.pop("api", None)
-            if not urls:
-                section.pop("urls", None)
+        if "private" in api:
+            api.pop("private", None)
             changed = True
     return changed
 
@@ -136,18 +121,13 @@ def repair_config(path: Path, log_text: str) -> list[str]:
     )
     credential_failure = 'requires "apikey" credential' in lower_log
 
-    if restricted_location:
+    if restricted_location or credential_failure:
         if harden_public_only(config):
             actions.append(f"hardened spot-only public Binance metadata access in {path.name}")
         if set_public_data_url(config):
             actions.append(
-                f"routed Binance Spot metadata through public data endpoint in {path.name}"
+                f"pinned keyless Binance Spot metadata routing in {path.name}"
             )
-    elif credential_failure:
-        if harden_public_only(config):
-            actions.append(f"hardened spot-only public Binance metadata access in {path.name}")
-        if remove_custom_public_url(config):
-            actions.append(f"restored CCXT built-in public Binance metadata routing in {path.name}")
 
     if actions:
         write_json(path, config)
@@ -184,6 +164,7 @@ def main() -> int:
             "spot_enforced": True,
             "exchange_secrets_added": False,
             "trading_logic_modified": False,
+            "repair_oscillation_disabled": True,
         },
     }
     args.report.parent.mkdir(parents=True, exist_ok=True)
