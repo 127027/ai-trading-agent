@@ -33,6 +33,7 @@ jobs:
       PYTHONDONTWRITEBYTECODE: "1"
       DATA_DIR: ${{ github.workspace }}/.research-data/binance
       SEGMENT: ${{ github.event_name == 'workflow_dispatch' && inputs.segment || (contains(github.event.head_commit.message, '[10day-segment-2]') && '2' || '1') }}
+      SUPERVISED_SMOKE: ${{ contains(github.event.head_commit.message, '[10day-smoke]') && '1' || '0' }}
 
     steps:
       - name: Check out research branch
@@ -115,6 +116,7 @@ jobs:
         run: |
           BUDGET=250
           if [ "$SEGMENT" = "2" ]; then BUDGET=120; fi
+          if [ "$SUPERVISED_SMOKE" = "1" ]; then BUDGET=15; fi
           mkdir -p research/ten_day_challenge/results/self-heal
           .venv/bin/python research/ten_day_challenge/guarded_command.py \
             --root "$GITHUB_WORKSPACE" \
