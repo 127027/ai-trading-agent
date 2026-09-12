@@ -1,6 +1,6 @@
 """Exact rolling 10-day verifier using independent Freqtrade backtests.
 
-Every window gets a fresh 100-USDT simulated wallet.  This intentionally avoids
+Every window gets a fresh 100-USDT simulated wallet. This intentionally avoids
 letting gains from an early period compound into later windows.
 """
 
@@ -76,6 +76,21 @@ def load_export(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def newest_export(directory: Path) -> Path | None:
+    """Return the newest Freqtrade result produced in an isolated directory."""
+    zip_files = [item for item in directory.glob("*.zip") if item.is_file()]
+    if zip_files:
+        return max(zip_files, key=lambda item: item.stat().st_mtime_ns)
+    json_files = [
+        item
+        for item in directory.glob("*.json")
+        if item.is_file() and not item.name.endswith(".meta.json")
+    ]
+    if json_files:
+        return max(json_files, key=lambda item: item.stat().st_mtime_ns)
+    return None
+
+
 def close_time(trade: dict[str, Any]) -> datetime | None:
     timestamp = trade.get("close_timestamp")
     if timestamp is not None:
@@ -146,7 +161,7 @@ def build_backtest_command(
     data_dir: Path,
     strategy: str,
     window: Window,
-    export_path: Path,
+    export_directory: Path,
     starting_balance: float,
     fee: float,
     detail_timeframe: str | None,
@@ -154,22 +169,57 @@ def build_backtest_command(
     command = [
         freqtrade,
         "backtesting",
-        "--config", str(config),
-        "--userdir", str(userdir),
-        "--strategy-path", str(strategy_path),
-        "--data-dir", str(data_dir),
-        "--strategy", strategy,
-        "--timerange", window.timerange,
-        "--dry-run-wallet", str(starting_balance),
-        "--fee", str(fee),
-        "--cache", "none",
-        "--export", "trades",
-        "--backtest-filename", str(export_path),
+        "--config",
+        str(config),
+        "--userdir",
+        str(userdir),
+        "--strategy-path",
+        str(strategy_path),
+        "--data-dir",
+        str(data_dir),
+        "--strategy",
+        strategy,
+        "--timerange",
+        window.timerange,
+        "--dry-run-wallet",
+        str(starting_balance),
+        "--fee",
+        str(fee),
+        "--cache",
+        "none",
+        "--export",
+        "trades",
+        "--backtest-directory",
+        str(export_directory),
         "--enable-protections",
     ]
     if detail_timeframe:
         command.extend(["--timeframe-detail", detail_timeframe])
     return command
+
+
+def error_result(
+    window: Window,
+    starting_balance: float,
+    target_balance: float,
+    diagnostic: str,
+) -> WindowResult:
+    return WindowResult(
+        start=window.start.isoformat(),
+        end=window.end.isoformat(),
+        timerange=window.timerange,
+        starting_balance=starting_balance,
+        target_balance=target_balance,
+        final_balance=starting_balance,
+        return_pct=0.0,
+        target_hit=False,
+        target_hit_at=None,
+        trades=0,
+        profit_factor=None,
+        max_drawdown_pct=None,
+        near_ruin=False,
+        error=diagnostic,
+    )
 
 
 def run_window(
@@ -188,28 +238,52 @@ def run_window(
     detail_timeframe: str | None,
 ) -> WindowResult:
     with tempfile.TemporaryDirectory(prefix="ten-day-window-") as temporary:
-        export_path = Path(temporary) / "result.zip"
+        export_directory = Path(temporary) / "exports"
+        export_directory.mkdir(parents=True, exist_ok=True)
         command = build_backtest_command(
-            freqtrade, config, userdir, strategy_path, data_dir, strategy,
-            window, export_path, starting_balance, fee, detail_timeframe,
+            freqtrade,
+            config,
+            userdir,
+            strategy_path,
+            data_dir,
+            strategy,
+            window,
+            export_directory,
+            starting_balance,
+            fee,
+            detail_timeframe,
         )
         completed = subprocess.run(command, capture_output=True, text=True, check=False)
-        if completed.returncode != 0:
-            diagnostic = "\n".join(
-                (completed.stdout + "\n" + completed.stderr).splitlines()[-20:]
-            )
-            return WindowResult(
-                start=window.start.isoformat(), end=window.end.isoformat(),
-                timerange=window.timerange, starting_balance=starting_balance,
-                target_balance=target_balance, final_balance=starting_balance,
-                return_pct=0.0, target_hit=False, target_hit_at=None, trades=0,
-                profit_factor=None, max_drawdown_pct=None, near_ruin=False,
-                error=diagnostic,
-            )
-        return parse_result(
-            export_path, strategy, starting_balance, target_balance,
-            near_ruin_balance, window,
+        diagnostic = "\n".join(
+            (completed.stdout + "\n" + completed.stderr).splitlines()[-20:]
         )
+        if completed.returncode != 0:
+            return error_result(window, starting_balance, target_balance, diagnostic)
+
+        export_path = newest_export(export_directory)
+        if export_path is None:
+            files = sorted(item.name for item in export_directory.iterdir())
+            diagnostic = (
+                f"Freqtrade exited successfully but produced no readable backtest export. "
+                f"Directory contents: {files}\n{diagnostic}"
+            )
+            return error_result(window, starting_balance, target_balance, diagnostic)
+        try:
+            return parse_result(
+                export_path,
+                strategy,
+                starting_balance,
+                target_balance,
+                near_ruin_balance,
+                window,
+            )
+        except (OSError, ValueError, KeyError, json.JSONDecodeError) as exc:
+            return error_result(
+                window,
+                starting_balance,
+                target_balance,
+                f"Unable to parse {export_path.name}: {exc}\n{diagnostic}",
+            )
 
 
 def summarize(results: list[WindowResult]) -> dict[str, Any]:
@@ -259,17 +333,21 @@ def write_reports(
             writer.writeheader()
             writer.writerows(rows)
     text = [
-        "# Rolling 10-day verification", "",
+        "# Rolling 10-day verification",
+        "",
         f"- Windows: **{summary['windows_completed']} / {summary['windows_requested']}**",
         f"- Target hits: **{summary['target_hit_count']}**",
         f"- Target-hit rate: **{summary['target_hit_rate']:.2%}**",
         f"- Median final balance: **{summary['median_final_balance']}**",
         f"- Worst final balance: **{summary['min_final_balance']}**",
         f"- Best final balance: **{summary['max_final_balance']}**",
-        f"- Near-ruin rate: **{summary['near_ruin_rate']:.2%}**", "",
+        f"- Near-ruin rate: **{summary['near_ruin_rate']:.2%}**",
+        "",
         "A hit counts only after closed trades raise realized capital to the target.",
     ]
-    (output_dir / "rolling-windows.md").write_text("\n".join(text) + "\n", encoding="utf-8")
+    (output_dir / "rolling-windows.md").write_text(
+        "\n".join(text) + "\n", encoding="utf-8"
+    )
     return summary
 
 
@@ -296,13 +374,17 @@ def main() -> int:
 
     windows = list(iter_windows(args.start, args.end, args.window_days, args.step_days))
     kwargs = {
-        "freqtrade": args.freqtrade, "config": args.config,
-        "userdir": args.userdir, "strategy_path": args.strategy_path,
-        "data_dir": args.data_dir, "strategy": args.strategy,
+        "freqtrade": args.freqtrade,
+        "config": args.config,
+        "userdir": args.userdir,
+        "strategy_path": args.strategy_path,
+        "data_dir": args.data_dir,
+        "strategy": args.strategy,
         "starting_balance": args.starting_balance,
         "target_balance": args.target_balance,
         "near_ruin_balance": args.near_ruin_balance,
-        "fee": args.fee, "detail_timeframe": args.detail_timeframe or None,
+        "fee": args.fee,
+        "detail_timeframe": args.detail_timeframe or None,
     }
     results: list[WindowResult] = []
     with ThreadPoolExecutor(max_workers=max(1, args.workers)) as executor:
@@ -317,10 +399,14 @@ def main() -> int:
         results,
         args.output_dir,
         {
-            "strategy": args.strategy, "start": args.start.isoformat(),
-            "end": args.end.isoformat(), "window_days": args.window_days,
-            "step_days": args.step_days, "starting_balance": args.starting_balance,
-            "target_balance": args.target_balance, "fee_per_side": args.fee,
+            "strategy": args.strategy,
+            "start": args.start.isoformat(),
+            "end": args.end.isoformat(),
+            "window_days": args.window_days,
+            "step_days": args.step_days,
+            "starting_balance": args.starting_balance,
+            "target_balance": args.target_balance,
+            "fee_per_side": args.fee,
             "detail_timeframe": args.detail_timeframe,
         },
     )
