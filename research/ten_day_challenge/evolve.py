@@ -11,6 +11,8 @@ from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import Any
 
+from council import evaluate_candidate
+
 
 def load_json(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
@@ -23,18 +25,12 @@ def run(command: list[str], log_path: Path) -> None:
             command, stdout=log, stderr=subprocess.STDOUT, check=False
         )
     if completed.returncode != 0:
-        tail = "\n".join(log_path.read_text(encoding="utf-8", errors="replace").splitlines()[-30:])
-        raise RuntimeError(f"command failed ({completed.returncode}): {' '.join(command)}\n{tail}")
-
-
-def validation_score(summary: dict[str, Any]) -> float:
-    if not summary.get("valid"):
-        return float("-inf")
-    hit_rate = float(summary.get("target_hit_rate") or 0.0)
-    median_return = float(summary.get("median_return_pct") or 0.0) / 100.0
-    near_ruin = float(summary.get("near_ruin_rate") or 0.0)
-    median_dd = float(summary.get("median_max_drawdown_pct") or 0.0) / 100.0
-    return 100.0 * hit_rate + 8.0 * median_return - 35.0 * near_ruin - 8.0 * median_dd
+        tail = "\n".join(
+            log_path.read_text(encoding="utf-8", errors="replace").splitlines()[-30:]
+        )
+        raise RuntimeError(
+            f"command failed ({completed.returncode}): {' '.join(command)}\n{tail}"
+        )
 
 
 def exact_validation(
@@ -51,22 +47,38 @@ def exact_validation(
     command = [
         python,
         str(root / "research/ten_day_challenge/rolling_windows.py"),
-        "--config", str(root / "runtime/user_data/config-10day-research.json"),
-        "--userdir", str(root / "runtime/user_data"),
-        "--strategy-path", str(root / "runtime/user_data/strategies/candidates"),
-        "--data-dir", str(data_dir),
-        "--strategy", "TenDayMomentumV1",
-        "--start", start,
-        "--end", end,
-        "--window-days", str(challenge["window_days"]),
-        "--step-days", str(step_days),
-        "--starting-balance", str(challenge["starting_balance"]),
-        "--target-balance", str(challenge["target_balance"]),
-        "--near-ruin-balance", str(challenge["near_ruin_balance"]),
-        "--fee", str(challenge["effective_backtest_fee_per_side"]),
-        "--detail-timeframe", str(challenge["detail_timeframe"]),
-        "--workers", str(workers),
-        "--output-dir", str(output_dir),
+        "--config",
+        str(root / "runtime/user_data/config-10day-research.json"),
+        "--userdir",
+        str(root / "runtime/user_data"),
+        "--strategy-path",
+        str(root / "runtime/user_data/strategies/candidates"),
+        "--data-dir",
+        str(data_dir),
+        "--strategy",
+        "TenDayMomentumV1",
+        "--start",
+        start,
+        "--end",
+        end,
+        "--window-days",
+        str(challenge["window_days"]),
+        "--step-days",
+        str(step_days),
+        "--starting-balance",
+        str(challenge["starting_balance"]),
+        "--target-balance",
+        str(challenge["target_balance"]),
+        "--near-ruin-balance",
+        str(challenge["near_ruin_balance"]),
+        "--fee",
+        str(challenge["effective_backtest_fee_per_side"]),
+        "--detail-timeframe",
+        str(challenge["detail_timeframe"]),
+        "--workers",
+        str(workers),
+        "--output-dir",
+        str(output_dir),
     ]
     run(command, output_dir / "validator.log")
     return load_json(output_dir / "rolling-windows.json")["summary"]
@@ -85,6 +97,7 @@ def main() -> int:
 
     root = args.root.resolve()
     challenge = load_json(root / "research/ten_day_challenge/challenge.json")
+    council_config = load_json(root / "research/ten_day_challenge/agents.json")
     strategy_dir = root / "runtime/user_data/strategies/candidates"
     parameter_file = strategy_dir / "TenDayMomentumV1.json"
     research_root = root / "research/ten_day_challenge"
@@ -92,22 +105,39 @@ def main() -> int:
     champion_dir = research_root / "champion"
     champion_dir.mkdir(parents=True, exist_ok=True)
     state_path = research_root / "state.json"
-    state = load_json(state_path) if state_path.exists() else {
-        "schema_version": 1, "generation": 0, "best_score": None,
-        "best_generation": None,
-    }
+    state = (
+        load_json(state_path)
+        if state_path.exists()
+        else {
+            "schema_version": 1,
+            "generation": 0,
+            "best_score": None,
+            "best_generation": None,
+            "supervisor": council_config["supervisor"]["name"],
+        }
+    )
 
     if args.mode == "finalize":
         champion = champion_dir / "TenDayMomentumV1.json"
         if champion.exists():
             shutil.copy2(champion, parameter_file)
         summary = exact_validation(
-            args.python, root, args.data_dir,
-            challenge["dataset_start"], challenge["dataset_end"],
+            args.python,
+            root,
+            args.data_dir,
+            challenge["dataset_start"],
+            challenge["dataset_end"],
             int(challenge["exact_step_days_for_final"]),
-            results_root / "final-full-year", args.workers, challenge,
+            results_root / "final-full-year",
+            args.workers,
+            challenge,
+        )
+        final_council = evaluate_candidate(summary, council_config)
+        (results_root / "final-full-year" / "agent-council.json").write_text(
+            json.dumps(final_council, indent=2, sort_keys=True), encoding="utf-8"
         )
         state["final_full_year"] = summary
+        state["final_agent_council"] = final_council
         state["finalized"] = True
         if champion.exists():
             payload = load_json(champion)
@@ -116,13 +146,17 @@ def main() -> int:
             (strategy_dir / "TenDayMomentumPaperV1.json").write_text(
                 json.dumps(payload, indent=2, sort_keys=True), encoding="utf-8"
             )
-        state_path.write_text(json.dumps(state, indent=2, sort_keys=True), encoding="utf-8")
-        print(json.dumps(summary, indent=2, sort_keys=True))
+        state_path.write_text(
+            json.dumps(state, indent=2, sort_keys=True), encoding="utf-8"
+        )
+        print(json.dumps({"summary": summary, "council": final_council}, indent=2))
         return 0
 
     deadline = time.monotonic() + max(args.budget_minutes, 5) * 60
     best_score = (
-        float(state["best_score"]) if state.get("best_score") is not None else float("-inf")
+        float(state["best_score"])
+        if state.get("best_score") is not None
+        else float("-inf")
     )
     generation = int(state.get("generation") or 0)
     while time.monotonic() < deadline - 600:
@@ -137,31 +171,55 @@ def main() -> int:
             f"{date.fromisoformat(challenge['train_end']):%Y%m%d}"
         )
         command = [
-            args.freqtrade, "hyperopt",
-            "--config", str(root / "runtime/user_data/config-10day-research.json"),
-            "--userdir", str(root / "runtime/user_data"),
-            "--strategy-path", str(strategy_dir),
-            "--data-dir", str(args.data_dir),
-            "--strategy", "TenDayMomentumV1",
-            "--hyperopt-loss", "TenDayChallengeLoss",
-            "--timerange", timerange,
-            "--epochs", str(challenge["hyperopt_epochs_per_generation"]),
-            "--spaces", *[str(item) for item in challenge["hyperopt_spaces"]],
-            "--fee", str(challenge["effective_backtest_fee_per_side"]),
-            "--random-state", str(1000 + generation),
+            args.freqtrade,
+            "hyperopt",
+            "--config",
+            str(root / "runtime/user_data/config-10day-research.json"),
+            "--userdir",
+            str(root / "runtime/user_data"),
+            "--strategy-path",
+            str(strategy_dir),
+            "--data-dir",
+            str(args.data_dir),
+            "--strategy",
+            "TenDayMomentumV1",
+            "--hyperopt-loss",
+            "TenDayChallengeLoss",
+            "--timerange",
+            timerange,
+            "--epochs",
+            str(challenge["hyperopt_epochs_per_generation"]),
+            "--spaces",
+            *[str(item) for item in challenge["hyperopt_spaces"]],
+            "--fee",
+            str(challenge["effective_backtest_fee_per_side"]),
+            "--random-state",
+            str(1000 + generation),
             "--enable-protections",
         ]
         run(command, out / "hyperopt.log")
         summary = exact_validation(
-            args.python, root, args.data_dir,
-            challenge["train_end"], challenge["validation_end"],
+            args.python,
+            root,
+            args.data_dir,
+            challenge["train_end"],
+            challenge["validation_end"],
             int(challenge["validation_step_days_during_search"]),
-            out / "validation", args.workers, challenge,
+            out / "validation",
+            args.workers,
+            challenge,
         )
-        score = validation_score(summary)
-        accepted = score > best_score and parameter_file.exists()
-        record = {"generation": generation, "score": score, "accepted": accepted,
-                  "validation": summary, "seed": 1000 + generation}
+        council = evaluate_candidate(summary, council_config)
+        score = float(council["council_score"])
+        accepted = bool(council["promotion_eligible"]) and score > best_score and parameter_file.exists()
+        record = {
+            "generation": generation,
+            "score": score,
+            "accepted": accepted,
+            "validation": summary,
+            "agent_council": council,
+            "seed": 1000 + generation,
+        }
         (out / "generation.json").write_text(
             json.dumps(record, indent=2, sort_keys=True), encoding="utf-8"
         )
@@ -178,12 +236,17 @@ def main() -> int:
                 shutil.copy2(champion, parameter_file)
             elif previous.exists():
                 shutil.copy2(previous, parameter_file)
-        state.update({
-            "generation": generation,
-            "best_score": None if best_score == float("-inf") else best_score,
-            "updated_at_utc": datetime.now(UTC).isoformat(),
-        })
-        state_path.write_text(json.dumps(state, indent=2, sort_keys=True), encoding="utf-8")
+        state.update(
+            {
+                "generation": generation,
+                "best_score": None if best_score == float("-inf") else best_score,
+                "supervisor": council_config["supervisor"]["name"],
+                "updated_at_utc": datetime.now(UTC).isoformat(),
+            }
+        )
+        state_path.write_text(
+            json.dumps(state, indent=2, sort_keys=True), encoding="utf-8"
+        )
         print(json.dumps(record, sort_keys=True))
     return 0
 
