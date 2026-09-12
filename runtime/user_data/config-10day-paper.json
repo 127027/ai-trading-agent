@@ -28,6 +28,8 @@
   "exit_pricing": {"price_side": "same", "use_order_book": true, "order_book_top": 1},
   "exchange": {
     "name": "binance",
+    "key": "",
+    "secret": "",
     "ccxt_config": {
       "enableRateLimit": true,
       "options": {
@@ -36,7 +38,14 @@
         "fetchMargins": false,
         "fetchMarkets": {"types": ["spot"]}
       },
-      "has": {"fetchCurrencies": false}
+      "has": {"fetchCurrencies": false},
+      "urls": {
+        "api": {
+          "public": "https://data-api.binance.vision/api/v3",
+          "private": "https://data-api.binance.vision/api/v3",
+          "v1": "https://data-api.binance.vision/api/v1"
+        }
+      }
     },
     "ccxt_async_config": {
       "enableRateLimit": true,
@@ -46,7 +55,14 @@
         "fetchMargins": false,
         "fetchMarkets": {"types": ["spot"]}
       },
-      "has": {"fetchCurrencies": false}
+      "has": {"fetchCurrencies": false},
+      "urls": {
+        "api": {
+          "public": "https://data-api.binance.vision/api/v3",
+          "private": "https://data-api.binance.vision/api/v3",
+          "v1": "https://data-api.binance.vision/api/v1"
+        }
+      }
     },
     "pair_whitelist": [
       "BTC/USDT", "ETH/USDT", "SOL/USDT", "BNB/USDT", "XRP/USDT", "ADA/USDT"
