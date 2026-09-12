@@ -37,7 +37,10 @@ def evaluate_candidate(summary: dict[str, Any], council_config: dict[str, Any]) 
         "agent": "ValidationCritic",
         "score": 0.0,
         "veto": bool(validation_reasons),
-        "reason": "; ".join(validation_reasons) or "Validation evidence is complete enough to review.",
+        "reason": (
+            "; ".join(validation_reasons)
+            or "Validation evidence is complete enough to review."
+        ),
     }
 
     risk_reasons: list[str] = []
