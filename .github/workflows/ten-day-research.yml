@@ -80,7 +80,22 @@ jobs:
             --python .venv/bin/python --freqtrade .venv/bin/freqtrade \
             --output research/ten_day_challenge/results/ops-watchdog-preflight.json
 
-      - name: Supervisor runs challenger council
+      - name: OpsWatchdog validator smoke test
+        run: |
+          rm -rf research/ten_day_challenge/results/ops-validator-smoke
+          .venv/bin/python research/ten_day_challenge/rolling_windows.py \
+            --freqtrade .venv/bin/freqtrade \
+            --config runtime/user_data/config-10day-research.json \
+            --userdir runtime/user_data \
+            --strategy-path runtime/user_data/strategies/candidates \
+            --data-dir "$DATA_DIR" --strategy TenDayMomentumV1 \
+            --start 2026-05-01 --end 2026-05-11 \
+            --window-days 10 --step-days 10 --starting-balance 100 \
+            --target-balance 200 --near-ruin-balance 10 --fee 0.0015 \
+            --detail-timeframe 5m --workers 1 \
+            --output-dir research/ten_day_challenge/results/ops-validator-smoke
+
+      - name: ResearchAgent generates challengers and Supervisor runs council
         run: |
           BUDGET=250
           if [ "$SEGMENT" = "2" ]; then BUDGET=120; fi
