@@ -29,6 +29,15 @@ def enforce_public_market_state(instance: Any) -> None:
     instance.urls["apiBackup"] = dict(api)
 
 
+def compact_stack() -> str:
+    """Return a compact caller chain that survives rolling-window log truncation."""
+    frames = traceback.extract_stack(limit=10)[:-1]
+    return " > ".join(
+        f"{frame.filename.rsplit('/', 1)[-1]}:{frame.lineno}:{frame.name}"
+        for frame in frames
+    )
+
+
 def patch_binance_class(exchange_class: type[Any]) -> None:
     """Force one CCXT Binance class to use public-only Spot metadata."""
     original: Callable[..., dict[str, Any]] = exchange_class.describe
@@ -110,15 +119,16 @@ def patch_binance_class(exchange_class: type[Any]) -> None:
     def check_required_credentials(self: Any, error: bool = True) -> bool:
         try:
             return bool(original_check(self, error))
-        except Exception:
-            print(
+        except Exception as exc:
+            caller = compact_stack()
+            marker = (
                 "TEN_DAY_CREDENTIAL_FAILURE "
                 f"class={type(self).__module__}.{type(self).__name__} "
-                f"error={error} has_api_key={bool(getattr(self, 'apiKey', None))}",
-                file=sys.stderr,
+                f"error={error} has_api_key={bool(getattr(self, 'apiKey', None))} "
+                f"caller={caller}"
             )
-            print("".join(traceback.format_stack(limit=12)), file=sys.stderr)
-            raise
+            print(marker, file=sys.stderr)
+            raise type(exc)(f"{exc}; {marker}") from exc
 
     check_required_credentials._ten_day_public_only = True  # type: ignore[attr-defined]
     exchange_class.check_required_credentials = check_required_credentials
