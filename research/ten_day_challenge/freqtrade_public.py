@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 """Run Freqtrade with Binance restricted to keyless public market metadata.
 
-This adapter is research-only. It disables CCXT's authenticated currency metadata
-lookup before Freqtrade creates its exchange objects and routes only Binance's
-public Spot market metadata endpoints through data-api.binance.vision.
+This adapter is research-only. It blocks CCXT's authenticated Binance currency
+metadata path before Freqtrade creates its exchange objects and restricts market
+loading to public Spot exchange information from data-api.binance.vision.
 """
 
 from __future__ import annotations
 
+import inspect
 from collections.abc import Callable
 from typing import Any
 
@@ -24,6 +25,9 @@ def patch_binance_class(exchange_class: type[Any]) -> None:
     def describe(self: Any) -> dict[str, Any]:
         payload = original(self)
         payload.setdefault("has", {})["fetchCurrencies"] = False
+        options = payload.setdefault("options", {})
+        options["fetchMargins"] = False
+        options["fetchMarkets"] = {"types": ["spot"]}
         api = payload.setdefault("urls", {}).setdefault("api", {})
         api["public"] = PUBLIC_SPOT_API
         api["v1"] = PUBLIC_SPOT_API_V1
@@ -31,6 +35,22 @@ def patch_binance_class(exchange_class: type[Any]) -> None:
 
     describe._ten_day_public_only = True  # type: ignore[attr-defined]
     exchange_class.describe = describe
+
+    original_fetch_currencies = exchange_class.fetch_currencies
+    if inspect.iscoroutinefunction(original_fetch_currencies):
+
+        async def fetch_currencies(self: Any, params: dict[str, Any] | None = None) -> dict[str, Any]:
+            del self, params
+            return {}
+
+    else:
+
+        def fetch_currencies(self: Any, params: dict[str, Any] | None = None) -> dict[str, Any]:
+            del self, params
+            return {}
+
+    fetch_currencies._ten_day_public_only = True  # type: ignore[attr-defined]
+    exchange_class.fetch_currencies = fetch_currencies
 
 
 def patch_ccxt() -> None:
