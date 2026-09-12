@@ -73,6 +73,13 @@ jobs:
             --timeframes 15m 5m \
             --start 2025-09-01 --end "$END" --data-dir "$DATA_DIR"
 
+      - name: OpsWatchdog preflight
+        run: |
+          .venv/bin/python research/ten_day_challenge/watchdog.py \
+            --root "$GITHUB_WORKSPACE" --data-dir "$DATA_DIR" \
+            --python .venv/bin/python --freqtrade .venv/bin/freqtrade \
+            --output research/ten_day_challenge/results/ops-watchdog-preflight.json
+
       - name: Supervisor runs challenger council
         run: |
           BUDGET=250
@@ -138,6 +145,7 @@ jobs:
             research/ten_day_challenge/state.json \
             research/ten_day_challenge/champion/TenDayMomentumV1.json \
             research/ten_day_challenge/champion/summary.json \
+            research/ten_day_challenge/results/ops-watchdog-preflight.json \
             runtime/user_data/strategies/candidates/TenDayMomentumV1.json \
             runtime/user_data/strategies/candidates/TenDayMomentumPaperV1.json; do
             if [ -f "$file" ]; then git add -f "$file"; fi
