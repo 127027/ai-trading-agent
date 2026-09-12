@@ -64,6 +64,7 @@ jobs:
         with:
           path: .research-data/binance
           key: binance-spot-20220901-20260901-15m-5m-v1
+          save-always: true
 
       - name: Download four years of public Binance data
         if: steps.market-cache.outputs.cache-hit != 'true'
