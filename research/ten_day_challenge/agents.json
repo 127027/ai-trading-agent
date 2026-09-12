@@ -1,5 +1,42 @@
 {
-  "schema_version": 3,
+  "schema_version": 4,
+  "raster_policy": {
+    "rule": "Every generation starts at raster 1. Any technical failure in a later raster returns to raster 1 after a whitelisted repair before work may continue.",
+    "on_failure": "return_to_raster_1",
+    "manual_stop_only": true,
+    "ordered_rasters": [
+      {
+        "raster": 1,
+        "agent": "OpsWatchdog",
+        "purpose": "Verify executables, dependencies, public data, configs, checkpoints, safety boundaries and validator health before any research work."
+      },
+      {
+        "raster": 2,
+        "agent": "ResearchAgent",
+        "purpose": "Generate and optimize challenger hypotheses using training data only."
+      },
+      {
+        "raster": 3,
+        "agent": "QuantAgent",
+        "purpose": "Backtest and score repeatable target hits, returns and trade evidence."
+      },
+      {
+        "raster": 4,
+        "agent": "ValidationCritic",
+        "purpose": "Reject incomplete, failed, cherry-picked or statistically fragile validation evidence."
+      },
+      {
+        "raster": 5,
+        "agent": "RiskAgent",
+        "purpose": "Apply drawdown and near-ruin risk gates with veto authority."
+      },
+      {
+        "raster": 6,
+        "agent": "TenDaySupervisor",
+        "purpose": "Promote only a superior non-vetoed challenger, checkpoint state, then start the next generation at raster 1."
+      }
+    ]
+  },
   "supervisor": {
     "name": "TenDaySupervisor",
     "role": "Research manager and sole promotion authority",
@@ -15,8 +52,9 @@
   },
   "operations_agent": {
     "name": "OpsWatchdog",
-    "role": "Monitor research health, executables, dependencies, data, validator smoke tests, checkpoints and stalled or failed runs without influencing strategy scores",
+    "role": "Raster 1 gate: continuously verify research health, executables, dependencies, public data, configs, validator smoke tests, checkpoints and stalled or failed runs without influencing strategy scores",
     "writes_repository": false,
+    "may_apply_whitelisted_repairs": true,
     "votes_on_strategy": false,
     "may_enable_live": false,
     "may_use_exchange_secrets": false
