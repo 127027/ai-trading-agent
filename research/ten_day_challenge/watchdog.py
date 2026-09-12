@@ -20,6 +20,29 @@ def check_file(path: Path, failures: list[str]) -> None:
         failures.append(f"missing file: {path}")
 
 
+def install_public_freqtrade_launcher(
+    root: Path, python_executable: Path, freqtrade_executable: Path
+) -> None:
+    """Replace the ephemeral Freqtrade entrypoint with the public-only adapter.
+
+    The virtualenv entrypoint is recreated on every GitHub runner, so changing it
+    here never mutates trading logic in the repository. The adapter only changes
+    Binance metadata loading and cannot enable live trading or add credentials.
+    """
+    adapter = root / "research/ten_day_challenge/freqtrade_public.py"
+    if not adapter.is_file() or not freqtrade_executable.is_file():
+        return
+
+    launcher = (
+        f"#!{python_executable.resolve()}\n"
+        "from pathlib import Path\n"
+        "import runpy\n"
+        f"runpy.run_path({str(adapter)!r}, run_name='__main__')\n"
+    )
+    freqtrade_executable.write_text(launcher, encoding="utf-8")
+    freqtrade_executable.chmod(0o755)
+
+
 def check_executable(path: Path, failures: list[str]) -> None:
     if not path.is_file():
         failures.append(f"missing executable: {path}")
@@ -75,6 +98,7 @@ def main() -> int:
         root / "research/ten_day_challenge/agents.json",
         root / "research/ten_day_challenge/evolve.py",
         root / "research/ten_day_challenge/rolling_windows.py",
+        root / "research/ten_day_challenge/freqtrade_public.py",
         root / "runtime/user_data/config-10day-research.json",
         root / "runtime/user_data/strategies/candidates/TenDayMomentumV1.py",
         root / "runtime/user_data/hyperopts/TenDayChallengeLoss.py",
@@ -82,6 +106,7 @@ def main() -> int:
     for path in required:
         check_file(path, failures)
 
+    install_public_freqtrade_launcher(root, args.python, args.freqtrade)
     check_executable(args.python, failures)
     check_executable(args.freqtrade, failures)
     check_module("filelock", failures)
@@ -100,6 +125,7 @@ def main() -> int:
             "live_trading_enabled": False,
             "exchange_secrets_required": False,
             "strategy_voting": False,
+            "public_market_metadata_only": True,
         },
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
