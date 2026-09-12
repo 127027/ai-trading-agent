@@ -10,6 +10,23 @@ from pathlib import Path
 from repair_known_failures import repair
 
 
+def run_streamed(command: list[str], cwd: Path, log_path: Path) -> int:
+    with log_path.open("w", encoding="utf-8") as log:
+        process = subprocess.Popen(
+            command,
+            cwd=cwd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            bufsize=1,
+        )
+        assert process.stdout is not None
+        for line in process.stdout:
+            print(line, end="")
+            log.write(line)
+        return process.wait()
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--root", type=Path, default=Path.cwd())
@@ -32,25 +49,16 @@ def main() -> int:
     attempts = max(1, args.attempts)
 
     for attempt in range(1, attempts + 1):
-        completed = subprocess.run(
-            command,
-            cwd=root,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            text=True,
-            check=False,
-        )
-        output = completed.stdout or ""
-        args.log.write_text(output, encoding="utf-8")
-        print(output, end="")
+        returncode = run_streamed(command, root, args.log)
+        output = args.log.read_text(encoding="utf-8", errors="replace")
         record: dict[str, object] = {
             "attempt": attempt,
-            "returncode": completed.returncode,
+            "returncode": returncode,
             "repairs": [],
         }
         history.append(record)
 
-        if completed.returncode == 0:
+        if returncode == 0:
             report = {
                 "agent": "OpsWatchdog",
                 "status": "healthy",
@@ -72,7 +80,7 @@ def main() -> int:
             }
             args.report.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
             print(json.dumps(report, sort_keys=True))
-            return completed.returncode or 2
+            return returncode or 2
 
         print(f"OpsWatchdog applied safe repairs: {actions}")
 
