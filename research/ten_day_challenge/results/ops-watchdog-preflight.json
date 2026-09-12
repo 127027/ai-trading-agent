@@ -1,6 +1,6 @@
 {
   "agent": "OpsWatchdog",
-  "checked_at_utc": "2026-09-12T15:30:25.487024+00:00",
+  "checked_at_utc": "2026-09-12T16:24:02.186725+00:00",
   "checkpoint": {
     "champion_present": false,
     "generation_records": 0,
@@ -10,11 +10,14 @@
     "bytes": 16967968,
     "files": 12
   },
-  "failures": [],
-  "healthy": true,
+  "failures": [
+    "executable failed: .venv/bin/freqtrade: ay_challenge/freqtrade_public.py\", line 60, in <module>\n    raise SystemExit(main())\n                     ^^^^^^\n  File \"/home/runner/work/ai-trading-agent/ai-trading-agent/research/ten_day_challenge/freqtrade_public.py\", line 52, in main\n    patch_ccxt()\n  File \"/home/runner/work/ai-trading-agent/ai-trading-agent/research/ten_day_challenge/freqtrade_public.py\", line 38, in patch_ccxt\n    from ccxt.async_support.binance import binance as async_binance\nModuleNotFoundError: No module named 'ccxt'\n"
+  ],
+  "healthy": false,
   "safety": {
     "exchange_secrets_required": false,
     "live_trading_enabled": false,
+    "public_market_metadata_only": true,
     "strategy_voting": false
   }
 }
