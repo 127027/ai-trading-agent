@@ -11,38 +11,38 @@
     "window_days": 10
   },
   "summary": {
-    "max_final_balance": null,
-    "mean_final_balance": null,
-    "mean_return_pct": null,
-    "median_final_balance": null,
-    "median_max_drawdown_pct": null,
-    "median_return_pct": null,
-    "min_final_balance": null,
+    "max_final_balance": 102.93564153,
+    "mean_final_balance": 102.93564153,
+    "mean_return_pct": 2.9356415299999883,
+    "median_final_balance": 102.93564153,
+    "median_max_drawdown_pct": 2.4296777899999995,
+    "median_return_pct": 2.9356415299999883,
+    "min_final_balance": 102.93564153,
     "near_ruin_count": 0,
     "near_ruin_rate": 0.0,
     "target_hit_count": 0,
     "target_hit_rate": 0.0,
-    "valid": false,
-    "windows_completed": 0,
-    "windows_failed": 1,
+    "valid": true,
+    "windows_completed": 1,
+    "windows_failed": 0,
     "windows_requested": 1
   },
   "windows": [
     {
       "end": "2026-05-11",
-      "error": "  File \"/home/runner/work/ai-trading-agent/ai-trading-agent/.venv/lib/python3.12/site-packages/freqtrade/exchange/common.py\", line 196, in wrapper\n    raise ex\n  File \"/home/runner/work/ai-trading-agent/ai-trading-agent/.venv/lib/python3.12/site-packages/freqtrade/exchange/common.py\", line 181, in wrapper\n    return f(*args, **kwargs)\n           ^^^^^^^^^^^^^^^^^^\n  File \"/home/runner/work/ai-trading-agent/ai-trading-agent/.venv/lib/python3.12/site-packages/freqtrade/exchange/exchange.py\", line 698, in _load_async_markets\n    markets = self.loop.run_until_complete(self._api_reload_markets(reload=reload))\n              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/opt/hostedtoolcache/Python/3.12.14/x64/lib/python3.12/asyncio/base_events.py\", line 691, in run_until_complete\n    return future.result()\n           ^^^^^^^^^^^^^^^\n  File \"/home/runner/work/ai-trading-agent/ai-trading-agent/.venv/lib/python3.12/site-packages/freqtrade/exchange/exchange.py\", line 689, in _api_reload_markets\n    raise TemporaryError(\nfreqtrade.exceptions.TemporaryError: Error in reload_markets due to AuthenticationError. Message: binance requires \"apiKey\" credential; TEN_DAY_CREDENTIAL_FAILURE class=ccxt.pro.binance.binance \nerror=True has_api_key=False caller=base_events.py:1999:_run_once > events.py:88:_run > binance.py:12473:request > exchange.py:1042:fetch2 > freqtrade_public.py:115:sign > freqtrade_public.py:115:sign\n> binance.py:12277:sign > freqtrade_public.py:136:check_required_credentials > freqtrade_public.py:138:check_required_credentials; TEN_DAY_CREDENTIAL_FAILURE class=ccxt.pro.binance.binance error=True \nhas_api_key=False caller=base_events.py:645:run_forever > base_events.py:1999:_run_once > events.py:88:_run > binance.py:12473:request > exchange.py:1042:fetch2 > freqtrade_public.py:115:sign > \nfreqtrade_public.py:115:sign > binance.py:12277:sign > freqtrade_public.py:138:check_required_credentials; TEN_DAY_SIGN_FAILURE path=equity/market/exchangeInfo api='sapi' method=GET; \nTEN_DAY_SIGN_FAILURE path=equity/market/exchangeInfo api='sapi' method=GET\n2026-09-12 17:28:01,536 - freqtrade - ERROR - Could not load markets, therefore cannot start. Please investigate the above error for more details.",
-      "final_balance": 100.0,
-      "max_drawdown_pct": null,
+      "error": null,
+      "final_balance": 102.93564153,
+      "max_drawdown_pct": 2.4296777899999995,
       "near_ruin": false,
-      "profit_factor": null,
-      "return_pct": 0.0,
+      "profit_factor": 1.7114409914673556,
+      "return_pct": 2.9356415299999883,
       "start": "2026-05-01",
       "starting_balance": 100.0,
       "target_balance": 200.0,
       "target_hit": false,
       "target_hit_at": null,
       "timerange": "20260501-20260511",
-      "trades": 0
+      "trades": 10
     }
   ]
 }

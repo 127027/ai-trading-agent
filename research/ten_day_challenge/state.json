@@ -1,0 +1,172 @@
+{
+  "best_generation": 1,
+  "best_score": -9.77359999978944e-06,
+  "current_agent": "OpsWatchdog",
+  "current_raster": 1,
+  "generation": 2,
+  "generation_in_progress": 2,
+  "last_failure": null,
+  "last_quant_review": {
+    "agent": "QuantAgent",
+    "reason": "Rewards repeatable 10-day target hits and median return.",
+    "score": -0.18019947359999922,
+    "veto": false
+  },
+  "last_raster_trace": {
+    "1": {
+      "agent": "OpsWatchdog",
+      "health": {
+        "agent": "OpsWatchdog",
+        "checked_at_utc": "2026-09-12T17:35:26.624482+00:00",
+        "checkpoint": {
+          "champion_present": true,
+          "generation_records": 1,
+          "state_present": true
+        },
+        "data": {
+          "bytes": 16967968,
+          "files": 12
+        },
+        "failures": [],
+        "healthy": true,
+        "safety": {
+          "exchange_secrets_required": false,
+          "live_trading_enabled": false,
+          "public_market_metadata_only": true,
+          "strategy_voting": false
+        }
+      },
+      "status": "passed"
+    },
+    "2": {
+      "agent": "ResearchAgent",
+      "status": "challenger_generated"
+    },
+    "3": {
+      "agent": "QuantAgent",
+      "review": {
+        "agent": "QuantAgent",
+        "reason": "Rewards repeatable 10-day target hits and median return.",
+        "score": -0.18019947359999922,
+        "veto": false
+      },
+      "status": "scored"
+    },
+    "4": {
+      "agent": "ValidationCritic",
+      "review": {
+        "agent": "ValidationCritic",
+        "reason": "Validation evidence is complete enough to review.",
+        "score": 0.0,
+        "veto": false
+      },
+      "status": "reviewed"
+    },
+    "5": {
+      "agent": "RiskAgent",
+      "review": {
+        "agent": "RiskAgent",
+        "reason": "Risk gates passed.",
+        "score": -0.18019947359999947,
+        "veto": false
+      },
+      "status": "reviewed"
+    },
+    "6": {
+      "agent": "TenDaySupervisor",
+      "status": "rejected"
+    }
+  },
+  "next_raster": 1,
+  "raster_history": [
+    {
+      "agent": "OpsWatchdog",
+      "at_utc": "2026-09-12T17:31:42.240109+00:00",
+      "generation": 1,
+      "raster": 1,
+      "status": "passed"
+    },
+    {
+      "agent": "ResearchAgent",
+      "at_utc": "2026-09-12T17:33:30.085711+00:00",
+      "generation": 1,
+      "raster": 2,
+      "status": "passed"
+    },
+    {
+      "agent": "QuantAgent",
+      "at_utc": "2026-09-12T17:35:22.797438+00:00",
+      "generation": 1,
+      "raster": 3,
+      "status": "passed"
+    },
+    {
+      "agent": "ValidationCritic",
+      "at_utc": "2026-09-12T17:35:22.798146+00:00",
+      "generation": 1,
+      "raster": 4,
+      "status": "passed"
+    },
+    {
+      "agent": "RiskAgent",
+      "at_utc": "2026-09-12T17:35:22.798494+00:00",
+      "generation": 1,
+      "raster": 5,
+      "status": "passed"
+    },
+    {
+      "agent": "TenDaySupervisor",
+      "at_utc": "2026-09-12T17:35:22.798870+00:00",
+      "generation": 1,
+      "raster": 6,
+      "status": "passed"
+    },
+    {
+      "agent": "OpsWatchdog",
+      "at_utc": "2026-09-12T17:35:26.630572+00:00",
+      "generation": 2,
+      "raster": 1,
+      "status": "passed"
+    },
+    {
+      "agent": "ResearchAgent",
+      "at_utc": "2026-09-12T17:37:14.100715+00:00",
+      "generation": 2,
+      "raster": 2,
+      "status": "passed"
+    },
+    {
+      "agent": "QuantAgent",
+      "at_utc": "2026-09-12T17:39:07.048421+00:00",
+      "generation": 2,
+      "raster": 3,
+      "status": "passed"
+    },
+    {
+      "agent": "ValidationCritic",
+      "at_utc": "2026-09-12T17:39:07.049325+00:00",
+      "generation": 2,
+      "raster": 4,
+      "status": "passed"
+    },
+    {
+      "agent": "RiskAgent",
+      "at_utc": "2026-09-12T17:39:07.049820+00:00",
+      "generation": 2,
+      "raster": 5,
+      "status": "passed"
+    },
+    {
+      "agent": "TenDaySupervisor",
+      "at_utc": "2026-09-12T17:39:07.050258+00:00",
+      "generation": 2,
+      "raster": 6,
+      "status": "passed"
+    }
+  ],
+  "raster_policy": "1-ops 2-research 3-quant 4-validation 5-risk 6-supervisor",
+  "raster_status": "generation_complete",
+  "schema_version": 3,
+  "supervisor": "TenDaySupervisor",
+  "updated_at_utc": "2026-09-12T17:39:07.050802+00:00"
+}
