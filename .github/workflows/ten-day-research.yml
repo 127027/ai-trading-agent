@@ -14,10 +14,11 @@ on:
 
 permissions:
   contents: write
+  actions: write
 
 concurrency:
   group: autonomous-10day-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   research:
@@ -207,3 +208,13 @@ jobs:
             git commit -m "research: checkpoint/self-heal segment ${SEGMENT} [skip ci]"
             git push origin "HEAD:${GITHUB_REF_NAME}"
           fi
+
+      - name: Continue autonomous research cycle
+        if: success()
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: |
+          .venv/bin/python research/ten_day_challenge/continue_research.py \
+            --repository "$GITHUB_REPOSITORY" \
+            --ref "$GITHUB_REF_NAME" \
+            --current-segment "$SEGMENT"
