@@ -20,6 +20,12 @@ PUBLIC_SPOT_API_V1 = "https://data-api.binance.vision/api/v1"
 
 def enforce_public_market_state(instance: Any) -> None:
     """Re-apply public-only market settings at the actual CCXT call boundary."""
+    # Freqtrade passes empty strings for dry-run credentials. CCXT 4.5.73 treats
+    # an empty apiKey as present (`is not None`) and then requests authenticated
+    # tokenized-equity metadata. Explicit None keeps the research exchange truly
+    # keyless and prevents that irrelevant SAPI path from being scheduled.
+    instance.apiKey = None
+    instance.secret = None
     instance.has["fetchCurrencies"] = False
     instance.options["fetchMargins"] = False
     instance.options["fetchMarkets"] = {"types": ["spot"]}
