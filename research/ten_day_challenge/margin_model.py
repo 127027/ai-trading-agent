@@ -11,6 +11,7 @@ import json
 import subprocess
 import tempfile
 from dataclasses import dataclass
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -57,14 +58,7 @@ def apply_isolated_margin(
     near_ruin_balance: float,
     spec: MarginSpec,
 ) -> dict[str, Any]:
-    """Apply isolated-margin economics to sequential long trades.
-
-    Freqtrade's ``profit_ratio`` already contains the configured round-trip fee
-    proxy on the underlying trade. Multiplying that return by leverage therefore
-    scales both market PnL and trading-cost drag with notional. Borrow interest is
-    charged separately. Liquidation is checked with each trade's recorded
-    ``min_rate`` so an adverse excursion cannot be hidden by a profitable close.
-    """
+    """Apply isolated-margin economics to sequential long trades."""
 
     if spec.direction != "long":
         raise ValueError("only long isolated-margin research is implemented")
@@ -81,8 +75,6 @@ def apply_isolated_margin(
     total_interest = 0.0
     trades_processed = 0
 
-    # Asset value / debt <= margin level triggers liquidation. For a long opened
-    # with equity E and leverage L: notional=L*E, debt=(L-1)*E.
     liquidation_price_ratio = (
         spec.liquidation_margin_level * (spec.leverage - 1) / spec.leverage
     )
@@ -113,8 +105,6 @@ def apply_isolated_margin(
             lowest = min(lowest, equity)
             if peak > 0:
                 max_drawdown = max(max_drawdown, (peak - equity) / peak)
-            # After liquidation, the original spot export no longer represents
-            # the signal path. Continuing through later trades would fabricate it.
             break
 
         profit_ratio = _float(trade, "profit_ratio")
@@ -161,7 +151,7 @@ def run_margin_window(
     detail_timeframe: str | None,
     spec: MarginSpec,
 ) -> tuple[WindowResult, dict[str, Any]]:
-    """Run the spot signal engine, then apply strict isolated-margin accounting."""
+    """Run the signal engine, then apply strict isolated-margin accounting."""
 
     with tempfile.TemporaryDirectory(prefix="ten-day-margin-window-") as temporary:
         export_directory = Path(temporary) / "exports"
@@ -204,7 +194,10 @@ def run_margin_window(
             if not isinstance(stats, dict):
                 raise KeyError(f"Strategy {strategy!r} missing from export")
             trades = list(stats.get("trades", []))
-            trades.sort(key=lambda item: close_time(item) or close_time({}) or 0)
+            trades.sort(
+                key=lambda item: close_time(item)
+                or datetime.max.replace(tzinfo=UTC)
+            )
             margin = apply_isolated_margin(
                 trades,
                 starting_balance=starting_balance,
