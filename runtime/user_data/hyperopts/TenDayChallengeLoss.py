@@ -65,23 +65,27 @@ class TenDayChallengeLoss(IHyperOptLoss):
         hit_250 = float((returns >= 1.50).mean())
         median_return = float(returns.median())
         mean_return = float(returns.mean())
+        best_return = float(returns.max())
 
-        # Binary mission dominates: >=200 is the only success state. Intermediate
-        # thresholds only provide gradient before the first true hit.
+        # Before the first validated 200 hit, return velocity dominates. Drawdown
+        # and near-ruin are intentionally not optimization penalties.
         reward = (
-            240.0 * hit_200
-            + 24.0 * hit_250
-            + 6.0 * hit_175
-            + 2.0 * hit_150
-            + 0.4 * max(-1.0, min(3.0, median_return))
-            + 0.1 * max(-1.0, min(3.0, mean_return))
+            320.0 * hit_200
+            + 40.0 * hit_250
+            + 10.0 * hit_175
+            + 4.0 * hit_150
+            + 1.0 * max(-1.0, min(4.0, best_return))
+            + 0.5 * max(-1.0, min(3.0, median_return))
+            + 0.2 * max(-1.0, min(3.0, mean_return))
         )
 
-        # A strategy that rarely trades is strongly disfavored for a 10-day mission.
-        # Drawdown/near-ruin are deliberately not optimization vetoes.
+        # A ten-day 100->200 mission needs substantially more opportunity than a
+        # handful of trades. Encourage roughly 1-2 closed trades/day while keeping
+        # the binary 200-hit reward dominant, so overtrading cannot beat real hits.
         days = max((max_date - min_date).total_seconds() / 86400.0, 1.0)
         trades_per_day = trade_count / days
-        inactivity_penalty = max(0.0, 0.30 - trades_per_day) * 80.0
+        inactivity_penalty = max(0.0, 1.0 - trades_per_day) * 45.0
+        activity_reward = min(2.0, trades_per_day) * 2.0
 
-        loss = -reward + inactivity_penalty
+        loss = -reward - activity_reward + inactivity_penalty
         return float(loss) if math.isfinite(loss) else 1000.0
