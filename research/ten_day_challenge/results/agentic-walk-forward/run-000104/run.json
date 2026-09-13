@@ -1,0 +1,121 @@
+{
+  "agent_council": {
+    "council_score": 0.0,
+    "primary_objective": "maximize_hit_rate_200",
+    "promotion_eligible": true,
+    "reviews": [
+      {
+        "agent": "QuantAgent",
+        "reason": "Primary objective is repeatable >=200 USDT outcomes in 10 days; 150/175/250 thresholds are secondary learning signals.",
+        "score": 0.0,
+        "veto": false
+      },
+      {
+        "agent": "ValidationCritic",
+        "reason": "Validation evidence is complete enough to review.",
+        "score": 0.0,
+        "veto": false
+      },
+      {
+        "agent": "RiskAgent",
+        "reason": "Research diagnostic only: near-ruin=0.00%, median drawdown=0.00%. Aggressive valid candidates are not vetoed.",
+        "score": 0.0,
+        "veto": false
+      }
+    ],
+    "supervisor": "TenDaySupervisor",
+    "veto": false,
+    "veto_agents": []
+  },
+  "allowed_history_end": "2023-11-25",
+  "allowed_history_start": "2022-11-25",
+  "blind_test_end": "2023-12-05",
+  "blind_test_start": "2023-11-25",
+  "completed_at_utc": "2026-09-13T21:27:24.802339+00:00",
+  "final_balance": 100.0,
+  "hyperopt_epochs": 60,
+  "hypothesis": {
+    "allowed_families": [
+      "mean_reversion",
+      "volatility_expansion"
+    ],
+    "blind_window_seen": false,
+    "external_research_id": null,
+    "hypothesis_id": "715623a34129bbb4",
+    "learning_directive": "negative_return_improve_entry_quality_without_becoming_passive",
+    "reasons": [
+      "regime=bull_trend",
+      "binary objective: >=200 is HIT; every lower final balance is MISS learning evidence",
+      "choose by regime-specific evidence plus exploration without discarding materially positive evidence"
+    ],
+    "regime": "bull_trend"
+  },
+  "learning_directive_for_next_run": "increase_signal_recall_and_trade_activity",
+  "market_regime": {
+    "blind_window_seen": false,
+    "evidence_cutoff": "2023-11-25",
+    "label": "bull_trend",
+    "median_annualized_vol_30d": 0.6263767858684215,
+    "median_return_30d": 0.14160517796717365,
+    "median_return_90d": 0.35646754566601524,
+    "median_trend_gap": 0.0442293264054725,
+    "pair_features": {
+      "ADA/USDT": {
+        "annualized_vol_30d": 0.6429478961047908,
+        "return_30d": 0.3753561253561253,
+        "return_90d": 0.4796934865900382,
+        "trend_gap": 0.07683146870813129
+      },
+      "BNB/USDT": {
+        "annualized_vol_30d": 0.5727264527425974,
+        "return_30d": 0.04772624943719039,
+        "return_90d": 0.07482678983833724,
+        "trend_gap": 0.0076023801429880855
+      },
+      "BTC/USDT": {
+        "annualized_vol_30d": 0.42542397328287196,
+        "return_30d": 0.09327212825816278,
+        "return_90d": 0.4495535098282417,
+        "trend_gap": 0.04364493095321076
+      },
+      "ETH/USDT": {
+        "annualized_vol_30d": 0.6098056756320522,
+        "return_30d": 0.16433427524270483,
+        "return_90d": 0.26338158150378876,
+        "trend_gap": 0.044813721857734246
+      },
+      "SOL/USDT": {
+        "annualized_vol_30d": 1.437152215336081,
+        "return_30d": 0.7527743526510482,
+        "return_90d": 1.8023656973878759,
+        "trend_gap": 0.15204761858162774
+      },
+      "XRP/USDT": {
+        "annualized_vol_30d": 0.6530086370868443,
+        "return_30d": 0.11887608069164246,
+        "return_90d": 0.18753584400688195,
+        "trend_gap": 0.013249887496142643
+      }
+    }
+  },
+  "max_drawdown_pct": 0.0,
+  "near_ruin": false,
+  "optimization_timerange_start": "2022-11-29",
+  "outcome": "MISS",
+  "parameter_fingerprint": "105e81b1108c66df204c35454718b70df8eaec077473cc34ab004e3872936876",
+  "raster_restart_attempts": 0,
+  "return_pct": 0.0,
+  "run": 104,
+  "safety": {
+    "blind_window_used_before_raster_5": false,
+    "exchange_secrets": false,
+    "live_trading": false,
+    "research_only": true
+  },
+  "search_seed": 222575,
+  "selected_family": "volatility_expansion",
+  "starting_balance": 100.0,
+  "target_balance": 200.0,
+  "target_hit_at": null,
+  "trades": 0
+}
