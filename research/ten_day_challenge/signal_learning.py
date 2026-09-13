@@ -9,7 +9,13 @@ from __future__ import annotations
 from typing import Any
 
 
-def _bucket(memory: dict[str, Any], regime: str, family: str, pair: str, tag: str) -> dict[str, Any]:
+def _bucket(
+    memory: dict[str, Any],
+    regime: str,
+    family: str,
+    pair: str,
+    tag: str,
+) -> dict[str, Any]:
     regimes = memory.setdefault("signal_context_stats", {})
     families = regimes.setdefault(regime, {})
     pairs = families.setdefault(family, {})
