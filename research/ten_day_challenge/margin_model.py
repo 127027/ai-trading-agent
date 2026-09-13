@@ -3,6 +3,8 @@
 This module never talks to Binance and never places orders. It applies documented
 isolated-margin leverage/liquidation rules to Freqtrade-exported trades so the
 research loop cannot claim a leveraged HIT by merely multiplying a spot balance.
+It also emits per-trade evidence for later runs. That evidence is written only
+after the blind window has completed and is never used to redesign the current run.
 """
 
 from __future__ import annotations
@@ -44,11 +46,59 @@ def _float(trade: dict[str, Any], key: str) -> float:
     return float(value)
 
 
+def _optional_float(trade: dict[str, Any], key: str) -> float | None:
+    value = trade.get(key)
+    return None if value is None else float(value)
+
+
 def _duration_days(trade: dict[str, Any]) -> float:
     minutes = trade.get("trade_duration")
     if minutes is None:
         return 0.0
     return max(0.0, float(minutes)) / 1440.0
+
+
+def _trade_evidence(
+    trade: dict[str, Any],
+    *,
+    leverage: int,
+    liquidated: bool,
+    interest_paid: float,
+    equity_before: float,
+    equity_after: float,
+) -> dict[str, Any]:
+    open_rate = _float(trade, "open_rate")
+    close_rate = _optional_float(trade, "close_rate")
+    min_rate = _float(trade, "min_rate")
+    max_rate = _optional_float(trade, "max_rate")
+    profit_ratio = _optional_float(trade, "profit_ratio") or 0.0
+    mae_pct = (min_rate / open_rate - 1.0) * 100.0 if open_rate else 0.0
+    mfe_pct = None
+    if max_rate is not None and open_rate:
+        mfe_pct = (max_rate / open_rate - 1.0) * 100.0
+    opened = trade.get("open_date") or trade.get("open_date_utc")
+    closed = trade.get("close_date") or trade.get("close_date_utc")
+    return {
+        "pair": str(trade.get("pair") or "unknown"),
+        "enter_tag": str(trade.get("enter_tag") or "unknown"),
+        "exit_reason": str(trade.get("exit_reason") or "unknown"),
+        "open_date": opened,
+        "close_date": closed,
+        "open_rate": open_rate,
+        "close_rate": close_rate,
+        "profit_ratio_spot": profit_ratio,
+        "leveraged_profit_ratio_before_interest": profit_ratio * leverage,
+        "mae_pct": mae_pct,
+        "mfe_pct": mfe_pct,
+        "trade_duration_minutes": float(trade.get("trade_duration") or 0.0),
+        "leverage": leverage,
+        "interest_paid": interest_paid,
+        "equity_before": equity_before,
+        "equity_after": equity_after,
+        "equity_change": equity_after - equity_before,
+        "profitable": equity_after > equity_before,
+        "liquidated": liquidated,
+    }
 
 
 def apply_isolated_margin(
@@ -75,6 +125,7 @@ def apply_isolated_margin(
     liquidation_trade_index: int | None = None
     total_interest = 0.0
     trades_processed = 0
+    trade_evidence: list[dict[str, Any]] = []
 
     liquidation_price_ratio = (
         spec.liquidation_margin_level * (spec.leverage - 1) / spec.leverage
@@ -83,6 +134,7 @@ def apply_isolated_margin(
     for index, trade in enumerate(trades):
         if equity <= 0.0:
             break
+        equity_before = equity
         open_rate = _float(trade, "open_rate")
         min_rate = _float(trade, "min_rate")
         if open_rate <= 0.0:
@@ -106,6 +158,16 @@ def apply_isolated_margin(
             lowest = min(lowest, equity)
             if peak > 0:
                 max_drawdown = max(max_drawdown, (peak - equity) / peak)
+            trade_evidence.append(
+                _trade_evidence(
+                    trade,
+                    leverage=spec.leverage,
+                    liquidated=True,
+                    interest_paid=interest,
+                    equity_before=equity_before,
+                    equity_after=equity,
+                )
+            )
             break
 
         profit_ratio = _float(trade, "profit_ratio")
@@ -117,6 +179,16 @@ def apply_isolated_margin(
             max_drawdown = max(max_drawdown, (peak - equity) / peak)
         if hit_at_index is None and equity >= target_balance:
             hit_at_index = index
+        trade_evidence.append(
+            _trade_evidence(
+                trade,
+                leverage=spec.leverage,
+                liquidated=False,
+                interest_paid=interest,
+                equity_before=equity_before,
+                equity_after=equity,
+            )
+        )
 
     return {
         "final_balance": equity,
@@ -130,6 +202,7 @@ def apply_isolated_margin(
         "liquidation_price_ratio": liquidation_price_ratio,
         "borrow_interest_paid": total_interest,
         "trades_processed": trades_processed,
+        "trade_evidence": trade_evidence,
         "product": spec.product,
         "direction": spec.direction,
         "leverage": spec.leverage,
