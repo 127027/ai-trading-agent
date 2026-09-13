@@ -24,9 +24,10 @@ def test_six_rasters_have_distinct_development_responsibilities():
     ]
     assert config["self_development"]["owner_raster"] == 3
     assert config["objective"]["stop_after_first_valid_hit"] is True
+    assert config["raster_policy"]["on_any_raster_rejection"] == "return_same_run_to_raster_1"
 
 
-def test_research_plan_changes_with_regime_specific_evidence():
+def test_research_plan_keeps_strong_regime_evidence_while_exploring():
     memory = evolution.initial_memory()
     memory["family_regime_stats"] = {
         "bull_trend": {
@@ -57,7 +58,10 @@ def test_research_plan_changes_with_regime_specific_evidence():
         run_id=40,
         inbox={"ideas": []},
     )
-    assert plan["allowed_families"][0] == "trend_pullback"
+    # A proven-better family for this regime must stay in the research shortlist,
+    # while the second slot may deliberately explore an untested family.
+    assert "trend_pullback" in plan["allowed_families"]
+    assert "breakout" not in plan["allowed_families"]
     assert plan["blind_window_seen"] is False
 
 
