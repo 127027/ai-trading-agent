@@ -1,5 +1,34 @@
 {
   "schema_version": 1,
   "policy": "Ideas may come from external/web research, but raster 3 may only consume an idea after its strategy family is implemented and the Germany/Saarland research-policy gate allows the modeled market. Blind-window information is never written here.",
-  "ideas": []
+  "ideas": [
+    {
+      "id": "web-2026-regime-bb-breakout-vs-reversion",
+      "implemented_family": "breakout",
+      "paired_family": "mean_reversion",
+      "status": "new",
+      "hypothesis": "Compare breakout and mean-reversion families conditionally by pre-window volatility/trend regime instead of judging either family globally.",
+      "source_title": "Bollinger Bands under Varying Market Regimes: A Comparative Study of Breakout and Mean-Reversion Strategies in BTC/USDT",
+      "source_url": "https://papers.ssrn.com/sol3/papers.cfm?abstract_id=5775962",
+      "research_note": "Use only as a hypothesis source. The paper reports regime-dependent behavior; our own blind windows must decide whether it generalizes to this bot and fee model."
+    },
+    {
+      "id": "web-2026-realized-volatility-regime-layer",
+      "implemented_family": "volatility_expansion",
+      "status": "new",
+      "hypothesis": "Treat short-vs-long realized volatility structure plus normalized direction as a control layer for choosing strategy family.",
+      "source_title": "Detecting Volatility Regimes in Crypto Markets using Realized Volatility Structure and Normalized Momentum",
+      "source_url": "https://papers.ssrn.com/sol3/papers.cfm?abstract_id=5920642",
+      "research_note": "Current EvidenceRegimeAgent uses return, volatility and trend gap; test whether a volatility-expansion family performs better specifically in expansion regimes."
+    },
+    {
+      "id": "web-2026-short-horizon-crypto-reversal",
+      "implemented_family": "mean_reversion",
+      "status": "new",
+      "hypothesis": "Test short-horizon reversal only in regimes where expected gross edge can plausibly exceed the configured round-trip costs; do not assume unconditional profitability.",
+      "source_title": "Short-horizon mean reversion in cryptocurrency markets: a matched cross-market measurement",
+      "source_url": "https://arxiv.org/abs/2608.21888",
+      "research_note": "The paper reports pervasive 15-minute directional reversal but also reports gross edge below its benchmark spot round-trip cost, so transaction-cost survival is a mandatory gate."
+    }
+  ]
 }
