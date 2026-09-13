@@ -1,0 +1,121 @@
+{
+  "agent_council": {
+    "council_score": 0.0,
+    "primary_objective": "maximize_hit_rate_200",
+    "promotion_eligible": true,
+    "reviews": [
+      {
+        "agent": "QuantAgent",
+        "reason": "Primary objective is repeatable >=200 USDT outcomes in 10 days; 150/175/250 thresholds are secondary learning signals.",
+        "score": 0.0,
+        "veto": false
+      },
+      {
+        "agent": "ValidationCritic",
+        "reason": "Validation evidence is complete enough to review.",
+        "score": 0.0,
+        "veto": false
+      },
+      {
+        "agent": "RiskAgent",
+        "reason": "Research diagnostic only: near-ruin=0.00%, median drawdown=0.00%. Aggressive valid candidates are not vetoed.",
+        "score": 0.0,
+        "veto": false
+      }
+    ],
+    "supervisor": "TenDaySupervisor",
+    "veto": false,
+    "veto_agents": []
+  },
+  "allowed_history_end": "2026-04-23",
+  "allowed_history_start": "2025-04-23",
+  "blind_test_end": "2026-05-03",
+  "blind_test_start": "2026-04-23",
+  "completed_at_utc": "2026-09-13T23:27:06.972510+00:00",
+  "final_balance": 100.0,
+  "hyperopt_epochs": 60,
+  "hypothesis": {
+    "allowed_families": [
+      "trend_pullback",
+      "mean_reversion"
+    ],
+    "blind_window_seen": false,
+    "external_research_id": null,
+    "hypothesis_id": "4636d89f94185530",
+    "learning_directive": "negative_return_improve_entry_quality_without_becoming_passive",
+    "reasons": [
+      "regime=sideways_low_vol",
+      "binary objective: >=200 is HIT; every lower final balance is MISS learning evidence",
+      "choose by regime-specific evidence plus exploration without discarding materially positive evidence"
+    ],
+    "regime": "sideways_low_vol"
+  },
+  "learning_directive_for_next_run": "increase_signal_recall_and_trade_activity",
+  "market_regime": {
+    "blind_window_seen": false,
+    "evidence_cutoff": "2026-04-23",
+    "label": "sideways_low_vol",
+    "median_annualized_vol_30d": 0.48773609685335984,
+    "median_return_30d": -0.002295391965743576,
+    "median_return_90d": -0.2695454996500394,
+    "median_trend_gap": 0.010277205328596994,
+    "pair_features": {
+      "ADA/USDT": {
+        "annualized_vol_30d": 0.612015537355117,
+        "return_30d": -0.050458715596330195,
+        "return_90d": -0.3088480801335559,
+        "trend_gap": -0.012506729212785617
+      },
+      "BNB/USDT": {
+        "annualized_vol_30d": 0.3676123067438262,
+        "return_30d": -0.0025660684389228194,
+        "return_90d": -0.2821768799405445,
+        "trend_gap": 0.00595742482641648
+      },
+      "BTC/USDT": {
+        "annualized_vol_30d": 0.40827762963173014,
+        "return_30d": 0.1025545630898177,
+        "return_90d": -0.12708220117380964,
+        "trend_gap": 0.03580298021881001
+      },
+      "ETH/USDT": {
+        "annualized_vol_30d": 0.5705673688901088,
+        "return_30d": 0.10317700032062738,
+        "return_90d": -0.1959636805760171,
+        "trend_gap": 0.0372517633260232
+      },
+      "SOL/USDT": {
+        "annualized_vol_30d": 0.5671945640749895,
+        "return_30d": -0.04987422071530134,
+        "return_90d": -0.3238110064606523,
+        "trend_gap": 0.003810510824305613
+      },
+      "XRP/USDT": {
+        "annualized_vol_30d": 0.3959753850013939,
+        "return_30d": -0.002024715492564333,
+        "return_90d": -0.25691411935953423,
+        "trend_gap": 0.014596985830777509
+      }
+    }
+  },
+  "max_drawdown_pct": 0.0,
+  "near_ruin": false,
+  "optimization_timerange_start": "2025-04-27",
+  "outcome": "MISS",
+  "parameter_fingerprint": "7837a1fe1554607aadedf629e8fb42f01fc8b817efe8b232983755e18a87ba82",
+  "raster_restart_attempts": 0,
+  "return_pct": 0.0,
+  "run": 159,
+  "safety": {
+    "blind_window_used_before_raster_5": false,
+    "exchange_secrets": false,
+    "live_trading": false,
+    "research_only": true
+  },
+  "search_seed": 247623,
+  "selected_family": "mean_reversion",
+  "starting_balance": 100.0,
+  "target_balance": 200.0,
+  "target_hit_at": null,
+  "trades": 0
+}
