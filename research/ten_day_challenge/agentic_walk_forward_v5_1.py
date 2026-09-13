@@ -8,7 +8,11 @@ from typing import Any
 
 import agentic_walk_forward as base
 import agentic_walk_forward_v4 as engine
-from agent_quality import make_enriched_classifier, meta_learning_report, validate_research_plan
+from agent_quality import (
+    make_enriched_classifier,
+    meta_learning_report,
+    validate_research_plan,
+)
 from evolution import classify_regime as original_classify_regime
 
 
@@ -19,20 +23,20 @@ def _load(path: Path) -> dict[str, Any]:
 
 
 def _write(path: Path, payload: dict[str, Any]) -> None:
-    path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    path.write_text(
+        json.dumps(payload, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
 
 
 def execute_one_run(args: argparse.Namespace) -> dict[str, Any]:
     root = args.root.resolve()
     research_root = root / "research" / "ten_day_challenge"
 
-    # Raster 2 and the pre-window leverage policy use the same richer evidence.
     enriched = make_enriched_classifier(original_classify_regime)
     base.classify_regime = enriched
     engine.classify_regime = enriched
 
-    # Raster 4 keeps the original build/fingerprint checks and adds semantic
-    # evidence provenance checks against completed memory only.
     original_validate = base.validate_candidate
 
     def strengthened_validate_candidate(**kwargs: Any) -> str:
@@ -49,7 +53,6 @@ def execute_one_run(args: argparse.Namespace) -> dict[str, Any]:
     base.validate_candidate = strengthened_validate_candidate
     record = engine.execute_one_run(args)
 
-    # Raster 6 owns learning-progress/stagnation diagnosis across completed runs.
     memory_path = research_root / "research-memory.json"
     state_path = research_root / "walk-forward-state.json"
     memory = _load(memory_path)
@@ -63,7 +66,13 @@ def execute_one_run(args: argparse.Namespace) -> dict[str, Any]:
 
     record["supervisor_meta_learning"] = report
     record["agent_generation"] = "contextual-signal-v5.1"
-    run_path = research_root / "results" / "agentic-walk-forward" / f"run-{int(record['run']):06d}" / "run.json"
+    run_path = (
+        research_root
+        / "results"
+        / "agentic-walk-forward"
+        / f"run-{int(record['run']):06d}"
+        / "run.json"
+    )
     _write(run_path, record)
     return record
 
