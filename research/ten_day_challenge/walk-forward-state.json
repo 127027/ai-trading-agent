@@ -5,18 +5,18 @@
   "current_raster": 1,
   "hit_count": 0,
   "hit_rate": 0.0,
-  "last_completed_hypothesis": "ac7dbf48ac1de69d",
+  "last_completed_hypothesis": "1a6fbf851cb68d2b",
   "last_failure": null,
   "last_run": {
     "agent_council": {
-      "council_score": -0.07707343640000008,
+      "council_score": -0.050409571200000114,
       "primary_objective": "maximize_hit_rate_200",
       "promotion_eligible": true,
       "reviews": [
         {
           "agent": "QuantAgent",
           "reason": "Primary objective is repeatable >=200 USDT outcomes in 10 days; 150/175/250 thresholds are secondary learning signals.",
-          "score": -0.07707343640000008,
+          "score": -0.050409571200000114,
           "veto": false
         },
         {
@@ -27,7 +27,7 @@
         },
         {
           "agent": "RiskAgent",
-          "reason": "Research diagnostic only: near-ruin=0.00%, median drawdown=3.85%. Aggressive valid candidates are not vetoed.",
+          "reason": "Research diagnostic only: near-ruin=0.00%, median drawdown=2.52%. Aggressive valid candidates are not vetoed.",
           "score": 0.0,
           "veto": false
         }
@@ -36,101 +36,100 @@
       "veto": false,
       "veto_agents": []
     },
-    "allowed_history_end": "2025-01-23",
-    "allowed_history_start": "2024-01-24",
-    "blind_test_end": "2025-02-02",
-    "blind_test_start": "2025-01-23",
-    "completed_at_utc": "2026-09-13T18:39:57.183875+00:00",
-    "final_balance": 96.14632818,
-    "hyperopt_epochs": 75,
+    "allowed_history_end": "2024-12-11",
+    "allowed_history_start": "2023-12-12",
+    "blind_test_end": "2024-12-21",
+    "blind_test_start": "2024-12-11",
+    "completed_at_utc": "2026-09-13T18:42:06.466959+00:00",
+    "final_balance": 97.47952144,
+    "hyperopt_epochs": 60,
     "hypothesis": {
       "allowed_families": [
-        "mean_reversion",
+        "trend_pullback",
         "volatility_expansion"
       ],
       "blind_window_seen": false,
       "external_research_id": null,
-      "hypothesis_id": "ac7dbf48ac1de69d",
-      "learning_directive": "increase_signal_recall_and_trade_activity",
+      "hypothesis_id": "1a6fbf851cb68d2b",
+      "learning_directive": "negative_return_improve_entry_quality_without_becoming_passive",
       "reasons": [
-        "regime=sideways_high_vol",
+        "regime=bull_trend_high_vol",
         "binary objective: >=200 is HIT; every lower final balance is MISS learning evidence",
-        "choose by regime-specific evidence plus exploration without discarding materially positive evidence",
-        "previous run had zero trades; widen signal-producing families"
+        "choose by regime-specific evidence plus exploration without discarding materially positive evidence"
       ],
-      "regime": "sideways_high_vol"
+      "regime": "bull_trend_high_vol"
     },
     "learning_directive_for_next_run": "negative_return_improve_entry_quality_without_becoming_passive",
     "market_regime": {
       "blind_window_seen": false,
-      "evidence_cutoff": "2025-01-23",
-      "label": "sideways_high_vol",
-      "median_annualized_vol_30d": 0.804409729887676,
-      "median_return_30d": 0.07689283585580176,
-      "median_return_90d": 0.48655801711848423,
-      "median_trend_gap": 0.024576286455116225,
+      "evidence_cutoff": "2024-12-11",
+      "label": "bull_trend_high_vol",
+      "median_annualized_vol_30d": 0.7652648482234399,
+      "median_return_30d": 0.17083116704096546,
+      "median_return_90d": 0.6488369478087339,
+      "median_trend_gap": 0.065736458992952,
       "pair_features": {
         "ADA/USDT": {
-          "annualized_vol_30d": 0.9864821618909619,
-          "return_30d": 0.0607728842832469,
-          "return_90d": 1.8360750360750364,
-          "trend_gap": 0.020435525369881358
+          "annualized_vol_30d": 1.441554908304147,
+          "return_30d": 0.7310625317742758,
+          "return_90d": 1.8921291053227636,
+          "trend_gap": 0.16365268198236516
         },
         "BNB/USDT": {
-          "annualized_vol_30d": 0.3637299278949804,
-          "return_30d": 0.001959202489339562,
-          "return_90d": 0.16992430613961318,
-          "trend_gap": -0.0005497799831868377
+          "annualized_vol_30d": 0.6954297705413511,
+          "return_30d": 0.0788580173114628,
+          "return_90d": 0.27674023769100153,
+          "trend_gap": 0.05309783233389953
         },
         "BTC/USDT": {
-          "annualized_vol_30d": 0.46355909906362497,
-          "return_30d": 0.09301278742835661,
-          "return_90d": 0.5206638642499488,
-          "trend_gap": 0.028717047540351093
+          "annualized_vol_30d": 0.5591684796093263,
+          "return_30d": 0.2018537760540282,
+          "return_90d": 0.6846245073075448,
+          "trend_gap": 0.05259181795347212
         },
         "ETH/USDT": {
-          "annualized_vol_30d": 0.6223372978843902,
-          "return_30d": -0.052572219965931755,
-          "return_90d": 0.2787185210306724,
-          "trend_gap": -0.020620158346934203
+          "annualized_vol_30d": 0.7474592318222159,
+          "return_30d": 0.1398085580279027,
+          "return_90d": 0.5501698318771229,
+          "trend_gap": 0.07837508565200446
         },
         "SOL/USDT": {
-          "annualized_vol_30d": 0.9996139048682454,
-          "return_30d": 0.35374257009099996,
-          "return_90d": 0.45245216998701965,
-          "trend_gap": 0.08134916043373575
+          "annualized_vol_30d": 0.783070464624664,
+          "return_30d": 0.016803922502023116,
+          "return_90d": 0.6130493883099231,
+          "trend_gap": 0.01864562877490128
         },
         "XRP/USDT": {
-          "annualized_vol_30d": 1.0405473943244086,
-          "return_30d": 0.406154662422072,
-          "return_90d": 4.978007518796992,
-          "trend_gap": 0.13226925463459804
+          "annualized_vol_30d": 1.8112406355146324,
+          "return_30d": 3.0294017675050977,
+          "return_90d": 3.4332460732984282,
+          "trend_gap": 0.3020877195595071
         }
       }
     },
-    "max_drawdown_pct": 3.853671820000002,
+    "max_drawdown_pct": 2.520478560000001,
     "near_ruin": false,
-    "optimization_timerange_start": "2024-01-28",
+    "optimization_timerange_start": "2023-12-16",
     "outcome": "MISS",
-    "parameter_fingerprint": "7b15fa9e8c4c7e6965d7ed291090f6bcddd2ac26f276b94bf7faa6b1cc72331e",
+    "parameter_fingerprint": "299726d539f6cdaf6ec99c621b5ae29d76d25615f45adbd1061d32199b6fd621",
     "raster_restart_attempts": 0,
-    "return_pct": -3.853671820000004,
-    "run": 30,
+    "return_pct": -2.5204785600000057,
+    "run": 31,
     "safety": {
       "blind_window_used_before_raster_5": false,
       "exchange_secrets": false,
       "live_trading": false,
       "research_only": true
     },
-    "search_seed": 76714,
+    "search_seed": 123869,
     "selected_family": "volatility_expansion",
     "starting_balance": 100.0,
     "target_balance": 200.0,
     "target_hit_at": null,
-    "trades": 2
+    "trades": 1
   },
   "learning_directive": "negative_return_improve_entry_quality_without_becoming_passive",
-  "miss_count": 30,
+  "miss_count": 31,
   "next_raster": 1,
   "parameter_fingerprints": [
     "059373dbd1ffea4d833a1e33b94472f892084d8a5d47ee1bc5eec16acda6ef48",
@@ -162,7 +161,8 @@
     "9a59e8942f77191d5501141494d75904d8f519a02d4a46d04a445b32e38f1176",
     "266c7db5ffed2d81ef6f906162e0bec1422995ae93036bcc1c4c6974d229286a",
     "0de2399374dbdd7b07779d37cc5e5bc38f77155a1df9abc455c674e5760a3ccf",
-    "7b15fa9e8c4c7e6965d7ed291090f6bcddd2ac26f276b94bf7faa6b1cc72331e"
+    "7b15fa9e8c4c7e6965d7ed291090f6bcddd2ac26f276b94bf7faa6b1cc72331e",
+    "299726d539f6cdaf6ec99c621b5ae29d76d25615f45adbd1061d32199b6fd621"
   ],
   "raster_history": [
     {
@@ -1604,14 +1604,62 @@
       "raster": 6,
       "run": 30,
       "status": "passed"
+    },
+    {
+      "agent": "OpsWatchdog",
+      "at_utc": "2026-09-13T18:40:35.435739+00:00",
+      "detail": "technical health and checkpoints valid",
+      "raster": 1,
+      "run": 31,
+      "status": "passed"
+    },
+    {
+      "agent": "EvidenceRegimeAgent",
+      "at_utc": "2026-09-13T18:40:35.600613+00:00",
+      "detail": "pre-window regime=bull_trend_high_vol cutoff=2024-12-11",
+      "raster": 2,
+      "run": 31,
+      "status": "passed"
+    },
+    {
+      "agent": "EvolutionResearchAgent",
+      "at_utc": "2026-09-13T18:41:56.646435+00:00",
+      "detail": "hypothesis=1a6fbf851cb68d2b families=['trend_pullback', 'volatility_expansion'] fingerprint=299726d539f6",
+      "raster": 3,
+      "run": 31,
+      "status": "passed"
+    },
+    {
+      "agent": "BuildValidationAgent",
+      "at_utc": "2026-09-13T18:41:56.650298+00:00",
+      "detail": "candidate valid selected_family=volatility_expansion; blind window still sealed",
+      "raster": 4,
+      "run": 31,
+      "status": "passed"
+    },
+    {
+      "agent": "QuantExperimentAgent",
+      "at_utc": "2026-09-13T18:42:06.464737+00:00",
+      "detail": "MISS final=97.47952144 trades=1 family=volatility_expansion",
+      "raster": 5,
+      "run": 31,
+      "status": "passed"
+    },
+    {
+      "agent": "TenDaySupervisor",
+      "at_utc": "2026-09-13T18:42:06.468613+00:00",
+      "detail": "checkpointed MISS; full cycle restarts at raster 1",
+      "raster": 6,
+      "run": 31,
+      "status": "passed"
     }
   ],
   "raster_status": "ready_for_next_run",
-  "run_count": 30,
-  "run_in_progress": 30,
+  "run_count": 31,
+  "run_in_progress": 31,
   "schema_version": 2,
   "supervisor": "TenDaySupervisor",
-  "updated_at_utc": "2026-09-13T18:39:57.186924+00:00",
+  "updated_at_utc": "2026-09-13T18:42:06.469576+00:00",
   "used_test_windows": [
     "2025-10-10",
     "2024-06-06",
@@ -1642,6 +1690,7 @@
     "2026-02-05",
     "2024-03-22",
     "2026-06-15",
-    "2025-01-23"
+    "2025-01-23",
+    "2024-12-11"
   ]
 }
