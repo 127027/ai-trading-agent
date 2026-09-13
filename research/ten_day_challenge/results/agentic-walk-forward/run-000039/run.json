@@ -1,0 +1,122 @@
+{
+  "agent_council": {
+    "council_score": 0.4139760413999998,
+    "primary_objective": "maximize_hit_rate_200",
+    "promotion_eligible": true,
+    "reviews": [
+      {
+        "agent": "QuantAgent",
+        "reason": "Primary objective is repeatable >=200 USDT outcomes in 10 days; 150/175/250 thresholds are secondary learning signals.",
+        "score": 0.4139760413999998,
+        "veto": false
+      },
+      {
+        "agent": "ValidationCritic",
+        "reason": "Validation evidence is complete enough to review.",
+        "score": 0.0,
+        "veto": false
+      },
+      {
+        "agent": "RiskAgent",
+        "reason": "Research diagnostic only: near-ruin=0.00%, median drawdown=0.00%. Aggressive valid candidates are not vetoed.",
+        "score": 0.0,
+        "veto": false
+      }
+    ],
+    "supervisor": "TenDaySupervisor",
+    "veto": false,
+    "veto_agents": []
+  },
+  "allowed_history_end": "2025-02-24",
+  "allowed_history_start": "2024-02-25",
+  "blind_test_end": "2025-03-06",
+  "blind_test_start": "2025-02-24",
+  "completed_at_utc": "2026-09-13T18:59:36.185711+00:00",
+  "final_balance": 120.69880207,
+  "hyperopt_epochs": 75,
+  "hypothesis": {
+    "allowed_families": [
+      "mean_reversion",
+      "volatility_expansion"
+    ],
+    "blind_window_seen": false,
+    "external_research_id": null,
+    "hypothesis_id": "15ed20e8a9e4268d",
+    "learning_directive": "increase_signal_recall_and_trade_activity",
+    "reasons": [
+      "regime=bear_trend",
+      "binary objective: >=200 is HIT; every lower final balance is MISS learning evidence",
+      "choose by regime-specific evidence plus exploration without discarding materially positive evidence",
+      "previous run had zero trades; widen signal-producing families"
+    ],
+    "regime": "bear_trend"
+  },
+  "learning_directive_for_next_run": "positive_but_slow_increase_return_velocity",
+  "market_regime": {
+    "blind_window_seen": false,
+    "evidence_cutoff": "2025-02-24",
+    "label": "bear_trend",
+    "median_annualized_vol_30d": 0.6369787098770203,
+    "median_return_30d": -0.15866488100242077,
+    "median_return_90d": -0.06963895863966413,
+    "median_trend_gap": -0.02556689601865031,
+    "pair_features": {
+      "ADA/USDT": {
+        "annualized_vol_30d": 0.7769824461218349,
+        "return_30d": -0.2074752883031301,
+        "return_90d": -0.1842077371489136,
+        "trend_gap": -0.04768052984404714
+      },
+      "BNB/USDT": {
+        "annualized_vol_30d": 0.6053572998808939,
+        "return_30d": -0.032375633771768775,
+        "return_90d": 0.03492612386042104,
+        "trend_gap": 0.0022768985888501625
+      },
+      "BTC/USDT": {
+        "annualized_vol_30d": 0.308413395525212,
+        "return_30d": -0.08212509714362004,
+        "return_90d": 0.034920864969265164,
+        "trend_gap": -0.010737789733474057
+      },
+      "ETH/USDT": {
+        "annualized_vol_30d": 0.5838821326497343,
+        "return_30d": -0.14815307136663958,
+        "return_90d": -0.17419878224859342,
+        "trend_gap": -0.039860318261965455
+      },
+      "SOL/USDT": {
+        "annualized_vol_30d": 0.6686001198731467,
+        "return_30d": -0.33717488258278405,
+        "return_90d": -0.28285933897002313,
+        "trend_gap": -0.08626992634226316
+      },
+      "XRP/USDT": {
+        "annualized_vol_30d": 0.7263109859216018,
+        "return_30d": -0.16917669063820195,
+        "return_90d": 0.8217366709093481,
+        "trend_gap": -0.011273473775335163
+      }
+    }
+  },
+  "max_drawdown_pct": 0.0,
+  "near_ruin": false,
+  "optimization_timerange_start": "2024-02-29",
+  "outcome": "MISS",
+  "parameter_fingerprint": "ebbcde39702fa4693633593973a5b5d88cbd3e9ff905343f85442d7e839b74f7",
+  "raster_restart_attempts": 0,
+  "return_pct": 20.69880206999999,
+  "run": 39,
+  "safety": {
+    "blind_window_used_before_raster_5": false,
+    "exchange_secrets": false,
+    "live_trading": false,
+    "research_only": true
+  },
+  "search_seed": 163049,
+  "selected_family": "volatility_expansion",
+  "starting_balance": 100.0,
+  "target_balance": 200.0,
+  "target_hit_at": null,
+  "trades": 2
+}
