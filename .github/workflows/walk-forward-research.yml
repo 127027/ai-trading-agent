@@ -1,8 +1,8 @@
-name: Autonomous blind walk-forward research
+name: Autonomous agentic ten-day research
 
 on:
   push:
-    branches: [autonomous-walkforward-v2]
+    branches: [autonomous-agentic-v3]
     paths:
       - ".github/workflows/walk-forward-research.yml"
       - "research/ten_day_challenge/**"
@@ -22,7 +22,7 @@ permissions:
   actions: write
 
 concurrency:
-  group: autonomous-walkforward-${{ github.ref }}
+  group: autonomous-agentic-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
@@ -36,7 +36,7 @@ jobs:
       SEGMENT: ${{ github.event_name == 'workflow_dispatch' && inputs.segment || '1' }}
 
     steps:
-      - name: Check out walk-forward branch
+      - name: Check out agentic branch
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
         with:
           fetch-depth: 0
@@ -58,7 +58,7 @@ jobs:
         run: |
           uv sync --frozen --all-extras --python 3.12
           uv pip install --python .venv/bin/python "freqtrade[hyperopt]==2026.7"
-          .venv/bin/python -c "import cmaes, filelock; print('hyperopt dependencies ready')"
+          .venv/bin/python -c "import cmaes, filelock, pandas, pyarrow; print('agentic research dependencies ready')"
 
       - name: Restore historical Binance cache
         id: market-cache
@@ -86,30 +86,33 @@ jobs:
 
       - name: Validate Germany retail research policy
         run: |
-          .venv/bin/python research/ten_day_challenge/jurisdiction_policy.py \
-            --root "$GITHUB_WORKSPACE"
+          .venv/bin/python research/ten_day_challenge/jurisdiction_policy.py --root "$GITHUB_WORKSPACE"
 
-      - name: Validate walk-forward implementation
+      - name: Validate agentic raster implementation
         run: |
           .venv/bin/python -m pytest \
             tests/research/test_ten_day_challenge.py \
             tests/research/test_walk_forward.py \
+            tests/research/test_agentic_evolution.py \
             tests/research/test_binance_vision.py
           .venv/bin/ruff check \
+            research/ten_day_challenge/agentic_walk_forward.py \
+            research/ten_day_challenge/evolution.py \
             research/ten_day_challenge/walk_forward.py \
             research/ten_day_challenge/rolling_windows.py \
             research/ten_day_challenge/council.py \
+            research/ten_day_challenge/watchdog.py \
             research/ten_day_challenge/binance_vision.py \
             research/ten_day_challenge/jurisdiction_policy.py \
             research/ten_day_challenge/continue_research.py \
-            tests/research/test_walk_forward.py \
-            tests/research/test_binance_vision.py
+            runtime/user_data/strategies/candidates/TenDayAdaptiveV2.py \
+            tests/research/test_agentic_evolution.py
 
-      - name: Up to five autonomous blind 10-day runs
+      - name: Up to five autonomous agentic 10-day runs
         id: blind-runs
         run: |
-          git config user.name "walk-forward-research-agent"
-          git config user.email "walk-forward-research-agent@users.noreply.github.com"
+          git config user.name "agentic-research-agent"
+          git config user.email "agentic-research-agent@users.noreply.github.com"
 
           START_COUNT=$(.venv/bin/python - <<'PY'
           import json
@@ -120,11 +123,11 @@ jobs:
           )
           COMPLETED=0
           HIT_FOUND=0
-          echo "Starting autonomous batch at run count $START_COUNT"
+          echo "Starting six-raster agentic batch at run count $START_COUNT"
 
           for SLOT in 1 2 3 4 5; do
-            echo "=== autonomous blind run $SLOT/5 ==="
-            .venv/bin/python research/ten_day_challenge/walk_forward.py \
+            echo "=== complete six-raster research run $SLOT/5 ==="
+            .venv/bin/python research/ten_day_challenge/agentic_walk_forward.py \
               --root "$GITHUB_WORKSPACE" \
               --data-dir "$DATA_DIR" \
               --python .venv/bin/python \
@@ -134,11 +137,12 @@ jobs:
 
             git add -f \
               research/ten_day_challenge/walk-forward-state.json \
-              research/ten_day_challenge/results/walk-forward \
-              research/ten_day_challenge/walk-forward-champion \
-              runtime/user_data/strategies/candidates/TenDayMomentumV1.json
+              research/ten_day_challenge/research-memory.json \
+              research/ten_day_challenge/results/agentic-walk-forward \
+              research/ten_day_challenge/agentic-champion \
+              runtime/user_data/strategies/candidates/TenDayAdaptiveV2.json
             if ! git diff --cached --quiet; then
-              git commit -m "research: blind walk-forward checkpoint segment ${SEGMENT} slot ${SLOT} [skip ci]"
+              git commit -m "research: agentic six-raster checkpoint segment ${SEGMENT} slot ${SLOT} [skip ci]"
               git push origin "HEAD:${GITHUB_REF_NAME}"
             fi
 
@@ -150,7 +154,7 @@ jobs:
           PY
             )
             if [ "$HIT_COUNT" -ge 1 ]; then
-              echo "Research target reached after slot $SLOT: hit_count=$HIT_COUNT"
+              echo "Research target reached: hit_count=$HIT_COUNT"
               HIT_FOUND=1
               break
             fi
@@ -159,8 +163,7 @@ jobs:
           END_COUNT=$(.venv/bin/python - <<'PY'
           import json
           from pathlib import Path
-          path = Path('research/ten_day_challenge/walk-forward-state.json')
-          print(json.loads(path.read_text())['run_count'])
+          print(json.loads(Path('research/ten_day_challenge/walk-forward-state.json').read_text())['run_count'])
           PY
           )
           EXPECTED=$((START_COUNT + COMPLETED))
@@ -169,7 +172,7 @@ jobs:
           echo "hit_found=$HIT_FOUND" >> "$GITHUB_OUTPUT"
 
       - name: Continue next autonomous batch if target not reached
-        if: success()
+        if: success() && steps.blind-runs.outputs.hit_found != '1'
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: |
