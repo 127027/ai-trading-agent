@@ -1,6 +1,6 @@
 {
-  "schema_version": 11,
-  "generation": "contextual-signal-v5",
+  "schema_version": 12,
+  "generation": "contextual-signal-v6-clean",
   "objective": {
     "primary": "reach_200_from_100_within_one_blind_10_day_run_then_measure_repeat_hit_rate",
     "starting_balance": 100.0,
@@ -15,7 +15,7 @@
     "duplicate_test_windows_should_be_avoided": true
   },
   "raster_policy": {
-    "rule": "Every experiment begins at raster 1. Every raster has a pass/reject decision. If raster 1, 2, 3, 4 or 5 rejects, fails, lacks sufficient evidence, detects an invalid hypothesis, encounters a technical blocker, or otherwise cannot honestly pass its responsibility, the same experiment returns immediately to raster 1. Raster 1 diagnoses the recorded reason, preserves valid research memory, applies only safe repairs or reset actions, and the pipeline starts again from 1. Only a candidate that passes 1 through 5 reaches raster 6. Raster 6 judges the completed blind ten-day experiment. A valid trading MISS below 200 is durable learning evidence, completes that experiment, and starts the next experiment again at raster 1. A valid HIT at or above 200 saves proof but does not stop research: the system continues on untouched blind windows to measure and improve repeat HIT-rate.",
+    "rule": "Every experiment begins at raster 1. Rasters 1-4 may only use pre-window information and completed prior-run memory. Raster 5 alone reveals the current ten-day blind window. Raster 6 judges the completed run, stores lessons for future runs, measures learning progress and forces materially new exploration when research stagnates. Technical failures return the same run to raster 1 without consuming or changing the blind window. A valid MISS is durable learning evidence. A HIT at or above 200 is saved but does not stop holdout research.",
     "on_any_raster_rejection": "return_same_run_to_raster_1",
     "on_technical_failure": "return_same_run_to_raster_1",
     "on_insufficient_evidence": "return_same_run_to_raster_1",
@@ -29,42 +29,44 @@
       {
         "raster": 1,
         "agent": "OpsWatchdog",
-        "purpose": "Inspect current technical state, checkpoints, data and prior rejection/failure. Localize the cause, preserve valid memory, apply only whitelisted repair/reset actions and restart the same run from raster 1. Detect stalled subprocesses and return control safely. Never choose or score trading ideas."
+        "purpose": "Own technical health, checkpoints, deterministic repairs and subprocess timeouts. Preserve valid current-generation memory, return failed work to raster 1, and never choose trading hypotheses."
       },
       {
         "raster": 2,
         "agent": "EvidenceRegimeAgent",
-        "purpose": "Use only the preceding 365 days to classify regime, direction, volatility and relative coin strength relevant to the next blind 10-day mission. Never inspect current blind-window candles."
+        "purpose": "Use exactly the preceding 365 days and no current blind candles. Classify regime and enrich it with cross-asset breadth, dispersion, trend persistence, volatility and evidence strength so Raster 3 receives a contextual market state rather than a simple bull/bear label."
       },
       {
         "raster": 3,
         "agent": "EvolutionResearchAgent",
-        "purpose": "Generate materially different high-velocity hypotheses from persistent MISS/HIT evidence and completed trade-level signal evidence. Learn contextually: signal quality may differ by regime, pair, family, entry tag, leverage and exit behavior. Optimize family, signal frequency, capital use and permitted leverage without assuming that yesterday's good signal is universally good. Never inspect the current blind window."
+        "purpose": "Generate materially different hypotheses from pre-window regime evidence plus completed run-level and trade-level memory. Learn contextually by regime, family, pair, entry tag, exit behavior and leverage. Preserve genuinely positive evidence, penalize repeated bad contexts, explore alternatives and never inspect the current blind window."
       },
       {
         "raster": 4,
         "agent": "BuildValidationAgent",
-        "purpose": "Verify candidate novelty, selected-family consistency, zero look-ahead and reproducibility before blind reveal. Repository workflow gates separately verify Germany/EWR research policy; the V5 margin engine separately verifies cost, borrowing and liquidation accounting. Reject fake leverage and duplicate fingerprints."
+        "purpose": "Challenge the candidate before blind reveal. Verify novelty, parameter-family consistency, hypothesis/regime consistency, zero look-ahead, and that any claimed signal evidence is actually backed by completed persistent memory. Reject duplicate or unsupported research claims and fake leverage."
       },
       {
         "raster": 5,
         "agent": "QuantExperimentAgent",
-        "purpose": "Reveal exactly one previously unseen ten-day window and execute the 100-start aggressive experiment. Leveraged research must include notional-scaled trading costs, borrowing cost proxy, documented liquidation threshold and liquidation fee. Persist per-trade evidence only after the blind experiment has completed. A valid economic MISS is learning evidence, not a technical failure."
+        "purpose": "Be the only raster that reveals the current untouched ten-day window. Execute from exactly 100 simulated capital with realistic configured fees, slippage proxy, borrowing proxy and liquidation accounting. Record per-trade evidence after execution; a valid MISS remains evidence rather than a technical failure."
       },
       {
         "raster": 6,
         "agent": "TenDaySupervisor",
-        "purpose": "Judge the complete experiment. HIT only at >=200. On MISS, preserve run-level and trade-level lessons for future untouched windows, then restart at raster 1. On the first HIT, save proof and switch to repeatability measurement; never stop solely because one HIT occurred."
+        "purpose": "Judge HIT only at >=200, checkpoint run and trade lessons for future windows, and perform meta-learning across recent completed runs. Measure HIT rate, balance distribution, improvement, zero-trade frequency and candidate diversity; detect stagnation and direct Raster 3 toward materially different hypotheses instead of endless parameter churn."
       }
     ]
   },
   "self_development": {
     "owner_raster": 3,
     "persistent_memory": "research-memory.json",
-    "external_research_inbox": "research-inbox.json",
+    "external_research_inbox": null,
     "must_reason_about_failure_context": true,
     "must_distinguish_bad_strategy_from_bad_regime_match": true,
     "must_learn_trade_level_signal_context": true,
+    "must_measure_meta_learning_progress": true,
+    "must_detect_stagnation": true,
     "signal_context_dimensions": [
       "market_regime",
       "strategy_family",
@@ -82,11 +84,13 @@
     "must_avoid_fixed_strategy_rotation": true,
     "blind_window_available_to_research": false,
     "current_blind_trade_evidence_available_to_current_hypothesis": false,
-    "completed_blind_trade_evidence_available_to_future_hypotheses": true
+    "completed_blind_trade_evidence_available_to_future_hypotheses": true,
+    "inherit_prior_generation_state": false,
+    "inherit_prior_generation_memory": false
   },
   "supervisor": {
     "name": "TenDaySupervisor",
-    "role": "Final judge and checkpoint owner",
+    "role": "Final judge, checkpoint owner and learning-progress supervisor",
     "writes_repository": true,
     "may_override_validation_veto": false
   },
@@ -103,7 +107,9 @@
     "minimum_completed_windows": 1,
     "minimum_trade_evidence": 0,
     "require_blind_window_seen_false_before_raster_5": true,
-    "require_signal_learning_only_after_completed_blind_run": true
+    "require_signal_learning_only_after_completed_blind_run": true,
+    "require_claimed_signal_evidence_backed_by_persistent_memory": true,
+    "require_clean_generation_from_run_1": true
   },
   "promotion": {
     "rule": "A run succeeds only when realized simulated capital reaches at least 200 within its blind ten-day window. A MISS remains valid learning evidence but never counts as success. One HIT is a milestone, not proof of repeatability.",
