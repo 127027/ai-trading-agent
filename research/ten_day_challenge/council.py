@@ -1,4 +1,4 @@
-"""Independent reviewer roles for ten-day strategy promotion.
+"""Independent reviewer views mapped to the current six-raster architecture.
 
 The primary research objective is the probability of turning 100 USDT into at
 least 200 USDT inside an independent 10-day window. Drawdown and near-ruin are
@@ -24,7 +24,8 @@ def quant_review(summary: dict[str, Any]) -> dict[str, Any]:
         + 2.0 * median_return
     )
     return {
-        "agent": "QuantAgent",
+        "agent": "QuantExperimentAgent",
+        "review_role": "outcome_scoring",
         "score": score,
         "veto": False,
         "reason": (
@@ -47,7 +48,8 @@ def validation_review(
     if completed < int(gates.get("minimum_completed_windows", 1)):
         reasons.append("too few completed validation windows")
     return {
-        "agent": "ValidationCritic",
+        "agent": "BuildValidationAgent",
+        "review_role": "completed_experiment_validation",
         "score": 0.0,
         "veto": bool(reasons),
         "reason": "; ".join(reasons) or "Validation evidence is complete enough to review.",
@@ -59,7 +61,8 @@ def risk_review(summary: dict[str, Any], council_config: dict[str, Any]) -> dict
     near_ruin_rate = float(summary.get("near_ruin_rate") or 0.0)
     median_dd_pct = float(summary.get("median_max_drawdown_pct") or 0.0)
     return {
-        "agent": "RiskAgent",
+        "agent": "TenDaySupervisor",
+        "review_role": "risk_diagnostic",
         "score": 0.0,
         "veto": False,
         "reason": (
