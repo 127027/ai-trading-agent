@@ -1,8 +1,8 @@
-name: Autonomous contextual-signal ten-day research
+name: Autonomous V6 clean six-agent ten-day research
 
 on:
   push:
-    branches: [autonomous-agentic-v5]
+    branches: [autonomous-agentic-v6-clean]
     paths:
       - ".github/workflows/walk-forward-research.yml"
       - "research/ten_day_challenge/**"
@@ -23,7 +23,7 @@ permissions:
   actions: write
 
 concurrency:
-  group: autonomous-agentic-${{ github.ref }}
+  group: autonomous-v6-clean-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
@@ -37,29 +37,19 @@ jobs:
       SEGMENT: ${{ github.event_name == 'workflow_dispatch' && inputs.segment || '1' }}
 
     steps:
-      - name: Check out contextual-signal V5 branch
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - name: Check out V6 clean branch
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
           fetch-depth: 0
           persist-credentials: true
 
-      - name: Load external Raster 3 research feed
-        run: |
-          git fetch origin agentic-research-feed:refs/remotes/origin/agentic-research-feed || true
-          if git show origin/agentic-research-feed:research/ten_day_challenge/research-inbox.json > /tmp/research-inbox.json 2>/dev/null; then
-            cp /tmp/research-inbox.json research/ten_day_challenge/research-inbox.json
-            echo "Loaded isolated external research feed"
-          else
-            echo "External research feed unavailable; using branch-local inbox"
-          fi
-
       - name: Set up Python 3.12
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
         with:
           python-version: "3.12"
 
       - name: Set up uv
-        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9
         with:
           version: "0.11.28"
           enable-cache: true
@@ -69,7 +59,6 @@ jobs:
         run: |
           uv sync --frozen --all-extras --python 3.12
           uv pip install --python .venv/bin/python "freqtrade[hyperopt]==2026.7"
-          .venv/bin/python -c "import cmaes, filelock, pandas, pyarrow; print('contextual-signal research dependencies ready')"
 
       - name: Restore historical Binance cache
         id: market-cache
@@ -97,31 +86,10 @@ jobs:
 
       - name: Validate Germany retail research policy
         run: |
-          .venv/bin/python research/ten_day_challenge/jurisdiction_policy.py --root "$GITHUB_WORKSPACE"
+          .venv/bin/python research/ten_day_challenge/jurisdiction_policy.py \
+            --root "$GITHUB_WORKSPACE"
 
-      - name: Raster 1 safe lint self-heal
-        run: |
-          .venv/bin/ruff check --fix \
-            research/ten_day_challenge/agentic_walk_forward.py \
-            research/ten_day_challenge/agentic_walk_forward_v4.py \
-            research/ten_day_challenge/agentic_walk_forward_v5.py \
-            research/ten_day_challenge/margin_model.py \
-            research/ten_day_challenge/signal_learning.py \
-            research/ten_day_challenge/evolution.py \
-            research/ten_day_challenge/walk_forward.py \
-            research/ten_day_challenge/rolling_windows.py \
-            research/ten_day_challenge/council.py \
-            research/ten_day_challenge/watchdog.py \
-            research/ten_day_challenge/binance_vision.py \
-            research/ten_day_challenge/jurisdiction_policy.py \
-            research/ten_day_challenge/continue_research.py \
-            runtime/user_data/hyperopts/TenDayChallengeLoss.py \
-            runtime/user_data/strategies/candidates/TenDayAdaptiveV2.py \
-            tests/research/test_agentic_evolution.py \
-            tests/research/test_margin_model.py \
-            tests/research/test_signal_learning.py
-
-      - name: Validate contextual-signal V5 implementation
+      - name: Validate V6 clean implementation
         run: |
           .venv/bin/python -m pytest \
             tests/research/test_ten_day_challenge.py \
@@ -129,90 +97,69 @@ jobs:
             tests/research/test_agentic_evolution.py \
             tests/research/test_binance_vision.py \
             tests/research/test_margin_model.py \
-            tests/research/test_signal_learning.py
+            tests/research/test_signal_learning.py \
+            tests/research/test_agent_quality.py
           .venv/bin/ruff check \
             research/ten_day_challenge/agentic_walk_forward.py \
             research/ten_day_challenge/agentic_walk_forward_v4.py \
-            research/ten_day_challenge/agentic_walk_forward_v5.py \
+            research/ten_day_challenge/agentic_walk_forward_v5_1.py \
+            research/ten_day_challenge/agent_quality.py \
             research/ten_day_challenge/margin_model.py \
             research/ten_day_challenge/signal_learning.py \
             research/ten_day_challenge/evolution.py \
             research/ten_day_challenge/walk_forward.py \
             research/ten_day_challenge/rolling_windows.py \
             research/ten_day_challenge/council.py \
-            research/ten_day_challenge/watchdog.py \
-            research/ten_day_challenge/binance_vision.py \
             research/ten_day_challenge/jurisdiction_policy.py \
-            research/ten_day_challenge/continue_research.py \
             runtime/user_data/hyperopts/TenDayChallengeLoss.py \
             runtime/user_data/strategies/candidates/TenDayAdaptiveV2.py \
             tests/research/test_agentic_evolution.py \
             tests/research/test_margin_model.py \
-            tests/research/test_signal_learning.py
+            tests/research/test_signal_learning.py \
+            tests/research/test_agent_quality.py
 
-      - name: Up to five contextual-signal autonomous 10-day runs
+      - name: Run five clean V6 blind experiments
         id: blind-runs
         run: |
           git config user.name "agentic-research-agent"
           git config user.email "agentic-research-agent@users.noreply.github.com"
 
-          START_COUNT=$(.venv/bin/python - <<'PY'
-          import json
-          from pathlib import Path
-          path = Path('research/ten_day_challenge/walk-forward-state.json')
-          print(json.loads(path.read_text())['run_count'] if path.exists() else 0)
-          PY
-          )
-          COMPLETED=0
-          HIT_FOUND=0
-          echo "Starting V5 contextual-signal six-raster batch at run count $START_COUNT"
-
           for SLOT in 1 2 3 4 5; do
-            echo "=== contextual-signal six-raster research run $SLOT/5 ==="
-            .venv/bin/python research/ten_day_challenge/agentic_walk_forward_v5.py \
+            echo "=== V6 clean six-raster run $SLOT/5 ==="
+            .venv/bin/python research/ten_day_challenge/agentic_walk_forward_v5_1.py \
               --root "$GITHUB_WORKSPACE" \
               --data-dir "$DATA_DIR" \
               --python .venv/bin/python \
               --freqtrade .venv/bin/freqtrade \
               --max-raster-restarts 6
-            COMPLETED=$((COMPLETED + 1))
 
-            git add -f \
+            .venv/bin/python - <<'PY'
+          import json
+          from pathlib import Path
+          state = json.loads(Path(
+              'research/ten_day_challenge/walk-forward-state.json'
+          ).read_text())
+          assert state['agent_generation'] == 'contextual-signal-v6-clean'
+          assert state['inherited_run_state'] is False
+          assert state['inherited_research_memory'] is False
+          assert int(state['run_count']) >= 1
+          if int(state['run_count']) == 1:
+              assert int(state['hit_count']) + int(state['miss_count']) == 1
+          PY
+
+            git add -A \
               research/ten_day_challenge/walk-forward-state.json \
               research/ten_day_challenge/research-memory.json \
               research/ten_day_challenge/results/agentic-walk-forward \
               research/ten_day_challenge/agentic-champion \
               runtime/user_data/strategies/candidates/TenDayAdaptiveV2.json
             if ! git diff --cached --quiet; then
-              git commit -m "research: V5 contextual-signal checkpoint segment ${SEGMENT} slot ${SLOT} [skip ci]"
+              git commit -m "research: V6 clean checkpoint segment ${SEGMENT} slot ${SLOT} [skip ci]"
               git push origin "HEAD:${GITHUB_REF_NAME}"
-            fi
-
-            HIT_COUNT=$(.venv/bin/python - <<'PY'
-          import json
-          from pathlib import Path
-          state = json.loads(Path('research/ten_day_challenge/walk-forward-state.json').read_text())
-          print(int(state.get('hit_count') or 0))
-          PY
-            )
-            if [ "$HIT_COUNT" -ge 1 ]; then
-              echo "First 200 HIT milestone exists: hit_count=$HIT_COUNT; continuing holdout research"
-              HIT_FOUND=1
             fi
           done
 
-          END_COUNT=$(.venv/bin/python - <<'PY'
-          import json
-          from pathlib import Path
-          print(json.loads(Path('research/ten_day_challenge/walk-forward-state.json').read_text())['run_count'])
-          PY
-          )
-          EXPECTED=$((START_COUNT + COMPLETED))
-          echo "Completed run count: $END_COUNT; expected: $EXPECTED"
-          test "$END_COUNT" -eq "$EXPECTED"
-          echo "hit_found=$HIT_FOUND" >> "$GITHUB_OUTPUT"
-
-      - name: Continue next contextual-signal autonomous batch
+      - name: Continue next V6 clean batch
         if: success()
         env:
           GITHUB_TOKEN: ${{ github.token }}
