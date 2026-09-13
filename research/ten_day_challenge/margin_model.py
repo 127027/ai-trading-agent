@@ -227,12 +227,11 @@ def run_margin_window(
             )
             return result, margin
         except (OSError, ValueError, KeyError, json.JSONDecodeError) as exc:
+            message = (
+                f"Unable to apply isolated-margin model to {export_path.name}: "
+                f"{exc}\n{diagnostic}"
+            )
             return (
-                error_result(
-                    window,
-                    starting_balance,
-                    target_balance,
-                    f"Unable to apply isolated-margin model to {export_path.name}: {exc}\n{diagnostic}",
-                ),
+                error_result(window, starting_balance, target_balance, message),
                 {},
             )
