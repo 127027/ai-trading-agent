@@ -1,8 +1,4 @@
-"""Operational health checks for autonomous ten-day research.
-
-This agent never scores or promotes trading strategies. It verifies that the
-research machinery is runnable and that expected inputs/checkpoints exist.
-"""
+"""Operational health checks for the autonomous six-raster research loop."""
 
 from __future__ import annotations
 
@@ -23,23 +19,11 @@ def check_file(path: Path, failures: list[str]) -> None:
 def install_public_freqtrade_launcher(
     root: Path, python_executable: Path, freqtrade_executable: Path
 ) -> None:
-    """Replace the ephemeral Freqtrade entrypoint with the public-only adapter.
-
-    The virtualenv entrypoint is recreated on every GitHub runner, so changing it
-    here never mutates trading logic in the repository. The adapter only changes
-    Binance metadata loading and cannot enable live trading or add credentials.
-    """
     adapter = root / "research/ten_day_challenge/freqtrade_public.py"
     if not adapter.is_file() or not freqtrade_executable.is_file():
         return
-
-    python_path = python_executable
-    if not python_path.is_absolute():
-        python_path = root / python_path
-    # Keep the virtualenv path in the shebang. Path.resolve() would follow the
-    # venv's python symlink to the host interpreter and lose venv site-packages.
+    python_path = python_executable if python_executable.is_absolute() else root / python_executable
     python_path = python_path.absolute()
-
     launcher = (
         f"#!{python_path}\n"
         "import runpy\n"
@@ -53,9 +37,7 @@ def check_executable(path: Path, failures: list[str]) -> None:
     if not path.is_file():
         failures.append(f"missing executable: {path}")
         return
-    completed = subprocess.run(
-        [str(path), "--version"], capture_output=True, text=True, check=False
-    )
+    completed = subprocess.run([str(path), "--version"], capture_output=True, text=True, check=False)
     if completed.returncode != 0:
         failures.append(f"executable failed: {path}: {completed.stderr[-500:]}")
 
@@ -77,14 +59,17 @@ def inspect_data(data_dir: Path, failures: list[str]) -> dict[str, Any]:
 
 
 def inspect_checkpoint(root: Path) -> dict[str, Any]:
-    state = root / "research/ten_day_challenge/state.json"
-    champion = root / "research/ten_day_challenge/champion/TenDayMomentumV1.json"
-    results = root / "research/ten_day_challenge/results"
-    generations = sorted(results.glob("generation-*/generation.json")) if results.exists() else []
+    research = root / "research/ten_day_challenge"
+    state = research / "walk-forward-state.json"
+    memory = research / "research-memory.json"
+    champion = research / "agentic-champion/TenDayAdaptiveV2.json"
+    results = research / "results/agentic-walk-forward"
+    runs = sorted(results.glob("run-*/run.json")) if results.exists() else []
     return {
         "state_present": state.is_file(),
+        "research_memory_present": memory.is_file(),
         "champion_present": champion.is_file(),
-        "generation_records": len(generations),
+        "agentic_run_records": len(runs),
     }
 
 
@@ -102,11 +87,14 @@ def main() -> int:
     required = [
         root / "research/ten_day_challenge/challenge.json",
         root / "research/ten_day_challenge/agents.json",
-        root / "research/ten_day_challenge/evolve.py",
+        root / "research/ten_day_challenge/agentic_walk_forward.py",
+        root / "research/ten_day_challenge/evolution.py",
+        root / "research/ten_day_challenge/research-memory.json",
+        root / "research/ten_day_challenge/research-inbox.json",
         root / "research/ten_day_challenge/rolling_windows.py",
         root / "research/ten_day_challenge/freqtrade_public.py",
         root / "runtime/user_data/config-10day-research.json",
-        root / "runtime/user_data/strategies/candidates/TenDayMomentumV1.py",
+        root / "runtime/user_data/strategies/candidates/TenDayAdaptiveV2.py",
         root / "runtime/user_data/hyperopts/TenDayChallengeLoss.py",
     ]
     for path in required:
@@ -115,8 +103,8 @@ def main() -> int:
     install_public_freqtrade_launcher(root, args.python, args.freqtrade)
     check_executable(args.python, failures)
     check_executable(args.freqtrade, failures)
-    check_module("filelock", failures)
-    check_module("cmaes", failures)
+    for module in ("filelock", "cmaes", "pandas", "pyarrow"):
+        check_module(module, failures)
 
     data = inspect_data(args.data_dir.resolve(), failures)
     checkpoint = inspect_checkpoint(root)
@@ -130,8 +118,8 @@ def main() -> int:
         "safety": {
             "live_trading_enabled": False,
             "exchange_secrets_required": False,
-            "strategy_voting": False,
             "public_market_metadata_only": True,
+            "trading_idea_selection": False,
         },
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
