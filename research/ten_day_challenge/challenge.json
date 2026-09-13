@@ -1,6 +1,6 @@
 {
-  "schema_version": 5,
-  "workflow_generation": "aggressive-v4",
+  "schema_version": 6,
+  "workflow_generation": "contextual-signal-v6-clean",
   "exchange": "binance",
   "trading_mode": "binance_isolated_margin_research",
   "stake_currency": "USDT",
@@ -17,14 +17,7 @@
   "test_pool_end": "2026-08-22",
   "timeframe": "15m",
   "detail_timeframe": "5m",
-  "pairs": [
-    "BTC/USDT",
-    "ETH/USDT",
-    "SOL/USDT",
-    "BNB/USDT",
-    "XRP/USDT",
-    "ADA/USDT"
-  ],
+  "pairs": ["BTC/USDT", "ETH/USDT", "SOL/USDT", "BNB/USDT", "XRP/USDT", "ADA/USDT"],
   "exchange_fee_per_side": 0.001,
   "slippage_proxy_per_side": 0.0005,
   "effective_backtest_fee_per_side": 0.0015,
@@ -62,11 +55,7 @@
     "direction": "long",
     "allowed_leverage": [3, 5, 10],
     "preferred_leverage": 10,
-    "liquidation_margin_levels": {
-      "3": 1.18,
-      "5": 1.15,
-      "10": 1.05
-    },
+    "liquidation_margin_levels": {"3": 1.18, "5": 1.15, "10": 1.05},
     "liquidation_fee_fraction_of_repaid_debt": 0.02,
     "borrow_interest_apr_proxy": 0.30,
     "borrow_interest_note": "Conservative research proxy only; live/account-specific Binance borrow rates must be rechecked before any release.",
