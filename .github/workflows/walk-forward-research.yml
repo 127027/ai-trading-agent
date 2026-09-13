@@ -42,6 +42,16 @@ jobs:
           fetch-depth: 0
           persist-credentials: true
 
+      - name: Load external Raster 3 research feed
+        run: |
+          git fetch origin agentic-research-feed:refs/remotes/origin/agentic-research-feed || true
+          if git show origin/agentic-research-feed:research/ten_day_challenge/research-inbox.json > /tmp/research-inbox.json 2>/dev/null; then
+            cp /tmp/research-inbox.json research/ten_day_challenge/research-inbox.json
+            echo "Loaded isolated external research feed"
+          else
+            echo "External research feed unavailable; using branch-local inbox"
+          fi
+
       - name: Set up Python 3.12
         uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
         with:
