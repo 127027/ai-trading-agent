@@ -1,0 +1,121 @@
+{
+  "agent_council": {
+    "council_score": 0.0,
+    "primary_objective": "maximize_hit_rate_200",
+    "promotion_eligible": true,
+    "reviews": [
+      {
+        "agent": "QuantAgent",
+        "reason": "Primary objective is repeatable >=200 USDT outcomes in 10 days; 150/175/250 thresholds are secondary learning signals.",
+        "score": 0.0,
+        "veto": false
+      },
+      {
+        "agent": "ValidationCritic",
+        "reason": "Validation evidence is complete enough to review.",
+        "score": 0.0,
+        "veto": false
+      },
+      {
+        "agent": "RiskAgent",
+        "reason": "Research diagnostic only: near-ruin=0.00%, median drawdown=0.00%. Aggressive valid candidates are not vetoed.",
+        "score": 0.0,
+        "veto": false
+      }
+    ],
+    "supervisor": "TenDaySupervisor",
+    "veto": false,
+    "veto_agents": []
+  },
+  "allowed_history_end": "2024-02-01",
+  "allowed_history_start": "2023-02-01",
+  "blind_test_end": "2024-02-11",
+  "blind_test_start": "2024-02-01",
+  "completed_at_utc": "2026-09-13T21:50:05.252818+00:00",
+  "final_balance": 100.0,
+  "hyperopt_epochs": 60,
+  "hypothesis": {
+    "allowed_families": [
+      "mean_reversion",
+      "trend_pullback"
+    ],
+    "blind_window_seen": false,
+    "external_research_id": null,
+    "hypothesis_id": "742717f91f3fe877",
+    "learning_directive": "negative_return_improve_entry_quality_without_becoming_passive",
+    "reasons": [
+      "regime=transition",
+      "binary objective: >=200 is HIT; every lower final balance is MISS learning evidence",
+      "choose by regime-specific evidence plus exploration without discarding materially positive evidence"
+    ],
+    "regime": "transition"
+  },
+  "learning_directive_for_next_run": "increase_signal_recall_and_trade_activity",
+  "market_regime": {
+    "blind_window_seen": false,
+    "evidence_cutoff": "2024-02-01",
+    "label": "transition",
+    "median_annualized_vol_30d": 0.5755404862292347,
+    "median_return_30d": -0.07964548927011039,
+    "median_return_90d": 0.28183239292430795,
+    "median_trend_gap": -0.008198978519448452,
+    "pair_features": {
+      "ADA/USDT": {
+        "annualized_vol_30d": 0.8482732683375936,
+        "return_30d": -0.20154043645699615,
+        "return_90d": 0.5405572755417956,
+        "trend_gap": -0.03141172741228926
+      },
+      "BNB/USDT": {
+        "annualized_vol_30d": 0.41433534410591993,
+        "return_30d": -0.04146730462519932,
+        "return_90d": 0.2958171625700732,
+        "trend_gap": 0.009930280212959719
+      },
+      "BTC/USDT": {
+        "annualized_vol_30d": 0.5357236745215598,
+        "return_30d": -0.03620566529084168,
+        "return_90d": 0.21860510640757913,
+        "trend_gap": -0.003944027266343575
+      },
+      "ETH/USDT": {
+        "annualized_vol_30d": 0.6153572979369096,
+        "return_30d": -0.029293719494566495,
+        "return_90d": 0.2678476232785427,
+        "trend_gap": -0.01245392977255333
+      },
+      "SOL/USDT": {
+        "annualized_vol_30d": 0.9144311316389198,
+        "return_30d": -0.11782367391502147,
+        "return_90d": 1.4101416853094704,
+        "trend_gap": 0.017282914076853784
+      },
+      "XRP/USDT": {
+        "annualized_vol_30d": 0.5147372501263611,
+        "return_30d": -0.20034953924372423,
+        "return_90d": -0.16864882722167174,
+        "trend_gap": -0.05068187475196917
+      }
+    }
+  },
+  "max_drawdown_pct": 0.0,
+  "near_ruin": false,
+  "optimization_timerange_start": "2023-02-05",
+  "outcome": "MISS",
+  "parameter_fingerprint": "56e957e37a0af60cb748d1fe44a355b5cc997978b1258be82bdf3716875b36f9",
+  "raster_restart_attempts": 0,
+  "return_pct": 0.0,
+  "run": 114,
+  "safety": {
+    "blind_window_used_before_raster_5": false,
+    "exchange_secrets": false,
+    "live_trading": false,
+    "research_only": true
+  },
+  "search_seed": 158855,
+  "selected_family": "trend_pullback",
+  "starting_balance": 100.0,
+  "target_balance": 200.0,
+  "target_hit_at": null,
+  "trades": 0
+}
