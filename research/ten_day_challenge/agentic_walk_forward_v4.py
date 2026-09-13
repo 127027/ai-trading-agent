@@ -138,7 +138,14 @@ def _select_leverage(
         aggression_bonus = (leverage / max(allowed)) * 0.20
         scores[leverage] = history_score + confidence_fit + aggression_bonus
 
-    selected = max(allowed, key=lambda value: (scores[value], value))
+    first_hit_run = state.get("first_hit_run")
+    if first_hit_run is None:
+        selected = max(allowed)
+        method = "pre_first_hit_force_max_documented_leverage"
+    else:
+        selected = max(allowed, key=lambda value: (scores[value], value))
+        method = "post_first_hit_regime_confidence_plus_leverage_outcome_memory"
+
     decision = {
         "selected_leverage": selected,
         "regime": label,
@@ -146,7 +153,8 @@ def _select_leverage(
         "scores": {str(key): value for key, value in scores.items()},
         "evidence_cutoff": regime.get("evidence_cutoff"),
         "blind_window_seen": False,
-        "method": "regime_confidence_plus_leverage_outcome_memory",
+        "first_hit_run": first_hit_run,
+        "method": method,
     }
     return selected, decision
 
