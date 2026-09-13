@@ -14,8 +14,8 @@ def test_raster2_enriches_cross_asset_context_without_blind_data():
         "label": "bull_trend",
         "blind_window_seen": False,
         "pair_features": {
-            "BTC/USDT": {"return_30d": .10, "return_90d": .20, "trend_gap": .03, "annualized_vol_30d": .6},
-            "ETH/USDT": {"return_30d": .08, "return_90d": .15, "trend_gap": .02, "annualized_vol_30d": .7},
+            "BTC/USDT": {"return_30d": 0.10, "return_90d": 0.20, "trend_gap": 0.03, "annualized_vol_30d": 0.6},
+            "ETH/USDT": {"return_30d": 0.08, "return_90d": 0.15, "trend_gap": 0.02, "annualized_vol_30d": 0.7},
         },
     }
     out = enrich_regime(regime)
