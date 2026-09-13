@@ -11,6 +11,7 @@ import argparse
 import json
 import math
 import os
+import subprocess
 from pathlib import Path
 from typing import Any
 
@@ -21,6 +22,8 @@ from walk_forward import choose_test_start, training_bounds
 
 
 LAST_MARGIN_SIDECAR = "latest-margin-result.json"
+_ORIGINAL_REPAIR = base.repair
+_STALL_MARKER = "stalled subprocess watchdog timeout"
 
 
 def _load(path: Path, default: dict[str, Any]) -> dict[str, Any]:
@@ -32,6 +35,53 @@ def _load(path: Path, default: dict[str, Any]) -> dict[str, Any]:
 def _write(path: Path, payload: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+
+def _tail(log_path: Path) -> str:
+    if not log_path.exists():
+        return ""
+    return "\n".join(
+        log_path.read_text(encoding="utf-8", errors="replace").splitlines()[-50:]
+    )
+
+
+def _watchdog_run_command(
+    command: list[str], log_path: Path, *, env: dict[str, str] | None = None
+) -> None:
+    """Run Hyperopt with a hard watchdog so Raster 1 always regains control."""
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+    effective_env = env or os.environ.copy()
+    timeout_seconds = int(effective_env.get("TEN_DAY_SUBPROCESS_TIMEOUT_SECONDS", "1800"))
+    try:
+        with log_path.open("w", encoding="utf-8") as handle:
+            completed = subprocess.run(
+                command,
+                stdout=handle,
+                stderr=subprocess.STDOUT,
+                check=False,
+                env=effective_env,
+                timeout=timeout_seconds,
+            )
+    except subprocess.TimeoutExpired as exc:
+        raise RuntimeError(
+            f"{_STALL_MARKER} after {timeout_seconds}s: {' '.join(command)}\n{_tail(log_path)}"
+        ) from exc
+    if completed.returncode != 0:
+        raise RuntimeError(
+            f"command failed ({completed.returncode}): {' '.join(command)}\n{_tail(log_path)}"
+        )
+
+
+def _ops_watchdog_repair(root: Path, log_text: str) -> list[str]:
+    """Teach Raster 1 how to recover from a process that stopped making progress."""
+    actions = list(_ORIGINAL_REPAIR(root, log_text))
+    if _STALL_MARKER in log_text.lower():
+        actions.append(
+            "OpsWatchdog diagnosed and terminated a stalled research subprocess; "
+            "return the same run to Raster 1, restore the clean candidate/checkpoint, "
+            "and retry without consuming or changing the blind window"
+        )
+    return actions
 
 
 def _regime_confidence(regime: dict[str, Any]) -> float:
@@ -157,6 +207,8 @@ def execute_one_run(args: argparse.Namespace) -> dict[str, Any]:
 
     sidecar_path = research_root / LAST_MARGIN_SIDECAR
     sidecar_path.unlink(missing_ok=True)
+    base.run_command = _watchdog_run_command
+    base.repair = _ops_watchdog_repair
     base.run_window = _margin_run_window
     record = base.execute_one_run(args)
 
@@ -185,6 +237,13 @@ def execute_one_run(args: argparse.Namespace) -> dict[str, Any]:
     state["last_run"] = record
     state["aggressive_v4_active"] = True
     state["last_leverage_used"] = sidecar.get("leverage")
+    state["ops_watchdog_policy"] = {
+        "subprocess_timeout_seconds": int(
+            os.environ.get("TEN_DAY_SUBPROCESS_TIMEOUT_SECONDS", "1800")
+        ),
+        "on_timeout": "terminate_record_return_same_run_to_raster_1_clean_retry",
+        "blind_window_consumed_on_technical_timeout": False,
+    }
     state.setdefault("leverage_history", []).append(
         {
             "run": int(record["run"]),
