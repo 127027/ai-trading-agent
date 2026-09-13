@@ -2,6 +2,8 @@ import sys
 from importlib.util import module_from_spec, spec_from_file_location
 from pathlib import Path
 
+import pytest
+
 ROOT = Path(__file__).resolve().parents[2]
 RESEARCH = ROOT / "research" / "ten_day_challenge"
 if str(RESEARCH) not in sys.path:
@@ -104,7 +106,7 @@ def test_trade_evidence_contains_context_for_future_learning():
     assert item["pair"] == "BTC/USDT"
     assert item["enter_tag"] == "adaptive_breakout"
     assert item["exit_reason"] == "roi"
-    assert item["mae_pct"] == -2.0
-    assert item["mfe_pct"] == 12.0
+    assert item["mae_pct"] == pytest.approx(-2.0)
+    assert item["mfe_pct"] == pytest.approx(12.0)
     assert item["equity_change"] > 0.0
     assert item["profitable"] is True
