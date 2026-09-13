@@ -1,8 +1,9 @@
-"""Aggressive V4 wrapper around the six-raster agentic walk-forward engine.
+"""Aggressive V5 wrapper around the six-raster agentic walk-forward engine.
 
 The base six-raster logic remains unchanged. This wrapper replaces Raster 5 spot
-accounting with a research-only Binance isolated-margin model and makes leverage
-an adaptive pre-window decision based on regime evidence plus prior outcomes.
+accounting with a research-only Binance isolated-margin model, makes leverage an
+adaptive pre-window decision, and writes completed trade-level signal evidence to
+persistent memory only after the blind run is finished.
 """
 
 from __future__ import annotations
@@ -18,6 +19,7 @@ from typing import Any
 import agentic_walk_forward as base
 from evolution import classify_regime
 from margin_model import MarginSpec, run_margin_window
+from signal_learning import update_signal_memory
 from walk_forward import choose_test_start, training_bounds
 
 
@@ -214,14 +216,15 @@ def execute_one_run(args: argparse.Namespace) -> dict[str, Any]:
 
     sidecar = _load(sidecar_path, {})
     if not sidecar:
-        raise RuntimeError("V4 run completed without isolated-margin evidence")
+        raise RuntimeError("V5 run completed without isolated-margin evidence")
     if int(sidecar.get("leverage") or 0) != selected_leverage:
-        raise RuntimeError("Raster 3/5 leverage mismatch in V4 research run")
+        raise RuntimeError("Raster 3/5 leverage mismatch in V5 research run")
 
     record["margin_model"] = sidecar
     record["research_product"] = sidecar.get("product")
     record["leverage_used"] = sidecar.get("leverage")
     record["leverage_decision"] = leverage_decision
+    record["learning_generation"] = "contextual-signal-v5"
 
     run_path = (
         research_root
@@ -232,10 +235,20 @@ def execute_one_run(args: argparse.Namespace) -> dict[str, Any]:
     )
     _write(run_path, record)
 
+    # Base Raster 6 stores run-level learning before the V5 margin sidecar is
+    # attached. Now that the blind run is fully complete, add its trade-level
+    # evidence to persistent memory for FUTURE runs only.
+    memory_path = research_root / "research-memory.json"
+    memory = _load(memory_path, {})
+    update_signal_memory(memory, record)
+    memory["schema_version"] = max(2, int(memory.get("schema_version") or 1))
+    _write(memory_path, memory)
+
     state_path = research_root / "walk-forward-state.json"
     state = _load(state_path, {})
     state["last_run"] = record
-    state["aggressive_v4_active"] = True
+    state["aggressive_v5_active"] = True
+    state["learning_generation"] = "contextual-signal-v5"
     state["last_leverage_used"] = sidecar.get("leverage")
     state["ops_watchdog_policy"] = {
         "subprocess_timeout_seconds": int(
