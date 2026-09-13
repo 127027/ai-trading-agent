@@ -1,37 +1,55 @@
-"""V5.1 entrypoint: stronger evidence context and supervisor meta-learning."""
+"""V5.1 entrypoint: stronger evidence, validation and supervisor meta-learning."""
 from __future__ import annotations
 
 import argparse
 import json
 from pathlib import Path
+from typing import Any
 
 import agentic_walk_forward as base
 import agentic_walk_forward_v4 as engine
-from agent_quality import make_enriched_classifier, meta_learning_report
+from agent_quality import make_enriched_classifier, meta_learning_report, validate_research_plan
 from evolution import classify_regime as original_classify_regime
 
 
-def _load(path: Path) -> dict:
+def _load(path: Path) -> dict[str, Any]:
     if not path.exists():
         return {}
     return json.loads(path.read_text(encoding="utf-8"))
 
 
-def _write(path: Path, payload: dict) -> None:
+def _write(path: Path, payload: dict[str, Any]) -> None:
     path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
-def execute_one_run(args: argparse.Namespace) -> dict:
-    # Raster 2 and the pre-window leverage policy use the same enriched evidence.
+def execute_one_run(args: argparse.Namespace) -> dict[str, Any]:
+    root = args.root.resolve()
+    research_root = root / "research" / "ten_day_challenge"
+
+    # Raster 2 and the pre-window leverage policy use the same richer evidence.
     enriched = make_enriched_classifier(original_classify_regime)
     base.classify_regime = enriched
     engine.classify_regime = enriched
 
+    # Raster 4 keeps the original build/fingerprint checks and adds semantic
+    # evidence provenance checks against completed memory only.
+    original_validate = base.validate_candidate
+
+    def strengthened_validate_candidate(**kwargs: Any) -> str:
+        selected = original_validate(**kwargs)
+        plan = kwargs["plan"]
+        memory = _load(research_root / "research-memory.json")
+        validate_research_plan(
+            plan,
+            {"label": plan.get("regime"), "blind_window_seen": False},
+            memory,
+        )
+        return selected
+
+    base.validate_candidate = strengthened_validate_candidate
     record = engine.execute_one_run(args)
 
     # Raster 6 owns learning-progress/stagnation diagnosis across completed runs.
-    root = args.root.resolve()
-    research_root = root / "research" / "ten_day_challenge"
     memory_path = research_root / "research-memory.json"
     state_path = research_root / "walk-forward-state.json"
     memory = _load(memory_path)
