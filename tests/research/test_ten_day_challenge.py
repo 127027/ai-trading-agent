@@ -134,9 +134,9 @@ def test_reviewer_rasters_are_callable_independently():
         "near_ruin_rate": 0.0,
         "median_max_drawdown_pct": 10.0,
     }
-    assert council.quant_review(summary)["agent"] == "QuantAgent"
-    assert council.validation_review(summary, AGENTS)["agent"] == "ValidationCritic"
-    assert council.risk_review(summary, AGENTS)["agent"] == "RiskAgent"
+    assert council.quant_review(summary)["agent"] == "QuantExperimentAgent"
+    assert council.validation_review(summary, AGENTS)["agent"] == "BuildValidationAgent"
+    assert council.risk_review(summary, AGENTS)["agent"] == "TenDaySupervisor"
 
 
 def test_aggressive_target_candidate_is_not_vetoed_only_for_near_ruin_or_drawdown():
@@ -153,5 +153,5 @@ def test_aggressive_target_candidate_is_not_vetoed_only_for_near_ruin_or_drawdow
         AGENTS,
     )
     assert review["veto"] is False
-    assert "RiskAgent" not in review["veto_agents"]
+    assert "TenDaySupervisor" not in review["veto_agents"]
     assert review["promotion_eligible"] is True
