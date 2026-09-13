@@ -32,17 +32,17 @@ class TenDayAdaptiveV2(IStrategy):
     max_entry_position_adjustment = 0
 
     family_mode = CategoricalParameter(_allowed_families(), default=_allowed_families()[0], space="buy")
-    ema_fast = IntParameter(8, 48, default=20, space="buy")
-    ema_slow = IntParameter(72, 240, default=144, space="buy")
-    adx_min = IntParameter(10, 38, default=20, space="buy")
-    volume_ratio = DecimalParameter(0.70, 2.20, default=1.05, decimals=2, space="buy")
-    atr_floor = DecimalParameter(0.001, 0.018, default=0.003, decimals=3, space="buy")
-    breakout_lookback = IntParameter(8, 96, default=40, space="buy")
-    breakout_buffer = DecimalParameter(0.0, 0.008, default=0.001, decimals=3, space="buy")
-    pullback_depth = DecimalParameter(0.002, 0.035, default=0.012, decimals=3, space="buy")
-    rsi_entry = IntParameter(25, 62, default=48, space="buy")
-    rsi_exit = IntParameter(58, 88, default=72, space="sell")
-    exit_ema = IntParameter(8, 64, default=24, space="sell")
+    ema_fast = IntParameter(6, 48, default=18, space="buy")
+    ema_slow = IntParameter(48, 220, default=120, space="buy")
+    adx_min = IntParameter(5, 32, default=14, space="buy")
+    volume_ratio = DecimalParameter(0.25, 1.50, default=0.70, decimals=2, space="buy")
+    atr_floor = DecimalParameter(0.000, 0.012, default=0.001, decimals=3, space="buy")
+    breakout_lookback = IntParameter(4, 72, default=24, space="buy")
+    breakout_buffer = DecimalParameter(0.0, 0.006, default=0.0, decimals=3, space="buy")
+    pullback_depth = DecimalParameter(0.002, 0.060, default=0.025, decimals=3, space="buy")
+    rsi_entry = IntParameter(20, 70, default=55, space="buy")
+    rsi_exit = IntParameter(55, 90, default=74, space="sell")
+    exit_ema = IntParameter(6, 48, default=18, space="sell")
 
     minimal_roi: ClassVar[dict[str, float]] = {"0": 0.08, "180": 0.04, "720": 0.0}
     stoploss = -0.12
@@ -73,9 +73,9 @@ class TenDayAdaptiveV2(IStrategy):
         dataframe["atr_mean"] = dataframe["atr_pct"].shift(1).rolling(48, min_periods=48).mean()
         dataframe["volume_mean"] = dataframe["volume"].shift(1).rolling(32, min_periods=32).mean()
         dataframe["rolling_high"] = (
-            dataframe["high"].shift(1).rolling(int(self.breakout_lookback.value), min_periods=8).max()
+            dataframe["high"].shift(1).rolling(int(self.breakout_lookback.value), min_periods=4).max()
         )
-        dataframe["rolling_low"] = dataframe["low"].shift(1).rolling(32, min_periods=16).min()
+        dataframe["rolling_low"] = dataframe["low"].shift(1).rolling(24, min_periods=12).min()
         bb = ta.BBANDS(dataframe, timeperiod=20, nbdevup=2.0, nbdevdn=2.0)
         dataframe["bb_upper"] = bb["upperband"]
         dataframe["bb_middle"] = bb["middleband"]
@@ -104,28 +104,27 @@ class TenDayAdaptiveV2(IStrategy):
             signal = (
                 common
                 & (dataframe["ema_fast"] > dataframe["ema_slow"])
-                & (dataframe["ema_slow"] > dataframe["ema_slow"].shift(16))
+                & (dataframe["ema_slow"] > dataframe["ema_slow"].shift(8))
                 & (distance <= float(self.pullback_depth.value))
-                & (dataframe["rsi"] >= 38)
-                & (dataframe["rsi"] <= int(self.rsi_entry.value) + 10)
-                & (dataframe["close"] > dataframe["open"])
+                & (dataframe["rsi"] >= 32)
+                & (dataframe["rsi"] <= int(self.rsi_entry.value) + 12)
             )
             tag = "adaptive_trend_pullback"
         elif family == "mean_reversion":
             signal = (
                 common
-                & (dataframe["close"] <= dataframe["bb_lower"])
+                & (dataframe["close"] <= dataframe["bb_middle"])
                 & (dataframe["rsi"] <= int(self.rsi_entry.value))
-                & (dataframe["close"] > dataframe["rolling_low"] * 0.97)
+                & (dataframe["close"] > dataframe["rolling_low"] * 0.94)
             )
             tag = "adaptive_mean_reversion"
         else:
             signal = (
                 common
-                & (dataframe["atr_pct"] > dataframe["atr_mean"] * 1.20)
-                & (dataframe["close"] > dataframe["rolling_high"] * 0.998)
-                & (dataframe["close"] > dataframe["ema_fast"])
-                & (dataframe["rsi"] >= 50)
+                & (dataframe["atr_pct"] > dataframe["atr_mean"] * 1.02)
+                & (dataframe["close"] > dataframe["rolling_high"] * 0.995)
+                & (dataframe["close"] > dataframe["ema_fast"] * 0.997)
+                & (dataframe["rsi"] >= 45)
             )
             tag = "adaptive_volatility_expansion"
 
