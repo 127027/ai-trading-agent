@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 from pathlib import Path
 from typing import Any
 
@@ -84,14 +85,23 @@ def _margin_run_window(window: Any, **kwargs: Any) -> Any:
 
 
 def execute_one_run(args: argparse.Namespace) -> dict[str, Any]:
+    root = args.root.resolve()
+    research_root = root / "research" / "ten_day_challenge"
+    challenge = _load(research_root / "challenge.json", {})
+    state = _load(research_root / "walk-forward-state.json", {})
+    selected_leverage = _select_leverage(challenge, state)
+    os.environ["TEN_DAY_RESEARCH_LEVERAGE"] = str(selected_leverage)
+
+    sidecar_path = research_root / LAST_MARGIN_SIDECAR
+    sidecar_path.unlink(missing_ok=True)
     base.run_window = _margin_run_window
     record = base.execute_one_run(args)
 
-    root = args.root.resolve()
-    research_root = root / "research" / "ten_day_challenge"
-    sidecar = _load(research_root / LAST_MARGIN_SIDECAR, {})
+    sidecar = _load(sidecar_path, {})
     if not sidecar:
         raise RuntimeError("V4 run completed without isolated-margin evidence")
+    if int(sidecar.get("leverage") or 0) != selected_leverage:
+        raise RuntimeError("Raster 3/5 leverage mismatch in V4 research run")
 
     record["margin_model"] = sidecar
     record["research_product"] = sidecar.get("product")
@@ -110,6 +120,7 @@ def execute_one_run(args: argparse.Namespace) -> dict[str, Any]:
     state = _load(state_path, {})
     state["last_run"] = record
     state["aggressive_v4_active"] = True
+    state["last_leverage_used"] = sidecar.get("leverage")
     if record.get("outcome") == "HIT" and state.get("first_hit_run") is None:
         state["first_hit_run"] = int(record["run"])
         state["phase"] = "post_first_hit_holdout_measurement"
