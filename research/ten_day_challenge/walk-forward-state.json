@@ -8,14 +8,14 @@
   "last_failure": null,
   "last_run": {
     "agent_council": {
-      "council_score": 0.0,
+      "council_score": 0.046546929399999826,
       "primary_objective": "maximize_hit_rate_200",
       "promotion_eligible": true,
       "reviews": [
         {
           "agent": "QuantAgent",
           "reason": "Primary objective is repeatable >=200 USDT outcomes in 10 days; 150/175/250 thresholds are secondary learning signals.",
-          "score": 0.0,
+          "score": 0.046546929399999826,
           "veto": false
         },
         {
@@ -35,36 +35,36 @@
       "veto": false,
       "veto_agents": []
     },
-    "allowed_history_end": "2025-03-16",
-    "allowed_history_start": "2024-03-16",
-    "blind_test_end": "2025-03-26",
-    "blind_test_start": "2025-03-16",
-    "completed_at_utc": "2026-09-13T06:37:04.055809+00:00",
-    "final_balance": 100.0,
-    "hyperopt_epochs": 60,
-    "learning_directive_for_next_run": "increase_signal_recall_and_trade_activity",
+    "allowed_history_end": "2026-02-05",
+    "allowed_history_start": "2025-02-05",
+    "blind_test_end": "2026-02-15",
+    "blind_test_start": "2026-02-05",
+    "completed_at_utc": "2026-09-13T06:39:38.704979+00:00",
+    "final_balance": 102.32734647,
+    "hyperopt_epochs": 75,
+    "learning_directive_for_next_run": "positive_but_slow_increase_return_velocity",
     "max_drawdown_pct": 0.0,
     "near_ruin": false,
-    "optimization_timerange_start": "2024-03-20",
+    "optimization_timerange_start": "2025-02-09",
     "outcome": "MISS",
-    "parameter_fingerprint": "004b71917420eaa2c79ae2afb767618764a88415fd4c650331a0d908c75d654d",
+    "parameter_fingerprint": "bbaf18ad2c62567f18544d0dd9327007b0aa69da2f05dd85d0f81d3a77218d3b",
     "raster_restart_attempts": 0,
-    "return_pct": 0.0,
-    "run": 26,
+    "return_pct": 2.3273464699999913,
+    "run": 27,
     "safety": {
       "blind_window_used_for_raster_2": false,
       "exchange_secrets": false,
       "live_trading": false,
       "research_only": true
     },
-    "search_seed": 126499,
+    "search_seed": 160092,
     "starting_balance": 100.0,
     "target_balance": 200.0,
     "target_hit_at": null,
-    "trades": 0
+    "trades": 1
   },
-  "learning_directive": "increase_signal_recall_and_trade_activity",
-  "miss_count": 26,
+  "learning_directive": "positive_but_slow_increase_return_velocity",
+  "miss_count": 27,
   "next_raster": 1,
   "parameter_fingerprints": [
     "059373dbd1ffea4d833a1e33b94472f892084d8a5d47ee1bc5eec16acda6ef48",
@@ -92,7 +92,8 @@
     "4ff8ce45eca5db3d28a56e9d65a11c5edb7def319a822fd0e14b11b254bb7b5e",
     "4f743023624005db551b3d92acd230dafd81dbedca24f8c3639c837c6faaea31",
     "ec6cfc8869f2e08be9c63c6f5712540f0f8528d188046053a9255c5f39ae6027",
-    "004b71917420eaa2c79ae2afb767618764a88415fd4c650331a0d908c75d654d"
+    "004b71917420eaa2c79ae2afb767618764a88415fd4c650331a0d908c75d654d",
+    "bbaf18ad2c62567f18544d0dd9327007b0aa69da2f05dd85d0f81d3a77218d3b"
   ],
   "raster_history": [
     {
@@ -1342,14 +1343,62 @@
       "raster": 6,
       "run": 26,
       "status": "passed"
+    },
+    {
+      "agent": "OpsWatchdog",
+      "at_utc": "2026-09-13T06:37:10.601383+00:00",
+      "detail": "health and research memory valid",
+      "raster": 1,
+      "run": 27,
+      "status": "passed"
+    },
+    {
+      "agent": "ResearchAgent",
+      "at_utc": "2026-09-13T06:39:25.234769+00:00",
+      "detail": "trained only on 2025-02-05..2026-02-05 with fingerprint bbaf18ad2c62",
+      "raster": 2,
+      "run": 27,
+      "status": "passed"
+    },
+    {
+      "agent": "QuantAgent",
+      "at_utc": "2026-09-13T06:39:38.697583+00:00",
+      "detail": "MISS final=102.32734647 trades=1",
+      "raster": 3,
+      "run": 27,
+      "status": "passed"
+    },
+    {
+      "agent": "ValidationCritic",
+      "at_utc": "2026-09-13T06:39:38.700050+00:00",
+      "detail": "blind window complete and reproducible",
+      "raster": 4,
+      "run": 27,
+      "status": "passed"
+    },
+    {
+      "agent": "RiskAgent",
+      "at_utc": "2026-09-13T06:39:38.702356+00:00",
+      "detail": "near_ruin=False drawdown=0.0",
+      "raster": 5,
+      "run": 27,
+      "status": "passed"
+    },
+    {
+      "agent": "TenDaySupervisor",
+      "at_utc": "2026-09-13T06:39:38.706321+00:00",
+      "detail": "checkpointed MISS; next run starts at raster 1",
+      "raster": 6,
+      "run": 27,
+      "status": "passed"
     }
   ],
   "raster_status": "ready_for_next_run",
-  "run_count": 26,
-  "run_in_progress": 26,
+  "run_count": 27,
+  "run_in_progress": 27,
   "schema_version": 1,
   "supervisor": "TenDaySupervisor",
-  "updated_at_utc": "2026-09-13T06:37:04.058105+00:00",
+  "updated_at_utc": "2026-09-13T06:39:38.707465+00:00",
   "used_test_windows": [
     "2025-10-10",
     "2024-06-06",
@@ -1376,6 +1425,7 @@
     "2024-10-08",
     "2026-08-01",
     "2024-05-14",
-    "2025-03-16"
+    "2025-03-16",
+    "2026-02-05"
   ]
 }
