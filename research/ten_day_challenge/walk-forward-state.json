@@ -35,36 +35,36 @@
       "veto": false,
       "veto_agents": []
     },
-    "allowed_history_end": "2025-01-05",
-    "allowed_history_start": "2024-01-06",
-    "blind_test_end": "2025-01-15",
-    "blind_test_start": "2025-01-05",
-    "completed_at_utc": "2026-09-13T06:56:34.509185+00:00",
+    "allowed_history_end": "2026-04-15",
+    "allowed_history_start": "2025-04-15",
+    "blind_test_end": "2026-04-25",
+    "blind_test_start": "2026-04-15",
+    "completed_at_utc": "2026-09-13T06:58:59.753772+00:00",
     "final_balance": 100.0,
     "hyperopt_epochs": 75,
     "learning_directive_for_next_run": "increase_signal_recall_and_trade_activity",
     "max_drawdown_pct": 0.0,
     "near_ruin": false,
-    "optimization_timerange_start": "2024-01-10",
+    "optimization_timerange_start": "2025-04-19",
     "outcome": "MISS",
-    "parameter_fingerprint": "4f9e7312325468493e7069b59033c8ef744b66fcd44b3c08a58e058c3051b721",
+    "parameter_fingerprint": "5cd4471e0a33500df99cd32fa70074ffa58c694b0457a72c30966f417305ac40",
     "raster_restart_attempts": 0,
     "return_pct": 0.0,
-    "run": 34,
+    "run": 35,
     "safety": {
       "blind_window_used_for_raster_2": false,
       "exchange_secrets": false,
       "live_trading": false,
       "research_only": true
     },
-    "search_seed": 167155,
+    "search_seed": 168164,
     "starting_balance": 100.0,
     "target_balance": 200.0,
     "target_hit_at": null,
     "trades": 0
   },
   "learning_directive": "increase_signal_recall_and_trade_activity",
-  "miss_count": 34,
+  "miss_count": 35,
   "next_raster": 1,
   "parameter_fingerprints": [
     "059373dbd1ffea4d833a1e33b94472f892084d8a5d47ee1bc5eec16acda6ef48",
@@ -100,7 +100,8 @@
     "985227c32d735cdeb555397d3eb30f6f28c1232aea59da3dc0068b311ac8cc62",
     "219de00b7256da0fab599435fae7412da9d39b89bcab468b2cba13dbfaf011ea",
     "ada681891e040f1f5986a45b5b2c4bbd25acd0412c557bddb1f173be4c8546bd",
-    "4f9e7312325468493e7069b59033c8ef744b66fcd44b3c08a58e058c3051b721"
+    "4f9e7312325468493e7069b59033c8ef744b66fcd44b3c08a58e058c3051b721",
+    "5cd4471e0a33500df99cd32fa70074ffa58c694b0457a72c30966f417305ac40"
   ],
   "raster_history": [
     {
@@ -1734,14 +1735,62 @@
       "raster": 6,
       "run": 34,
       "status": "passed"
+    },
+    {
+      "agent": "OpsWatchdog",
+      "at_utc": "2026-09-13T06:56:40.276687+00:00",
+      "detail": "health and research memory valid",
+      "raster": 1,
+      "run": 35,
+      "status": "passed"
+    },
+    {
+      "agent": "ResearchAgent",
+      "at_utc": "2026-09-13T06:58:47.667885+00:00",
+      "detail": "trained only on 2025-04-15..2026-04-15 with fingerprint 5cd4471e0a33",
+      "raster": 2,
+      "run": 35,
+      "status": "passed"
+    },
+    {
+      "agent": "QuantAgent",
+      "at_utc": "2026-09-13T06:58:59.745726+00:00",
+      "detail": "MISS final=100.00000000 trades=0",
+      "raster": 3,
+      "run": 35,
+      "status": "passed"
+    },
+    {
+      "agent": "ValidationCritic",
+      "at_utc": "2026-09-13T06:58:59.748443+00:00",
+      "detail": "blind window complete and reproducible",
+      "raster": 4,
+      "run": 35,
+      "status": "passed"
+    },
+    {
+      "agent": "RiskAgent",
+      "at_utc": "2026-09-13T06:58:59.751064+00:00",
+      "detail": "near_ruin=False drawdown=0.0",
+      "raster": 5,
+      "run": 35,
+      "status": "passed"
+    },
+    {
+      "agent": "TenDaySupervisor",
+      "at_utc": "2026-09-13T06:58:59.755242+00:00",
+      "detail": "checkpointed MISS; next run starts at raster 1",
+      "raster": 6,
+      "run": 35,
+      "status": "passed"
     }
   ],
   "raster_status": "ready_for_next_run",
-  "run_count": 34,
-  "run_in_progress": 34,
+  "run_count": 35,
+  "run_in_progress": 35,
   "schema_version": 1,
   "supervisor": "TenDaySupervisor",
-  "updated_at_utc": "2026-09-13T06:56:34.511931+00:00",
+  "updated_at_utc": "2026-09-13T06:58:59.756506+00:00",
   "used_test_windows": [
     "2025-10-10",
     "2024-06-06",
@@ -1776,6 +1825,7 @@
     "2024-12-11",
     "2025-01-30",
     "2024-05-22",
-    "2025-01-05"
+    "2025-01-05",
+    "2026-04-15"
   ]
 }
