@@ -1,0 +1,122 @@
+{
+  "agent_council": {
+    "council_score": -0.017893005599999956,
+    "primary_objective": "maximize_hit_rate_200",
+    "promotion_eligible": true,
+    "reviews": [
+      {
+        "agent": "QuantAgent",
+        "reason": "Primary objective is repeatable >=200 USDT outcomes in 10 days; 150/175/250 thresholds are secondary learning signals.",
+        "score": -0.017893005599999956,
+        "veto": false
+      },
+      {
+        "agent": "ValidationCritic",
+        "reason": "Validation evidence is complete enough to review.",
+        "score": 0.0,
+        "veto": false
+      },
+      {
+        "agent": "RiskAgent",
+        "reason": "Research diagnostic only: near-ruin=0.00%, median drawdown=0.89%. Aggressive valid candidates are not vetoed.",
+        "score": 0.0,
+        "veto": false
+      }
+    ],
+    "supervisor": "TenDaySupervisor",
+    "veto": false,
+    "veto_agents": []
+  },
+  "allowed_history_end": "2026-02-09",
+  "allowed_history_start": "2025-02-09",
+  "blind_test_end": "2026-02-19",
+  "blind_test_start": "2026-02-09",
+  "completed_at_utc": "2026-09-13T23:29:04.660454+00:00",
+  "final_balance": 99.10534972,
+  "hyperopt_epochs": 75,
+  "hypothesis": {
+    "allowed_families": [
+      "mean_reversion",
+      "trend_pullback"
+    ],
+    "blind_window_seen": false,
+    "external_research_id": null,
+    "hypothesis_id": "ee45f7002260ca44",
+    "learning_directive": "increase_signal_recall_and_trade_activity",
+    "reasons": [
+      "regime=bear_trend_high_vol",
+      "binary objective: >=200 is HIT; every lower final balance is MISS learning evidence",
+      "choose by regime-specific evidence plus exploration without discarding materially positive evidence",
+      "previous run had zero trades; widen signal-producing families"
+    ],
+    "regime": "bear_trend_high_vol"
+  },
+  "learning_directive_for_next_run": "negative_return_improve_entry_quality_without_becoming_passive",
+  "market_regime": {
+    "blind_window_seen": false,
+    "evidence_cutoff": "2026-02-09",
+    "label": "bear_trend_high_vol",
+    "median_annualized_vol_30d": 0.9658245453894965,
+    "median_return_30d": -0.3136072007752518,
+    "median_return_90d": -0.42392838875543,
+    "median_trend_gap": -0.12415227260756029,
+    "pair_features": {
+      "ADA/USDT": {
+        "annualized_vol_30d": 0.9682137040649602,
+        "return_30d": -0.3099131323454267,
+        "return_90d": -0.5443657219973009,
+        "trend_gap": -0.12460119519800106
+      },
+      "BNB/USDT": {
+        "annualized_vol_30d": 0.7370522388667797,
+        "return_30d": -0.2864772651249917,
+        "return_90d": -0.3548962680699208,
+        "trend_gap": -0.114851677609899
+      },
+      "BTC/USDT": {
+        "annualized_vol_30d": 0.7968125240927157,
+        "return_30d": -0.22408002181787368,
+        "return_90d": -0.33657550862819785,
+        "trend_gap": -0.09662475692372152
+      },
+      "ETH/USDT": {
+        "annualized_vol_30d": 0.9930568662224156,
+        "return_30d": -0.32335837326771155,
+        "return_90d": -0.41428591448631535,
+        "trend_gap": -0.14603428855013056
+      },
+      "SOL/USDT": {
+        "annualized_vol_30d": 0.9634353867140328,
+        "return_30d": -0.360226520556005,
+        "return_90d": -0.4800669416054032,
+        "trend_gap": -0.15124877051955965
+      },
+      "XRP/USDT": {
+        "annualized_vol_30d": 1.1397027443964733,
+        "return_30d": -0.31730126920507684,
+        "return_90d": -0.4335708630245446,
+        "trend_gap": -0.12370335001711952
+      }
+    }
+  },
+  "max_drawdown_pct": 0.8946502799999932,
+  "near_ruin": false,
+  "optimization_timerange_start": "2025-02-13",
+  "outcome": "MISS",
+  "parameter_fingerprint": "a1c7de7cb559405f9ef006b75053d3d4e5686c4ae78dff1778d81d95c684eb46",
+  "raster_restart_attempts": 0,
+  "return_pct": -0.8946502799999978,
+  "run": 160,
+  "safety": {
+    "blind_window_used_before_raster_5": false,
+    "exchange_secrets": false,
+    "live_trading": false,
+    "research_only": true
+  },
+  "search_seed": 279982,
+  "selected_family": "trend_pullback",
+  "starting_balance": 100.0,
+  "target_balance": 200.0,
+  "target_hit_at": null,
+  "trades": 2
+}
