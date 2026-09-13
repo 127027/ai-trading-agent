@@ -8,6 +8,7 @@ research loop cannot claim a leveraged HIT by merely multiplying a spot balance.
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import tempfile
 from dataclasses import dataclass
@@ -169,7 +170,21 @@ def run_margin_window(
             fee,
             detail_timeframe,
         )
-        completed = subprocess.run(command, capture_output=True, text=True, check=False)
+        timeout_seconds = int(os.environ.get("TEN_DAY_SUBPROCESS_TIMEOUT_SECONDS", "1800"))
+        try:
+            completed = subprocess.run(
+                command,
+                capture_output=True,
+                text=True,
+                check=False,
+                timeout=timeout_seconds,
+            )
+        except subprocess.TimeoutExpired as exc:
+            diagnostic = (
+                "stalled subprocess watchdog timeout "
+                f"after {timeout_seconds}s during blind margin backtest: {exc}"
+            )
+            return error_result(window, starting_balance, target_balance, diagnostic), {}
         diagnostic = "\n".join(
             (completed.stdout + "\n" + completed.stderr).splitlines()[-20:]
         )
@@ -232,6 +247,11 @@ def run_margin_window(
                 f"{exc}\n{diagnostic}"
             )
             return (
-                error_result(window, starting_balance, target_balance, message),
+                error_result(
+                    window,
+                    starting_balance,
+                    target_balance,
+                    message,
+                ),
                 {},
             )
