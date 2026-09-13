@@ -16,10 +16,17 @@ SPEC.loader.exec_module(margin_model)
 
 def trade(profit_ratio: float, min_rate: float = 100.0) -> dict:
     return {
+        "pair": "BTC/USDT",
+        "enter_tag": "adaptive_breakout",
+        "exit_reason": "roi",
         "open_rate": 100.0,
+        "close_rate": 100.0 * (1.0 + profit_ratio),
         "min_rate": min_rate,
+        "max_rate": 112.0,
         "profit_ratio": profit_ratio,
-        "trade_duration": 0,
+        "trade_duration": 60,
+        "open_date": "2025-01-01T00:00:00+00:00",
+        "close_date": "2025-01-01T01:00:00+00:00",
     }
 
 
@@ -81,3 +88,23 @@ def test_total_loss_is_valid_miss_not_success():
     assert result["final_balance"] == 0.0
     assert result["target_hit"] is False
     assert result["near_ruin"] is True
+
+
+def test_trade_evidence_contains_context_for_future_learning():
+    result = margin_model.apply_isolated_margin(
+        [trade(0.05, min_rate=98.0)],
+        starting_balance=100.0,
+        target_balance=200.0,
+        near_ruin_balance=10.0,
+        spec=spec(5),
+    )
+    evidence = result["trade_evidence"]
+    assert len(evidence) == 1
+    item = evidence[0]
+    assert item["pair"] == "BTC/USDT"
+    assert item["enter_tag"] == "adaptive_breakout"
+    assert item["exit_reason"] == "roi"
+    assert item["mae_pct"] == -2.0
+    assert item["mfe_pct"] == 12.0
+    assert item["equity_change"] > 0.0
+    assert item["profitable"] is True
