@@ -117,9 +117,11 @@ def main() -> int:
         check_file(path, failures)
 
     checkpoint = inspect_checkpoint(root)
+    # research-inbox.json is optional by design; the hypothesis engine uses an
+    # empty inbox when it is absent. Completed V6 runs must persist memory,
+    # but an optional external-ideas inbox must never block the next run.
     if not checkpoint["clean_start"]:
         check_file(research / "research-memory.json", failures)
-        check_file(research / "research-inbox.json", failures)
 
     install_public_freqtrade_launcher(root, args.python, args.freqtrade)
     check_executable(args.python, failures)
