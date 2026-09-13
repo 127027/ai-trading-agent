@@ -89,6 +89,27 @@ jobs:
           .venv/bin/python research/ten_day_challenge/jurisdiction_policy.py \
             --root "$GITHUB_WORKSPACE"
 
+      - name: Auto-fix Ruff-only formatting
+        run: |
+          .venv/bin/ruff check --fix \
+            research/ten_day_challenge/agentic_walk_forward.py \
+            research/ten_day_challenge/agentic_walk_forward_v4.py \
+            research/ten_day_challenge/agentic_walk_forward_v5_1.py \
+            research/ten_day_challenge/agent_quality.py \
+            research/ten_day_challenge/margin_model.py \
+            research/ten_day_challenge/signal_learning.py \
+            research/ten_day_challenge/evolution.py \
+            research/ten_day_challenge/walk_forward.py \
+            research/ten_day_challenge/rolling_windows.py \
+            research/ten_day_challenge/council.py \
+            research/ten_day_challenge/jurisdiction_policy.py \
+            runtime/user_data/hyperopts/TenDayChallengeLoss.py \
+            runtime/user_data/strategies/candidates/TenDayAdaptiveV2.py \
+            tests/research/test_agentic_evolution.py \
+            tests/research/test_margin_model.py \
+            tests/research/test_signal_learning.py \
+            tests/research/test_agent_quality.py
+
       - name: Validate V6 clean implementation
         run: |
           .venv/bin/python -m pytest \
