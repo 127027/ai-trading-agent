@@ -1,9 +1,10 @@
 """Persistent evidence and hypothesis engine for the autonomous six-raster loop.
 
 Raster 2 classifies the market context using only information available before the
-blind window. Raster 3 turns that evidence plus prior completed runs into a new,
-non-duplicate research hypothesis. Blind-window outcomes are written back only
-after raster 6, so the current test window can never leak into candidate design.
+blind window. Raster 3 turns that evidence plus prior completed runs and completed
+trade-level signal evidence into a new, non-duplicate research hypothesis.
+Blind-window outcomes are written back only after raster 6, so the current test
+window can never leak into candidate design.
 """
 
 from __future__ import annotations
@@ -11,14 +12,16 @@ from __future__ import annotations
 import hashlib
 import json
 import math
-from datetime import UTC, date, datetime, timedelta
+from datetime import UTC, date, datetime
 from pathlib import Path
 from typing import Any
 
 import pandas as pd
+from freqtrade.configuration.timerange import TimeRange
 from freqtrade.data.history.datahandlers.featherdatahandler import FeatherDataHandler
 from freqtrade.enums import CandleType
-from freqtrade.configuration.timerange import TimeRange
+
+from signal_learning import family_signal_score, signal_summary, update_signal_memory
 
 IMPLEMENTED_FAMILIES = (
     "breakout",
@@ -42,8 +45,10 @@ def write_json(path: Path, payload: dict[str, Any]) -> None:
 
 def initial_memory() -> dict[str, Any]:
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "family_regime_stats": {},
+        "signal_context_stats": {},
+        "recent_signal_evidence": [],
         "hypothesis_history": [],
         "recent_completed_runs": [],
         "external_research_consumed": [],
@@ -103,7 +108,7 @@ def classify_regime(
         if item is not None:
             features[pair] = item
     if not features:
-        raise RuntimeError("EvidenceAgent could not derive regime features from pre-window data")
+        raise RuntimeError("EvidenceRegimeAgent could not derive regime features from pre-window data")
 
     ret30 = float(pd.Series([x["return_30d"] for x in features.values()]).median())
     ret90 = float(pd.Series([x["return_90d"] for x in features.values()]).median())
@@ -151,21 +156,20 @@ def _family_score(memory: dict[str, Any], regime: str, family: str, total: int) 
     item = _stats(memory, regime, family)
     attempts = int(item["attempts"])
     if attempts == 0:
-        # Exploration matters, but an untested family must not automatically outrank
-        # a family with materially positive blind evidence in the same regime.
-        return 12.0 * math.sqrt(math.log(total + 2.0))
-    avg_balance = float(item["sum_final_balance"]) / attempts
-    hit_bonus = 150.0 * (float(item["hits"]) / attempts)
-    exploration = 12.0 * math.sqrt(math.log(total + 2.0) / attempts)
-    inactivity_penalty = 3.0 * (float(item["zero_trade_runs"]) / attempts)
-    return (avg_balance - 100.0) + hit_bonus + exploration - inactivity_penalty
+        base = 12.0 * math.sqrt(math.log(total + 2.0))
+    else:
+        avg_balance = float(item["sum_final_balance"]) / attempts
+        hit_bonus = 150.0 * (float(item["hits"]) / attempts)
+        exploration = 12.0 * math.sqrt(math.log(total + 2.0) / attempts)
+        inactivity_penalty = 3.0 * (float(item["zero_trade_runs"]) / attempts)
+        base = (avg_balance - 100.0) + hit_bonus + exploration - inactivity_penalty
+    return base + family_signal_score(memory, regime, family)
 
 
 def _regime_priors(regime: str) -> list[str]:
     if regime.startswith("bull_trend"):
         return ["breakout", "trend_pullback", "volatility_expansion", "mean_reversion"]
     if regime.startswith("bear_trend"):
-        # Spot-only research cannot short yet; favor rebound/mean-reversion hypotheses.
         return ["mean_reversion", "volatility_expansion", "trend_pullback", "breakout"]
     if regime == "sideways_high_vol":
         return ["mean_reversion", "volatility_expansion", "breakout", "trend_pullback"]
@@ -193,18 +197,28 @@ def plan_hypothesis(
         reverse=True,
     )
 
+    signal_evidence = {family: signal_summary(memory, label, family) for family in ranked}
     reasons = [
         f"regime={label}",
         "binary objective: >=200 is HIT; every lower final balance is MISS learning evidence",
-        "choose by regime-specific evidence plus exploration without discarding materially positive evidence",
+        "rank families by regime-level results plus completed trade-level signal evidence",
     ]
+    for family in ranked[:2]:
+        summary = signal_evidence[family]
+        if int(summary.get("trades") or 0) > 0:
+            reasons.append(
+                f"signal-memory {family}: trades={summary['trades']} "
+                f"win_rate={float(summary['win_rate'] or 0.0):.3f} "
+                f"avg_equity_change={float(summary['average_equity_change'] or 0.0):.4f} "
+                f"score={float(summary['score'] or 0.0):.3f}"
+            )
+
     last = state.get("last_run") or {}
     directive = str(state.get("learning_directive") or "initial_broad_search")
     if int(last.get("trades") or 0) == 0:
         reasons.append("previous run had zero trades; widen signal-producing families")
-        ranked = [f for f in ranked if f in {"mean_reversion", "trend_pullback", "volatility_expansion"}] + [
-            f for f in ranked if f not in {"mean_reversion", "trend_pullback", "volatility_expansion"}
-        ]
+        active = {"mean_reversion", "trend_pullback", "volatility_expansion"}
+        ranked = [f for f in ranked if f in active] + [f for f in ranked if f not in active]
     elif float(last.get("final_balance") or 100.0) > 110.0:
         reasons.append("previous MISS had useful positive evidence; preserve one nearby family while exploring")
 
@@ -228,6 +242,7 @@ def plan_hypothesis(
             "allowed_families": allowed,
             "directive": directive,
             "external_id": external_id,
+            "signal_scores": {family: signal_evidence[family]["score"] for family in allowed},
         },
         sort_keys=True,
     )
@@ -238,6 +253,7 @@ def plan_hypothesis(
         "allowed_families": allowed,
         "learning_directive": directive,
         "external_research_id": external_id,
+        "signal_evidence": {family: signal_evidence[family] for family in allowed},
         "reasons": reasons,
         "blind_window_seen": False,
     }
@@ -273,6 +289,8 @@ def update_memory_after_completed_run(
     best = item.get("best_final_balance")
     if best is None or float(record["final_balance"]) > float(best):
         item["best_final_balance"] = float(record["final_balance"])
+
+    update_signal_memory(memory, record)
 
     memory.setdefault("hypothesis_history", []).append(
         {
