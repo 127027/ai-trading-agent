@@ -103,12 +103,14 @@ jobs:
             research/ten_day_challenge/rolling_windows.py \
             research/ten_day_challenge/council.py \
             research/ten_day_challenge/jurisdiction_policy.py \
+            research/ten_day_challenge/watchdog.py \
             runtime/user_data/hyperopts/TenDayChallengeLoss.py \
             runtime/user_data/strategies/candidates/TenDayAdaptiveV2.py \
             tests/research/test_agentic_evolution.py \
             tests/research/test_margin_model.py \
             tests/research/test_signal_learning.py \
-            tests/research/test_agent_quality.py
+            tests/research/test_agent_quality.py \
+            tests/research/test_watchdog.py
 
       - name: Validate V6 clean implementation
         run: |
@@ -119,7 +121,8 @@ jobs:
             tests/research/test_binance_vision.py \
             tests/research/test_margin_model.py \
             tests/research/test_signal_learning.py \
-            tests/research/test_agent_quality.py
+            tests/research/test_agent_quality.py \
+            tests/research/test_watchdog.py
           .venv/bin/ruff check \
             research/ten_day_challenge/agentic_walk_forward.py \
             research/ten_day_challenge/agentic_walk_forward_v4.py \
@@ -132,12 +135,14 @@ jobs:
             research/ten_day_challenge/rolling_windows.py \
             research/ten_day_challenge/council.py \
             research/ten_day_challenge/jurisdiction_policy.py \
+            research/ten_day_challenge/watchdog.py \
             runtime/user_data/hyperopts/TenDayChallengeLoss.py \
             runtime/user_data/strategies/candidates/TenDayAdaptiveV2.py \
             tests/research/test_agentic_evolution.py \
             tests/research/test_margin_model.py \
             tests/research/test_signal_learning.py \
-            tests/research/test_agent_quality.py
+            tests/research/test_agent_quality.py \
+            tests/research/test_watchdog.py
 
       - name: Run five clean V6 blind experiments
         id: blind-runs
