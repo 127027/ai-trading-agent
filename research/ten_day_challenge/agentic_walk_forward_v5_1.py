@@ -1,8 +1,9 @@
-"""V5.1 entrypoint: stronger evidence, validation and supervisor meta-learning."""
+"""V6-clean entrypoint: isolated state plus strengthened six-agent research."""
 from __future__ import annotations
 
 import argparse
 import json
+import shutil
 from pathlib import Path
 from typing import Any
 
@@ -14,6 +15,8 @@ from agent_quality import (
     validate_research_plan,
 )
 from evolution import classify_regime as original_classify_regime
+
+GENERATION = "contextual-signal-v6-clean"
 
 
 def _load(path: Path) -> dict[str, Any]:
@@ -29,9 +32,34 @@ def _write(path: Path, payload: dict[str, Any]) -> None:
     )
 
 
+def _reset_old_generation(root: Path) -> None:
+    """Remove persisted V4/V5/V5.1 research evidence before V6 Run 1."""
+    research_root = root / "research" / "ten_day_challenge"
+    state_path = research_root / "walk-forward-state.json"
+    state = _load(state_path)
+    if state.get("agent_generation") == GENERATION:
+        return
+
+    for path in (
+        state_path,
+        research_root / "research-memory.json",
+        research_root / "latest-margin-result.json",
+        root / "runtime/user_data/strategies/candidates/TenDayAdaptiveV2.json",
+    ):
+        path.unlink(missing_ok=True)
+
+    for directory in (
+        research_root / "results" / "agentic-walk-forward",
+        research_root / "agentic-champion",
+    ):
+        if directory.exists():
+            shutil.rmtree(directory)
+
+
 def execute_one_run(args: argparse.Namespace) -> dict[str, Any]:
     root = args.root.resolve()
     research_root = root / "research" / "ten_day_challenge"
+    _reset_old_generation(root)
 
     enriched = make_enriched_classifier(original_classify_regime)
     base.classify_regime = enriched
@@ -61,11 +89,16 @@ def execute_one_run(args: argparse.Namespace) -> dict[str, Any]:
     state["supervisor_meta_learning"] = report
     if report.get("directive"):
         state["learning_directive"] = report["directive"]
-    state["agent_generation"] = "contextual-signal-v5.1"
+    state["agent_generation"] = GENERATION
+    state["clean_generation_started_at_run"] = 1
+    state["inherited_run_state"] = False
+    state["inherited_research_memory"] = False
     _write(state_path, state)
 
     record["supervisor_meta_learning"] = report
-    record["agent_generation"] = "contextual-signal-v5.1"
+    record["agent_generation"] = GENERATION
+    record["inherited_run_state"] = False
+    record["inherited_research_memory"] = False
     run_path = (
         research_root
         / "results"
