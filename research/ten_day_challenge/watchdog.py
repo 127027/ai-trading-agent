@@ -58,18 +58,35 @@ def inspect_data(data_dir: Path, failures: list[str]) -> dict[str, Any]:
     return {"files": len(files), "bytes": total_bytes}
 
 
+def load_state(path: Path) -> dict[str, Any]:
+    if not path.is_file():
+        return {}
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+    return payload if isinstance(payload, dict) else {}
+
+
 def inspect_checkpoint(root: Path) -> dict[str, Any]:
     research = root / "research/ten_day_challenge"
     state = research / "walk-forward-state.json"
     memory = research / "research-memory.json"
+    inbox = research / "research-inbox.json"
     champion = research / "agentic-champion/TenDayAdaptiveV2.json"
     results = research / "results/agentic-walk-forward"
     runs = sorted(results.glob("run-*/run.json")) if results.exists() else []
+    state_payload = load_state(state)
+    run_count = int(state_payload.get("run_count") or 0)
+    clean_start = run_count == 0 and len(runs) == 0
     return {
         "state_present": state.is_file(),
         "research_memory_present": memory.is_file(),
+        "research_inbox_present": inbox.is_file(),
         "champion_present": champion.is_file(),
         "agentic_run_records": len(runs),
+        "run_count": run_count,
+        "clean_start": clean_start,
     }
 
 
@@ -84,21 +101,25 @@ def main() -> int:
 
     root = args.root.resolve()
     failures: list[str] = []
+    research = root / "research/ten_day_challenge"
     required = [
-        root / "research/ten_day_challenge/challenge.json",
-        root / "research/ten_day_challenge/agents.json",
-        root / "research/ten_day_challenge/agentic_walk_forward.py",
-        root / "research/ten_day_challenge/evolution.py",
-        root / "research/ten_day_challenge/research-memory.json",
-        root / "research/ten_day_challenge/research-inbox.json",
-        root / "research/ten_day_challenge/rolling_windows.py",
-        root / "research/ten_day_challenge/freqtrade_public.py",
+        research / "challenge.json",
+        research / "agents.json",
+        research / "agentic_walk_forward.py",
+        research / "evolution.py",
+        research / "rolling_windows.py",
+        research / "freqtrade_public.py",
         root / "runtime/user_data/config-10day-research.json",
         root / "runtime/user_data/strategies/candidates/TenDayAdaptiveV2.py",
         root / "runtime/user_data/hyperopts/TenDayChallengeLoss.py",
     ]
     for path in required:
         check_file(path, failures)
+
+    checkpoint = inspect_checkpoint(root)
+    if not checkpoint["clean_start"]:
+        check_file(research / "research-memory.json", failures)
+        check_file(research / "research-inbox.json", failures)
 
     install_public_freqtrade_launcher(root, args.python, args.freqtrade)
     check_executable(args.python, failures)
@@ -107,7 +128,6 @@ def main() -> int:
         check_module(module, failures)
 
     data = inspect_data(args.data_dir.resolve(), failures)
-    checkpoint = inspect_checkpoint(root)
     report = {
         "agent": "OpsWatchdog",
         "checked_at_utc": datetime.now(UTC).isoformat(),
