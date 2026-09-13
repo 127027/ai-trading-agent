@@ -1,5 +1,6 @@
 {
-  "schema_version": 10,
+  "schema_version": 11,
+  "generation": "contextual-signal-v5",
   "objective": {
     "primary": "reach_200_from_100_within_one_blind_10_day_run_then_measure_repeat_hit_rate",
     "starting_balance": 100.0,
@@ -28,32 +29,32 @@
       {
         "raster": 1,
         "agent": "OpsWatchdog",
-        "purpose": "Inspect current technical state, checkpoints, data and prior rejection/failure. Localize the cause, preserve valid memory, apply only whitelisted repair/reset actions and restart the same run from raster 1. Never choose or score trading ideas."
+        "purpose": "Inspect current technical state, checkpoints, data and prior rejection/failure. Localize the cause, preserve valid memory, apply only whitelisted repair/reset actions and restart the same run from raster 1. Detect stalled subprocesses and return control safely. Never choose or score trading ideas."
       },
       {
         "raster": 2,
         "agent": "EvidenceRegimeAgent",
-        "purpose": "Use only the preceding 365 days to classify regime, direction, volatility, relative coin strength and evidence relevant to the next blind 10-day mission. Never inspect current blind-window candles."
+        "purpose": "Use only the preceding 365 days to classify regime, direction, volatility and relative coin strength relevant to the next blind 10-day mission. Never inspect current blind-window candles."
       },
       {
         "raster": 3,
         "agent": "EvolutionResearchAgent",
-        "purpose": "Generate materially different high-velocity hypotheses from persistent MISS/HIT evidence. Optimize coin/pair, regime fit, strategy family, signal frequency, capital use and permitted leverage. Prefer true >=200 HIT probability over capital preservation. Never inspect the current blind window."
+        "purpose": "Generate materially different high-velocity hypotheses from persistent MISS/HIT evidence and completed trade-level signal evidence. Learn contextually: signal quality may differ by regime, pair, family, entry tag, leverage and exit behavior. Optimize family, signal frequency, capital use and permitted leverage without assuming that yesterday's good signal is universally good. Never inspect the current blind window."
       },
       {
         "raster": 4,
         "agent": "BuildValidationAgent",
-        "purpose": "Verify novelty, reproducibility, Germany/EWR research-policy compliance, realistic cost/margin/liquidation modeling and zero look-ahead. Reject fake leverage and duplicate fingerprints."
+        "purpose": "Verify candidate novelty, selected-family consistency, zero look-ahead and reproducibility before blind reveal. Repository workflow gates separately verify Germany/EWR research policy; the V5 margin engine separately verifies cost, borrowing and liquidation accounting. Reject fake leverage and duplicate fingerprints."
       },
       {
         "raster": 5,
         "agent": "QuantExperimentAgent",
-        "purpose": "Reveal exactly one previously unseen ten-day window and execute the 100-start aggressive experiment. Leveraged research must include notional-scaled trading costs, borrowing cost proxy, documented liquidation threshold and liquidation fee. A valid economic MISS is learning evidence, not a technical failure."
+        "purpose": "Reveal exactly one previously unseen ten-day window and execute the 100-start aggressive experiment. Leveraged research must include notional-scaled trading costs, borrowing cost proxy, documented liquidation threshold and liquidation fee. Persist per-trade evidence only after the blind experiment has completed. A valid economic MISS is learning evidence, not a technical failure."
       },
       {
         "raster": 6,
         "agent": "TenDaySupervisor",
-        "purpose": "Judge the complete experiment. HIT only at >=200. On MISS, preserve lesson and restart at raster 1. On the first HIT, save proof and switch to repeatability measurement; never stop the research loop solely because one HIT occurred."
+        "purpose": "Judge the complete experiment. HIT only at >=200. On MISS, preserve run-level and trade-level lessons for future untouched windows, then restart at raster 1. On the first HIT, save proof and switch to repeatability measurement; never stop solely because one HIT occurred."
       }
     ]
   },
@@ -63,9 +64,25 @@
     "external_research_inbox": "research-inbox.json",
     "must_reason_about_failure_context": true,
     "must_distinguish_bad_strategy_from_bad_regime_match": true,
+    "must_learn_trade_level_signal_context": true,
+    "signal_context_dimensions": [
+      "market_regime",
+      "strategy_family",
+      "pair",
+      "enter_tag",
+      "exit_reason",
+      "leverage",
+      "profitability",
+      "mae_pct",
+      "mfe_pct",
+      "duration",
+      "liquidation"
+    ],
     "must_explore_new_hypotheses": true,
     "must_avoid_fixed_strategy_rotation": true,
-    "blind_window_available_to_research": false
+    "blind_window_available_to_research": false,
+    "current_blind_trade_evidence_available_to_current_hypothesis": false,
+    "completed_blind_trade_evidence_available_to_future_hypotheses": true
   },
   "supervisor": {
     "name": "TenDaySupervisor",
@@ -84,7 +101,9 @@
   "gates": {
     "require_all_windows_valid": true,
     "minimum_completed_windows": 1,
-    "minimum_trade_evidence": 0
+    "minimum_trade_evidence": 0,
+    "require_blind_window_seen_false_before_raster_5": true,
+    "require_signal_learning_only_after_completed_blind_run": true
   },
   "promotion": {
     "rule": "A run succeeds only when realized simulated capital reaches at least 200 within its blind ten-day window. A MISS remains valid learning evidence but never counts as success. One HIT is a milestone, not proof of repeatability.",
