@@ -1,111 +1,86 @@
 {
-  "schema_version": 7,
+  "schema_version": 8,
   "objective": {
-    "primary": "maximize_hit_rate_200",
+    "primary": "reach_200_from_100_within_one_blind_10_day_run",
     "starting_balance": 100.0,
     "target_balance": 200.0,
     "window_days": 10,
+    "history_days": 365,
     "research_only": true,
-    "capital_preservation_is_primary": false,
-    "allow_aggressive_research": true,
     "one_run_equals_one_blind_window": true,
+    "stop_after_first_valid_hit": true,
     "duplicate_challengers_should_be_avoided": true,
     "duplicate_test_windows_should_be_avoided": true
   },
   "raster_policy": {
-    "rule": "Each research run starts at raster 1 and ends after raster 6. Raster 2 may use only the 365 calendar days immediately before that run's randomly selected test start. Raster 3 then opens exactly one previously unseen blind 10-day window starting with 100 USDT. A miss is a valid research outcome, not a technical failure: rasters 4-6 diagnose it, checkpoint the lesson, and the next run begins again at raster 1 with a materially different search. Any technical failure in rasters 2-6 is handed back to raster 1 and the same run is retried after a whitelisted repair.",
-    "on_technical_failure": "handoff_to_raster_1_and_retry_same_run",
-    "on_target_miss": "finish_rasters_4_to_6_then_start_new_run_at_raster_1",
-    "on_target_hit": "record_success_then_start_new_run_at_raster_1",
-    "manual_stop_only": true,
+    "rule": "Every completed trading experiment traverses rasters 1 through 6. A technical fault at any raster returns the same experiment to raster 1 for diagnosis and a safe repair. A valid MISS is not a technical fault: it reaches raster 6, is converted into durable research memory, and the next experiment begins again at raster 1. The cycle continues autonomously until the first technically valid HIT reaches at least 200 from 100 within the blind ten-day window.",
+    "on_technical_failure": "return_same_run_to_raster_1",
+    "on_target_miss": "checkpoint_learning_then_new_full_cycle_at_raster_1",
+    "on_target_hit": "checkpoint_success_and_stop_new_batches",
     "run_completes_only_after_raster": 6,
-    "on_failure": "handoff_to_raster_1_and_restart_generation",
-    "generation_completes_only_after_raster": 6,
     "ordered_rasters": [
       {
         "raster": 1,
         "agent": "OpsWatchdog",
-        "purpose": "Check infrastructure, previous-run memory, window uniqueness and checkpoint health. Own technical recovery without changing live-trading safety."
+        "purpose": "Inspect current technical state, checkpoints, data and prior failure. If any later raster broke the system, localize the technical cause, apply only whitelisted repair actions, re-run health checks and restart this same run from raster 1. Never choose or score trading ideas."
       },
       {
         "raster": 2,
-        "agent": "ResearchAgent",
-        "purpose": "Choose a materially different hypothesis/parameter search using only the 365 days before the selected blind test start. Never inspect the 10 test days while searching."
+        "agent": "EvidenceRegimeAgent",
+        "purpose": "Understand what is known before the blind window: read completed-run memory, classify market regime from only the preceding 365 days, identify where previous hypotheses worked or failed and prepare evidence for raster 3. Never inspect current blind-window candles."
       },
       {
         "raster": 3,
-        "agent": "QuantAgent",
-        "purpose": "Execute exactly one blind 10-day backtest from 100 USDT and classify the run HIT only at >=200 USDT, otherwise MISS. Fees and slippage stay included."
+        "agent": "EvolutionResearchAgent",
+        "purpose": "Self-improvement and research raster. Explain plausible causes of prior misses, generate a materially different hypothesis, select or expand strategy families, consume vetted external/web-research ideas, vary search design and avoid repetitive loops. It may change the research direction but may not see the current blind ten days."
       },
       {
         "raster": 4,
-        "agent": "ValidationCritic",
-        "purpose": "Verify the run is reproducible, technically complete, unique, and free of look-ahead/data leakage. A valid MISS is not vetoed merely for missing 200."
+        "agent": "BuildValidationAgent",
+        "purpose": "Verify that the new candidate is buildable, novel, reproducible, permitted by the Germany/Saarland retail research policy and free of look-ahead. Reject duplicate fingerprints, invalid implementations and research plans that leaked the blind window."
       },
       {
         "raster": 5,
-        "agent": "RiskAgent",
-        "purpose": "Measure trade count, drawdown, near-ruin and loss pattern as diagnostic evidence for the next search. Risk alone does not veto aggressive research."
+        "agent": "QuantExperimentAgent",
+        "purpose": "Reveal exactly one previously unseen ten-day window and execute the 100-start blind experiment. Record trades, final balance, target-hit time, drawdown, inactivity and technical diagnostics without re-optimizing on those ten days."
       },
       {
         "raster": 6,
         "agent": "TenDaySupervisor",
-        "purpose": "Checkpoint HIT/MISS, strategy fingerprint, random window and learning directive. Then start the next run at raster 1 without user intervention."
+        "purpose": "Judge the complete experiment. HIT only at >=200. On MISS, preserve regime, strategy family, fingerprint, failure pattern and lesson in research memory, then return the next run to raster 1. On a valid HIT, save proof and stop dispatching new batches."
       }
     ]
   },
+  "self_development": {
+    "owner_raster": 3,
+    "persistent_memory": "research-memory.json",
+    "external_research_inbox": "research-inbox.json",
+    "must_reason_about_failure_context": true,
+    "must_distinguish_bad_strategy_from_bad_regime_match": true,
+    "must_explore_new_hypotheses": true,
+    "must_avoid_fixed_strategy_rotation": true,
+    "blind_window_available_to_research": false
+  },
   "supervisor": {
     "name": "TenDaySupervisor",
-    "role": "Research manager and checkpoint owner for one-run/one-window walk-forward research",
+    "role": "Final judge and checkpoint owner",
     "writes_repository": true,
-    "may_override_veto": false
-  },
-  "research_agent": {
-    "name": "ResearchAgent",
-    "role": "Generate materially different challenger parameters from the preceding 365-day history only; vary deterministic search seeds and reject duplicate parameter fingerprints",
-    "writes_repository": false,
-    "votes_on_strategy": false,
-    "may_use_current_blind_window": false
+    "may_override_validation_veto": false
   },
   "operations_agent": {
     "name": "OpsWatchdog",
-    "role": "Raster 1 central recovery owner: preserve state, diagnose technical failures, apply whitelisted infrastructure repairs, and retry the same run from raster 1",
-    "writes_repository": false,
     "may_apply_whitelisted_repairs": true,
     "owns_all_technical_failure_handoffs": true,
-    "restart_same_run_after_repair": true,
-    "restart_same_generation_after_repair": true,
-    "votes_on_strategy": false,
     "may_enable_live": false,
     "may_use_exchange_secrets": false
   },
-  "agents": [
-    {
-      "name": "QuantAgent",
-      "role": "Run one blind 10-day test and report whether 100 became at least 200",
-      "weight": 1.0,
-      "veto": false
-    },
-    {
-      "name": "ValidationCritic",
-      "role": "Reject broken, incomplete, duplicate, cherry-picked, look-ahead contaminated or non-reproducible runs",
-      "weight": 1.0,
-      "veto": true
-    },
-    {
-      "name": "RiskAgent",
-      "role": "Report failure modes and risk diagnostics without suppressing valid aggressive research solely for drawdown",
-      "weight": 1.0,
-      "veto": false
-    }
-  ],
   "gates": {
     "require_all_windows_valid": true,
     "minimum_completed_windows": 1,
     "minimum_trade_evidence": 0
   },
   "promotion": {
-    "rule": "A run is successful only when the blind final balance reaches at least 200 USDT. Misses remain valid learning evidence. Best miss/champion tracking may guide later searches but may not expose the current blind window to raster 2.",
+    "rule": "A run succeeds only when realized simulated capital reaches at least 200 within its blind ten-day window. A MISS remains valid learning evidence but never counts as success.",
     "blind_window_may_be_used_for_search": false,
     "single_writer": "TenDaySupervisor"
   }
