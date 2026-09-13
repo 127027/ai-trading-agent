@@ -23,7 +23,7 @@ def test_six_rasters_have_distinct_development_responsibilities():
         "TenDaySupervisor",
     ]
     assert config["self_development"]["owner_raster"] == 3
-    assert config["objective"]["stop_after_first_valid_hit"] is True
+    assert config["objective"]["stop_after_first_valid_hit"] is False
     assert config["raster_policy"]["on_any_raster_rejection"] == "return_same_run_to_raster_1"
 
 
