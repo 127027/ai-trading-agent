@@ -1,11 +1,11 @@
 {
-  "schema_version": 3,
+  "schema_version": 4,
   "exchange": "binance",
   "trading_mode": "spot",
   "stake_currency": "USDT",
   "starting_balance": 100.0,
   "target_balance": 200.0,
-  "primary_objective": "maximize_hit_rate_200",
+  "primary_objective": "maximize_probability_of_first_valid_100_to_200_hit",
   "run_definition": "one_random_blind_10_day_window",
   "window_days": 10,
   "history_days": 365,
@@ -39,11 +39,31 @@
   "duplicate_fingerprint_retries": 8,
   "unique_test_windows_until_exhausted": true,
   "runs_per_workflow_batch": 5,
+  "required_hits_before_stop": 1,
+  "stop_after_required_hits": true,
+  "jurisdiction_profile": "jurisdiction-de-retail.json",
+  "jurisdiction": "Germany",
+  "region": "Saarland",
+  "client_class": "retail",
+  "market_expansion_policy": {
+    "allow_any_asset_class_when_verified": true,
+    "require_historical_data_adapter": true,
+    "require_realistic_cost_model": true,
+    "require_margin_and_liquidation_model_for_leverage": true,
+    "require_plausible_german_retail_execution_path": true,
+    "never_fake_leverage_in_spot_mode": true
+  },
   "leverage_research": {
     "requested": true,
-    "candidate_levels": [1, 2, 3, 5, 10],
+    "regulatory_caps_are_hard_ceilings": true,
+    "crypto_cfd_max": 2,
+    "major_fx_cfd_max": 30,
+    "gold_cfd_max": 20,
+    "major_index_cfd_max": 20,
+    "other_commodity_cfd_max": 10,
+    "single_equity_cfd_max": 5,
     "require_realistic_liquidation_fees_funding": true,
     "do_not_fake_leverage_in_spot_mode": true,
-    "status": "pending_futures_backtest_adapter"
+    "status": "expand_only_after_verified_adapter"
   }
 }
