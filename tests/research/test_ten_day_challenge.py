@@ -74,19 +74,14 @@ def test_newest_export_prefers_zip_and_ignores_meta_json(tmp_path):
 
 
 def test_six_research_roles_are_explicit():
-    names = {
-        AGENTS["supervisor"]["name"],
-        AGENTS["research_agent"]["name"],
-        AGENTS["operations_agent"]["name"],
-        *(agent["name"] for agent in AGENTS["agents"]),
-    }
+    names = {item["agent"] for item in AGENTS["raster_policy"]["ordered_rasters"]}
     assert names == {
-        "TenDaySupervisor",
-        "ResearchAgent",
         "OpsWatchdog",
-        "QuantAgent",
-        "ValidationCritic",
-        "RiskAgent",
+        "EvidenceRegimeAgent",
+        "EvolutionResearchAgent",
+        "BuildValidationAgent",
+        "QuantExperimentAgent",
+        "TenDaySupervisor",
     }
 
 
@@ -96,18 +91,19 @@ def test_raster_order_uses_ops_as_central_recovery_owner():
     assert [item["raster"] for item in rasters] == [1, 2, 3, 4, 5, 6]
     assert [item["agent"] for item in rasters] == [
         "OpsWatchdog",
-        "ResearchAgent",
-        "QuantAgent",
-        "ValidationCritic",
-        "RiskAgent",
+        "EvidenceRegimeAgent",
+        "EvolutionResearchAgent",
+        "BuildValidationAgent",
+        "QuantExperimentAgent",
         "TenDaySupervisor",
     ]
-    assert policy["on_failure"] == "handoff_to_raster_1_and_restart_generation"
-    assert policy["generation_completes_only_after_raster"] == 6
-    assert policy["manual_stop_only"] is True
+    assert policy["on_any_raster_rejection"] == "return_same_run_to_raster_1"
+    assert policy["on_technical_failure"] == "return_same_run_to_raster_1"
+    assert policy["run_completes_only_after_raster"] == 6
+    assert policy["on_target_miss_at_raster_6"] == "checkpoint_learning_then_new_full_cycle_at_raster_1"
     ops = AGENTS["operations_agent"]
-    assert ops["owns_all_technical_failure_handoffs"] is True
-    assert ops["restart_same_generation_after_repair"] is True
+    assert ops["owns_all_failure_and_rejection_handoffs"] is True
+    assert ops["restart_same_run_after_rejection"] is True
 
 
 def test_agent_council_allows_complete_low_risk_candidate():
