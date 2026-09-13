@@ -1,13 +1,14 @@
 {
   "enabled": true,
-  "mode": "continuous_champion_challenger",
+  "mode": "continuous_blind_walk_forward_until_first_hit",
   "stop_requested": false,
   "stop_on_elapsed_time": false,
   "max_total_runtime_hours": null,
   "next_after_segment_1": "2",
   "next_after_segment_2": "1",
-  "full_year_proof_every_segment_2": true,
   "paper_only": true,
   "live_trading_allowed": false,
-  "notes": "Continue autonomous research indefinitely until the user explicitly requests a stop. Elapsed runtime and performance milestones are never stop conditions. Individual GitHub-hosted jobs may be bounded by platform limits, but the next research cycle must continue automatically."
+  "stop_after_required_hits": true,
+  "required_hits": 1,
+  "notes": "Continue autonomous blind walk-forward research without user intervention until at least one technically valid 10-day run turns 100 into at least 200. A normal MISS must lead to analysis, a materially different next search, and another random blind window. Stop dispatching new batches after the required hit count is reached. Never enable live trading or exchange secrets."
 }
