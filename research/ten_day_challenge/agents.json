@@ -1,5 +1,5 @@
 {
-  "schema_version": 8,
+  "schema_version": 9,
   "objective": {
     "primary": "reach_200_from_100_within_one_blind_10_day_run",
     "starting_balance": 100.0,
@@ -13,41 +13,46 @@
     "duplicate_test_windows_should_be_avoided": true
   },
   "raster_policy": {
-    "rule": "Every completed trading experiment traverses rasters 1 through 6. A technical fault at any raster returns the same experiment to raster 1 for diagnosis and a safe repair. A valid MISS is not a technical fault: it reaches raster 6, is converted into durable research memory, and the next experiment begins again at raster 1. The cycle continues autonomously until the first technically valid HIT reaches at least 200 from 100 within the blind ten-day window.",
+    "rule": "Every experiment begins at raster 1. Every raster has a pass/reject decision. If raster 1, 2, 3, 4 or 5 rejects, fails, lacks sufficient evidence, detects an invalid hypothesis, encounters a technical blocker, or otherwise cannot honestly pass its responsibility, the same experiment returns immediately to raster 1. Raster 1 diagnoses the recorded reason, preserves valid research memory, applies only safe repairs or reset actions, and the pipeline starts again from 1. Only a candidate that passes 1 through 5 reaches raster 6. Raster 6 judges the completed blind ten-day experiment. A valid trading MISS below 200 is durable learning evidence, completes that experiment, and starts the next experiment again at raster 1. A valid HIT at or above 200 saves proof and stops new batches.",
+    "on_any_raster_rejection": "return_same_run_to_raster_1",
     "on_technical_failure": "return_same_run_to_raster_1",
-    "on_target_miss": "checkpoint_learning_then_new_full_cycle_at_raster_1",
+    "on_insufficient_evidence": "return_same_run_to_raster_1",
+    "on_invalid_hypothesis": "return_same_run_to_raster_1",
+    "on_build_validation_rejection": "return_same_run_to_raster_1",
+    "on_experiment_technical_failure": "return_same_run_to_raster_1",
+    "on_target_miss_at_raster_6": "checkpoint_learning_then_new_full_cycle_at_raster_1",
     "on_target_hit": "checkpoint_success_and_stop_new_batches",
     "run_completes_only_after_raster": 6,
     "ordered_rasters": [
       {
         "raster": 1,
         "agent": "OpsWatchdog",
-        "purpose": "Inspect current technical state, checkpoints, data and prior failure. If any later raster broke the system, localize the technical cause, apply only whitelisted repair actions, re-run health checks and restart this same run from raster 1. Never choose or score trading ideas."
+        "purpose": "Inspect current technical state, checkpoints, data and prior rejection/failure. Localize the cause, preserve valid memory, apply only whitelisted repair/reset actions and restart the same run from raster 1. Never choose or score trading ideas."
       },
       {
         "raster": 2,
         "agent": "EvidenceRegimeAgent",
-        "purpose": "Understand what is known before the blind window: read completed-run memory, classify market regime from only the preceding 365 days, identify where previous hypotheses worked or failed and prepare evidence for raster 3. Never inspect current blind-window candles."
+        "purpose": "Understand what is known before the blind window: read completed-run memory, classify market regime from only the preceding 365 days, identify where previous hypotheses worked or failed and prepare evidence for raster 3. If evidence is invalid, inconsistent or insufficient to pass its gate, reject and return the same run to raster 1. Never inspect current blind-window candles."
       },
       {
         "raster": 3,
         "agent": "EvolutionResearchAgent",
-        "purpose": "Self-improvement and research raster. Explain plausible causes of prior misses, generate a materially different hypothesis, select or expand strategy families, consume vetted external/web-research ideas, vary search design and avoid repetitive loops. It may change the research direction but may not see the current blind ten days."
+        "purpose": "Self-improvement and research raster. Explain plausible causes of prior misses, generate a materially different hypothesis, select or expand strategy families, consume vetted external/web-research ideas, vary search design and avoid repetitive loops. If it cannot produce a novel, coherent hypothesis, reject and return the same run to raster 1. It may change the research direction but may not see the current blind ten days."
       },
       {
         "raster": 4,
         "agent": "BuildValidationAgent",
-        "purpose": "Verify that the new candidate is buildable, novel, reproducible, permitted by the Germany/Saarland retail research policy and free of look-ahead. Reject duplicate fingerprints, invalid implementations and research plans that leaked the blind window."
+        "purpose": "Verify that the new candidate is buildable, novel, reproducible, permitted by the Germany/Saarland retail research policy and free of look-ahead. Reject duplicate fingerprints, invalid implementations and research plans that leaked the blind window; any rejection returns the same run to raster 1."
       },
       {
         "raster": 5,
         "agent": "QuantExperimentAgent",
-        "purpose": "Reveal exactly one previously unseen ten-day window and execute the 100-start blind experiment. Record trades, final balance, target-hit time, drawdown, inactivity and technical diagnostics without re-optimizing on those ten days."
+        "purpose": "Reveal exactly one previously unseen ten-day window and execute the 100-start blind experiment. A technical/validation failure returns the same run to raster 1. A valid economic MISS is recorded and passed to raster 6 for learning; it is not disguised as a technical failure."
       },
       {
         "raster": 6,
         "agent": "TenDaySupervisor",
-        "purpose": "Judge the complete experiment. HIT only at >=200. On MISS, preserve regime, strategy family, fingerprint, failure pattern and lesson in research memory, then return the next run to raster 1. On a valid HIT, save proof and stop dispatching new batches."
+        "purpose": "Judge the complete experiment. HIT only at >=200. On a valid MISS, preserve regime, strategy family, fingerprint, failure pattern and lesson in research memory, complete that run, then begin the next full cycle at raster 1. On a valid HIT, save proof and stop dispatching new batches."
       }
     ]
   },
@@ -70,7 +75,8 @@
   "operations_agent": {
     "name": "OpsWatchdog",
     "may_apply_whitelisted_repairs": true,
-    "owns_all_technical_failure_handoffs": true,
+    "owns_all_failure_and_rejection_handoffs": true,
+    "restart_same_run_after_rejection": true,
     "may_enable_live": false,
     "may_use_exchange_secrets": false
   },
