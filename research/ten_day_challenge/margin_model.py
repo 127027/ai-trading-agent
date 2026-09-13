@@ -7,8 +7,22 @@ research loop cannot claim a leveraged HIT by merely multiplying a spot balance.
 
 from __future__ import annotations
 
+import json
+import subprocess
+import tempfile
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
+
+from rolling_windows import (
+    Window,
+    WindowResult,
+    build_backtest_command,
+    close_time,
+    error_result,
+    load_export,
+    newest_export,
+)
 
 
 @dataclass(frozen=True)
@@ -54,10 +68,8 @@ def apply_isolated_margin(
 
     if spec.direction != "long":
         raise ValueError("only long isolated-margin research is implemented")
-    if spec.leverage < 1:
-        raise ValueError("leverage must be >= 1")
-    if spec.leverage == 1:
-        raise ValueError("margin model is only for leverage > 1")
+    if spec.leverage <= 1:
+        raise ValueError("margin model requires leverage > 1")
 
     equity = float(starting_balance)
     peak = equity
@@ -88,9 +100,6 @@ def apply_isolated_margin(
         total_interest += interest
 
         if min_rate / open_rate <= liquidation_price_ratio:
-            # At the documented margin-level threshold, collateral value is
-            # margin_level * debt. Repay principal, liquidation fee, and accrued
-            # borrow interest; any residual remains as simulated account equity.
             residual = (
                 spec.liquidation_margin_level * debt
                 - debt
@@ -102,11 +111,10 @@ def apply_isolated_margin(
             liquidation_trade_index = index
             trades_processed += 1
             lowest = min(lowest, equity)
-            peak = max(peak, equity)
             if peak > 0:
                 max_drawdown = max(max_drawdown, (peak - equity) / peak)
-            # The original spot export no longer represents the post-liquidation
-            # signal path, so continuing through later trades would fabricate data.
+            # After liquidation, the original spot export no longer represents
+            # the signal path. Continuing through later trades would fabricate it.
             break
 
         profit_ratio = _float(trade, "profit_ratio")
@@ -135,3 +143,103 @@ def apply_isolated_margin(
         "direction": spec.direction,
         "leverage": spec.leverage,
     }
+
+
+def run_margin_window(
+    window: Window,
+    *,
+    freqtrade: str,
+    config: Path,
+    userdir: Path,
+    strategy_path: Path,
+    data_dir: Path,
+    strategy: str,
+    starting_balance: float,
+    target_balance: float,
+    near_ruin_balance: float,
+    fee: float,
+    detail_timeframe: str | None,
+    spec: MarginSpec,
+) -> tuple[WindowResult, dict[str, Any]]:
+    """Run the spot signal engine, then apply strict isolated-margin accounting."""
+
+    with tempfile.TemporaryDirectory(prefix="ten-day-margin-window-") as temporary:
+        export_directory = Path(temporary) / "exports"
+        export_directory.mkdir(parents=True, exist_ok=True)
+        command = build_backtest_command(
+            freqtrade,
+            config,
+            userdir,
+            strategy_path,
+            data_dir,
+            strategy,
+            window,
+            export_directory,
+            starting_balance,
+            fee,
+            detail_timeframe,
+        )
+        completed = subprocess.run(command, capture_output=True, text=True, check=False)
+        diagnostic = "\n".join(
+            (completed.stdout + "\n" + completed.stderr).splitlines()[-20:]
+        )
+        if completed.returncode != 0:
+            return error_result(window, starting_balance, target_balance, diagnostic), {}
+
+        export_path = newest_export(export_directory)
+        if export_path is None:
+            return (
+                error_result(
+                    window,
+                    starting_balance,
+                    target_balance,
+                    f"Freqtrade produced no readable export.\n{diagnostic}",
+                ),
+                {},
+            )
+
+        try:
+            payload = load_export(export_path)
+            stats = payload.get("strategy", {}).get(strategy)
+            if not isinstance(stats, dict):
+                raise KeyError(f"Strategy {strategy!r} missing from export")
+            trades = list(stats.get("trades", []))
+            trades.sort(key=lambda item: close_time(item) or close_time({}) or 0)
+            margin = apply_isolated_margin(
+                trades,
+                starting_balance=starting_balance,
+                target_balance=target_balance,
+                near_ruin_balance=near_ruin_balance,
+                spec=spec,
+            )
+            hit_index = margin["target_hit_trade_index"]
+            hit_at = None
+            if hit_index is not None and hit_index < len(trades):
+                when = close_time(trades[hit_index])
+                hit_at = when.isoformat() if when else None
+            result = WindowResult(
+                start=window.start.isoformat(),
+                end=window.end.isoformat(),
+                timerange=window.timerange,
+                starting_balance=starting_balance,
+                target_balance=target_balance,
+                final_balance=float(margin["final_balance"]),
+                return_pct=float(margin["return_pct"]),
+                target_hit=bool(margin["target_hit"]),
+                target_hit_at=hit_at,
+                trades=int(margin["trades_processed"]),
+                profit_factor=None,
+                max_drawdown_pct=float(margin["max_drawdown_pct"]),
+                near_ruin=bool(margin["near_ruin"]),
+            )
+            return result, margin
+        except (OSError, ValueError, KeyError, json.JSONDecodeError) as exc:
+            return (
+                error_result(
+                    window,
+                    starting_balance,
+                    target_balance,
+                    f"Unable to apply isolated-margin model to {export_path.name}: {exc}\n{diagnostic}",
+                ),
+                {},
+            )
