@@ -59,12 +59,7 @@ def _pair_features(frame: pd.DataFrame, history_end: date) -> dict[str, float] |
     work = work[work["date"] < end_ts]
     if work.empty:
         return None
-    daily = (
-        work.set_index("date")["close"]
-        .resample("1D")
-        .last()
-        .dropna()
-    )
+    daily = work.set_index("date")["close"].resample("1D").last().dropna()
     if len(daily) < 35:
         return None
     last = float(daily.iloc[-1])
@@ -93,9 +88,7 @@ def classify_regime(
     history_end: date,
 ) -> dict[str, Any]:
     handler = FeatherDataHandler(data_dir)
-    timerange = TimeRange.parse_timerange(
-        f"{history_start:%Y%m%d}-{history_end:%Y%m%d}"
-    )
+    timerange = TimeRange.parse_timerange(f"{history_start:%Y%m%d}-{history_end:%Y%m%d}")
     features: dict[str, dict[str, float]] = {}
     for pair in pairs:
         frame = handler.ohlcv_load(
@@ -158,7 +151,9 @@ def _family_score(memory: dict[str, Any], regime: str, family: str, total: int) 
     item = _stats(memory, regime, family)
     attempts = int(item["attempts"])
     if attempts == 0:
-        return 50.0
+        # Exploration matters, but an untested family must not automatically outrank
+        # a family with materially positive blind evidence in the same regime.
+        return 12.0 * math.sqrt(math.log(total + 2.0))
     avg_balance = float(item["sum_final_balance"]) / attempts
     hit_bonus = 150.0 * (float(item["hits"]) / attempts)
     exploration = 12.0 * math.sqrt(math.log(total + 2.0) / attempts)
@@ -187,10 +182,7 @@ def plan_hypothesis(
     inbox: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     label = str(regime["label"])
-    total = sum(
-        int(_stats(memory, label, family)["attempts"])
-        for family in IMPLEMENTED_FAMILIES
-    )
+    total = sum(int(_stats(memory, label, family)["attempts"]) for family in IMPLEMENTED_FAMILIES)
     priors = _regime_priors(label)
     ranked = sorted(
         IMPLEMENTED_FAMILIES,
@@ -203,7 +195,8 @@ def plan_hypothesis(
 
     reasons = [
         f"regime={label}",
-        "choose by regime-specific evidence plus exploration bonus",
+        "binary objective: >=200 is HIT; every lower final balance is MISS learning evidence",
+        "choose by regime-specific evidence plus exploration without discarding materially positive evidence",
     ]
     last = state.get("last_run") or {}
     directive = str(state.get("learning_directive") or "initial_broad_search")
@@ -213,7 +206,7 @@ def plan_hypothesis(
             f for f in ranked if f not in {"mean_reversion", "trend_pullback", "volatility_expansion"}
         ]
     elif float(last.get("final_balance") or 100.0) > 110.0:
-        reasons.append("previous run was profitable; preserve one nearby family while exploring")
+        reasons.append("previous MISS had useful positive evidence; preserve one nearby family while exploring")
 
     external_id = None
     if inbox:
