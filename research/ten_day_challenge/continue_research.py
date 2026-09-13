@@ -1,4 +1,4 @@
-"""Dispatch the next bounded research segment while continuous mode remains enabled."""
+"""Dispatch the next bounded walk-forward segment while research should continue."""
 
 from __future__ import annotations
 
@@ -11,10 +11,17 @@ from urllib.parse import quote
 from urllib.request import Request, urlopen
 
 CONTROL_PATH = "research/ten_day_challenge/continuous-control.json"
-WORKFLOW_PATH = "ten-day-research.yml"
+STATE_PATH = "research/ten_day_challenge/walk-forward-state.json"
+WORKFLOW_PATH = "walk-forward-research.yml"
 
 
-def github_json(url: str, token: str, *, method: str = "GET", payload: dict | None = None) -> dict:
+def github_json(
+    url: str,
+    token: str,
+    *,
+    method: str = "GET",
+    payload: dict | None = None,
+) -> dict:
     data = None if payload is None else json.dumps(payload).encode("utf-8")
     request = Request(
         url,
@@ -24,7 +31,7 @@ def github_json(url: str, token: str, *, method: str = "GET", payload: dict | No
             "Accept": "application/vnd.github+json",
             "Authorization": f"Bearer {token}",
             "X-GitHub-Api-Version": "2022-11-28",
-            "User-Agent": "ten-day-research-agent",
+            "User-Agent": "ten-day-walk-forward-research-agent",
             "Content-Type": "application/json",
         },
     )
@@ -33,6 +40,18 @@ def github_json(url: str, token: str, *, method: str = "GET", payload: dict | No
     if not body:
         return {}
     return json.loads(body.decode("utf-8"))
+
+
+def fetch_repo_json(repository: str, ref: str, path: str, token: str) -> dict:
+    url = (
+        f"https://api.github.com/repos/{repository}/contents/{path}"
+        f"?ref={quote(ref, safe='')}"
+    )
+    response = github_json(url, token)
+    encoded = str(response.get("content") or "").replace("\n", "")
+    if not encoded:
+        raise RuntimeError(f"repository JSON content missing: {path}")
+    return json.loads(base64.b64decode(encoded).decode("utf-8"))
 
 
 def main() -> int:
@@ -47,27 +66,53 @@ def main() -> int:
     if not token:
         raise SystemExit("GITHUB_TOKEN is required")
 
-    control_url = (
-        f"https://api.github.com/repos/{args.repository}/contents/{CONTROL_PATH}"
-        f"?ref={quote(args.ref, safe='')}"
-    )
     try:
-        response = github_json(control_url, token)
-    except HTTPError as exc:
-        raise SystemExit(f"failed to read continuous control: HTTP {exc.code}") from exc
+        control = fetch_repo_json(args.repository, args.ref, CONTROL_PATH, token)
+    except (HTTPError, RuntimeError) as exc:
+        raise SystemExit(f"failed to read continuous control: {exc}") from exc
 
-    encoded = str(response.get("content") or "").replace("\n", "")
-    if not encoded:
-        raise SystemExit("continuous control content missing")
-    control = json.loads(base64.b64decode(encoded).decode("utf-8"))
-
-    safe = bool(control.get("paper_only")) and not bool(control.get("live_trading_allowed"))
+    safe = bool(control.get("paper_only")) and not bool(
+        control.get("live_trading_allowed")
+    )
     enabled = bool(control.get("enabled")) and not bool(control.get("stop_requested"))
     if not safe:
         raise SystemExit("continuous control violated paper-only safety invariant")
     if not enabled:
-        print(json.dumps({"status": "stopped_by_control", "segment": args.current_segment}))
+        print(
+            json.dumps(
+                {"status": "stopped_by_control", "segment": args.current_segment}
+            )
+        )
         return 0
+
+    if bool(control.get("stop_after_required_hits", True)):
+        required_hits = max(1, int(control.get("required_hits") or 1))
+        try:
+            state = fetch_repo_json(args.repository, args.ref, STATE_PATH, token)
+        except HTTPError as exc:
+            if exc.code == 404:
+                state = {}
+            else:
+                raise SystemExit(
+                    f"failed to read walk-forward state: HTTP {exc.code}"
+                ) from exc
+        except RuntimeError as exc:
+            raise SystemExit(f"failed to read walk-forward state: {exc}") from exc
+
+        hit_count = int(state.get("hit_count") or 0)
+        if hit_count >= required_hits:
+            print(
+                json.dumps(
+                    {
+                        "status": "research_goal_reached",
+                        "hit_count": hit_count,
+                        "required_hits": required_hits,
+                        "continuous": False,
+                    },
+                    sort_keys=True,
+                )
+            )
+            return 0
 
     key = f"next_after_segment_{args.current_segment}"
     next_segment = str(control.get(key) or "")
@@ -86,7 +131,9 @@ def main() -> int:
             payload={"ref": args.ref, "inputs": {"segment": next_segment}},
         )
     except HTTPError as exc:
-        raise SystemExit(f"failed to dispatch next segment: HTTP {exc.code}") from exc
+        raise SystemExit(
+            f"failed to dispatch next segment: HTTP {exc.code}"
+        ) from exc
 
     print(
         json.dumps(
