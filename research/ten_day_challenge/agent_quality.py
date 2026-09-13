@@ -7,29 +7,46 @@ measure learning progress only from already completed blind runs.
 from __future__ import annotations
 
 import math
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 
 def enrich_regime(regime: dict[str, Any]) -> dict[str, Any]:
-    """Add cross-asset breadth/dispersion/context strength to Raster 2 evidence."""
+    """Add cross-asset breadth, dispersion and strength to Raster 2 evidence."""
     out = dict(regime)
     features = dict(regime.get("pair_features") or {})
     rows = list(features.values())
     if not rows:
         out["context_quality"] = {"pair_count": 0, "evidence_strength": 0.0}
         return out
+
     r30 = [float(x.get("return_30d") or 0.0) for x in rows]
     r90 = [float(x.get("return_90d") or 0.0) for x in rows]
     gaps = [float(x.get("trend_gap") or 0.0) for x in rows]
     vols = [float(x.get("annualized_vol_30d") or 0.0) for x in rows]
     n = len(rows)
+
     breadth30 = sum(v > 0 for v in r30) / n
     breadth90 = sum(v > 0 for v in r90) / n
     agreement = max(breadth30, 1.0 - breadth30)
-    dispersion = math.sqrt(sum((v - sum(r30) / n) ** 2 for v in r30) / n)
-    trend_persistence = sum((a > 0) == (b > 0) for a, b in zip(r30, r90, strict=True)) / n
-    gap_agreement = max(sum(v > 0 for v in gaps) / n, sum(v <= 0 for v in gaps) / n)
-    strength = max(0.0, min(1.0, 0.35 * agreement + 0.30 * trend_persistence + 0.20 * gap_agreement + 0.15 * min(1.0, sum(vols) / n)))
+    mean_r30 = sum(r30) / n
+    dispersion = math.sqrt(sum((v - mean_r30) ** 2 for v in r30) / n)
+    trend_persistence = (
+        sum((a > 0) == (b > 0) for a, b in zip(r30, r90, strict=True)) / n
+    )
+    gap_agreement = max(
+        sum(v > 0 for v in gaps) / n,
+        sum(v <= 0 for v in gaps) / n,
+    )
+    vol_support = min(1.0, sum(vols) / n)
+    raw_strength = (
+        0.35 * agreement
+        + 0.30 * trend_persistence
+        + 0.20 * gap_agreement
+        + 0.15 * vol_support
+    )
+    strength = max(0.0, min(1.0, raw_strength))
+
     out["context_quality"] = {
         "pair_count": n,
         "positive_breadth_30d": breadth30,
@@ -42,40 +59,63 @@ def enrich_regime(regime: dict[str, Any]) -> dict[str, Any]:
     return out
 
 
-def make_enriched_classifier(original: Callable[..., dict[str, Any]]) -> Callable[..., dict[str, Any]]:
+def make_enriched_classifier(
+    original: Callable[..., dict[str, Any]],
+) -> Callable[..., dict[str, Any]]:
     def classify(*args: Any, **kwargs: Any) -> dict[str, Any]:
         return enrich_regime(original(*args, **kwargs))
+
     return classify
 
 
-def validate_research_plan(plan: dict[str, Any], regime: dict[str, Any], memory: dict[str, Any]) -> None:
+def validate_research_plan(
+    plan: dict[str, Any],
+    regime: dict[str, Any],
+    memory: dict[str, Any],
+) -> None:
     """Raster 4 semantic checks beyond a parameter fingerprint."""
     if bool(plan.get("blind_window_seen")) or bool(regime.get("blind_window_seen")):
-        raise RuntimeError("BuildValidationAgent rejected pre-Raster-5 blind-window access")
+        raise RuntimeError(
+            "BuildValidationAgent rejected pre-Raster-5 blind-window access"
+        )
     if plan.get("regime") != regime.get("label"):
         raise RuntimeError("BuildValidationAgent rejected hypothesis/regime mismatch")
+
     families = list(plan.get("allowed_families") or [])
     if not families or len(set(families)) != len(families):
         raise RuntimeError("BuildValidationAgent rejected empty/duplicate family plan")
-    # Signal evidence must be explainable by already-persisted memory only.
+
     for family, summary in (plan.get("signal_evidence") or {}).items():
         if family not in families:
-            raise RuntimeError("BuildValidationAgent rejected out-of-plan signal evidence")
+            raise RuntimeError(
+                "BuildValidationAgent rejected out-of-plan signal evidence"
+            )
         trades = int((summary or {}).get("trades") or 0)
         persisted = 0
-        family_data = memory.get("signal_context_stats", {}).get(str(regime.get("label")), {}).get(family, {})
+        family_data = (
+            memory.get("signal_context_stats", {})
+            .get(str(regime.get("label")), {})
+            .get(family, {})
+        )
         for pair_data in family_data.values():
             for item in pair_data.values():
                 persisted += int(item.get("trades") or 0)
         if trades > persisted:
-            raise RuntimeError("BuildValidationAgent rejected signal evidence not backed by completed memory")
+            raise RuntimeError(
+                "BuildValidationAgent rejected signal evidence not backed by "
+                "completed memory"
+            )
 
 
-def meta_learning_report(memory: dict[str, Any], window: int = 20) -> dict[str, Any]:
+def meta_learning_report(
+    memory: dict[str, Any],
+    window: int = 20,
+) -> dict[str, Any]:
     """Raster 6 checks whether research is improving or cycling."""
     runs = list(memory.get("recent_completed_runs") or [])[-window:]
     if not runs:
         return {"runs": 0, "stagnating": False, "directive": None}
+
     finals = [float(r.get("final_balance") or 0.0) for r in runs]
     hits = sum(str(r.get("outcome")) == "HIT" for r in runs)
     half = max(1, len(finals) // 2)
@@ -83,11 +123,17 @@ def meta_learning_report(memory: dict[str, Any], window: int = 20) -> dict[str, 
     late = finals[-half:]
     early_avg = sum(early) / len(early)
     late_avg = sum(late) / len(late)
-    unique_fingerprints = len({str(r.get("parameter_fingerprint") or "") for r in runs})
+    unique_fingerprints = len(
+        {str(r.get("parameter_fingerprint") or "") for r in runs}
+    )
     repeated_zero = sum(int(r.get("trades") or 0) == 0 for r in runs)
     best = max(finals)
     stagnating = len(runs) >= 10 and hits == 0 and late_avg <= early_avg + 2.0
-    directive = "break_stagnation_force_materially_new_signal_hypothesis" if stagnating else None
+    directive = (
+        "break_stagnation_force_materially_new_signal_hypothesis"
+        if stagnating
+        else None
+    )
     return {
         "runs": len(runs),
         "hit_rate": hits / len(runs),
