@@ -109,12 +109,12 @@ def apply_isolated_margin(
     near_ruin_balance: float,
     spec: MarginSpec,
 ) -> dict[str, Any]:
-    """Apply isolated-margin economics to sequential long trades."""
+    """Apply sequential long exposure with 1x no-borrow or isolated-margin economics."""
 
     if spec.direction != "long":
         raise ValueError("only long isolated-margin research is implemented")
-    if spec.leverage <= 1:
-        raise ValueError("margin model requires leverage > 1")
+    if spec.leverage < 1:
+        raise ValueError("research leverage must be >= 1")
 
     equity = float(starting_balance)
     peak = equity
@@ -127,8 +127,11 @@ def apply_isolated_margin(
     trades_processed = 0
     trade_evidence: list[dict[str, Any]] = []
 
+    # 1x is the explicit no-borrow baseline. No debt means no margin liquidation.
     liquidation_price_ratio = (
-        spec.liquidation_margin_level * (spec.leverage - 1) / spec.leverage
+        0.0
+        if spec.leverage == 1
+        else spec.liquidation_margin_level * (spec.leverage - 1) / spec.leverage
     )
 
     for index, trade in enumerate(trades):
@@ -144,7 +147,7 @@ def apply_isolated_margin(
         interest = debt * spec.borrow_interest_apr * _duration_days(trade) / 365.0
         total_interest += interest
 
-        if min_rate / open_rate <= liquidation_price_ratio:
+        if spec.leverage > 1 and min_rate / open_rate <= liquidation_price_ratio:
             residual = (
                 spec.liquidation_margin_level * debt
                 - debt
