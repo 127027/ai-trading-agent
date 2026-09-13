@@ -1,0 +1,167 @@
+TEN_DAY_PUBLIC_ADAPTER_ACTIVE
+2026-09-13 21:30:53,573 - freqtrade - INFO - freqtrade 2026.7
+2026-09-13 21:30:54,582 - numexpr.utils - INFO - NumExpr defaulting to 4 threads.
+2026-09-13 21:30:58,478 - freqtrade.configuration.load_config - INFO - Using config: /home/runner/work/ai-trading-agent/ai-trading-agent/runtime/user_data/config-10day-research.json ...
+2026-09-13 21:30:58,481 - freqtrade.loggers - INFO - Enabling colorized output.
+2026-09-13 21:30:58,481 - freqtrade.loggers - INFO - Logfile configured
+2026-09-13 21:30:58,481 - freqtrade.loggers - INFO - Verbosity set to 0
+2026-09-13 21:30:58,482 - freqtrade.configuration.configuration - INFO - Using additional Strategy lookup path: 
+/home/runner/work/ai-trading-agent/ai-trading-agent/runtime/user_data/strategies/candidates
+2026-09-13 21:30:58,482 - freqtrade.configuration.configuration - INFO - Parameter --enable-protections detected, enabling Protections ...
+2026-09-13 21:30:58,483 - freqtrade.configuration.configuration - INFO - Using max_open_trades: 1 ...
+2026-09-13 21:30:58,483 - freqtrade.configuration.configuration - INFO - Parameter --fee detected, setting fee to: 0.0015 ...
+2026-09-13 21:30:58,483 - freqtrade.configuration.configuration - INFO - Parameter --timerange detected: 20230319-20240314 ...
+2026-09-13 21:30:58,484 - freqtrade.configuration.configuration - INFO - Using user-data directory: /home/runner/work/ai-trading-agent/ai-trading-agent/runtime/user_data ...
+2026-09-13 21:30:58,484 - freqtrade.configuration.configuration - INFO - Using data directory: /home/runner/work/ai-trading-agent/ai-trading-agent/.research-data/binance ...
+2026-09-13 21:30:58,485 - freqtrade.configuration.configuration - INFO - Parameter --epochs detected ... Will run Hyperopt with for 75 epochs ...
+2026-09-13 21:30:58,485 - freqtrade.configuration.configuration - INFO - Parameter -s/--spaces detected: ['buy', 'sell', 'roi', 'stoploss']
+2026-09-13 21:30:58,485 - freqtrade.configuration.configuration - INFO - Parameter --analyze-per-epoch detected.
+2026-09-13 21:30:58,486 - freqtrade.configuration.configuration - INFO - Parameter -j/--job-workers detected: -1
+2026-09-13 21:30:58,486 - freqtrade.configuration.configuration - INFO - Parameter --random-state detected: 227590
+2026-09-13 21:30:58,486 - freqtrade.configuration.configuration - INFO - Parameter --min-trades detected: 1
+2026-09-13 21:30:58,487 - freqtrade.configuration.configuration - INFO - Using Hyperopt loss class name: TenDayChallengeLoss
+2026-09-13 21:30:58,487 - freqtrade.configuration.configuration - INFO - Filter trades by timerange: 20230319-20240314
+2026-09-13 21:30:58,488 - freqtrade.exchange.check_exchange - INFO - Checking exchange...
+2026-09-13 21:30:58,496 - freqtrade.exchange.check_exchange - INFO - Exchange "binance" is officially supported by the Freqtrade development team.
+2026-09-13 21:30:58,496 - freqtrade.configuration.configuration - INFO - Using pairlist from configuration.
+2026-09-13 21:30:58,497 - freqtrade.configuration.config_validation - INFO - Validating configuration ...
+2026-09-13 21:30:58,500 - freqtrade.commands.optimize_commands - INFO - Starting freqtrade in Hyperopt mode
+2026-09-13 21:30:58,501 - freqtrade.exchange.exchange - INFO - Instance is running with dry_run enabled
+2026-09-13 21:30:58,502 - freqtrade.exchange.exchange - INFO - Using CCXT 4.5.73
+2026-09-13 21:30:58,502 - freqtrade.exchange.exchange - INFO - Applying additional ccxt config: {'enableRateLimit': True, 'options': {'defaultType': 'spot', 'fetchCurrencies': False, 'fetchMargins': 
+False, 'fetchMarkets': {'types': ['spot']}}, 'has': {'fetchCurrencies': False}, 'urls': {'api': {'public': 'https://data-api.binance.vision/api/v3', 'v1': 'https://data-api.binance.vision/api/v1'}, 
+'apiBackup': {'public': 'https://data-api.binance.vision/api/v3', 'v1': 'https://data-api.binance.vision/api/v1'}}}
+2026-09-13 21:30:58,510 - freqtrade.exchange.exchange - INFO - Applying additional ccxt config: {'enableRateLimit': True, 'options': {'defaultType': 'spot', 'fetchCurrencies': False, 'fetchMargins': 
+False, 'fetchMarkets': {'types': ['spot']}}, 'has': {'fetchCurrencies': False}, 'urls': {'api': {'public': 'https://data-api.binance.vision/api/v3', 'v1': 'https://data-api.binance.vision/api/v1'}, 
+'apiBackup': {'public': 'https://data-api.binance.vision/api/v3', 'v1': 'https://data-api.binance.vision/api/v1'}}}
+2026-09-13 21:30:58,518 - freqtrade.exchange.exchange - INFO - Using Exchange "Binance"
+2026-09-13 21:31:00,491 - freqtrade.resolvers.exchange_resolver - INFO - Using resolved exchange class 'Binance' ...
+2026-09-13 21:31:00,505 - freqtrade.resolvers.iresolver - INFO - Using resolved strategy TenDayAdaptiveV2 from 
+'/home/runner/work/ai-trading-agent/ai-trading-agent/runtime/user_data/strategies/candidates/TenDayAdaptiveV2.py'...
+2026-09-13 21:31:00,506 - freqtrade.strategy.hyper - INFO - Loading parameters from file 
+/home/runner/work/ai-trading-agent/ai-trading-agent/runtime/user_data/strategies/candidates/TenDayAdaptiveV2.json
+2026-09-13 21:31:00,506 - freqtrade.resolvers.strategy_resolver - INFO - Override strategy 'timeframe' with value from the configuration: 15m.
+2026-09-13 21:31:00,507 - freqtrade.resolvers.strategy_resolver - INFO - Override strategy 'stake_currency' with value from the configuration: USDT.
+2026-09-13 21:31:00,507 - freqtrade.resolvers.strategy_resolver - INFO - Override strategy 'stake_amount' with value from the configuration: unlimited.
+2026-09-13 21:31:00,507 - freqtrade.resolvers.strategy_resolver - INFO - Override strategy 'use_exit_signal' with value from the configuration: True.
+2026-09-13 21:31:00,508 - freqtrade.resolvers.strategy_resolver - INFO - Override strategy 'position_adjustment_enable' with value from the configuration: False.
+2026-09-13 21:31:00,508 - freqtrade.resolvers.strategy_resolver - INFO - Override strategy 'max_entry_position_adjustment' with value from the configuration: 0.
+2026-09-13 21:31:00,508 - freqtrade.resolvers.strategy_resolver - INFO - Override strategy 'max_open_trades' with value from the configuration: 1.
+2026-09-13 21:31:00,509 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using minimal_roi: {'0': 0.271, '109': 0.159, '286': 0.059, '626': 0}
+2026-09-13 21:31:00,509 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using timeframe: 15m
+2026-09-13 21:31:00,509 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using stoploss: -0.118
+2026-09-13 21:31:00,510 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using trailing_stop: False
+2026-09-13 21:31:00,510 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using trailing_stop_positive_offset: 0.0
+2026-09-13 21:31:00,510 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using trailing_only_offset_is_reached: False
+2026-09-13 21:31:00,511 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using use_custom_stoploss: False
+2026-09-13 21:31:00,511 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using process_only_new_candles: True
+2026-09-13 21:31:00,511 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using order_types: {'entry': 'limit', 'exit': 'limit', 'stoploss': 'limit', 'stoploss_on_exchange': False, 
+'stoploss_on_exchange_interval': 60}
+2026-09-13 21:31:00,512 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using order_time_in_force: {'entry': 'GTC', 'exit': 'GTC'}
+2026-09-13 21:31:00,512 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using stake_currency: USDT
+2026-09-13 21:31:00,512 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using stake_amount: unlimited
+2026-09-13 21:31:00,512 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using startup_candle_count: 420
+2026-09-13 21:31:00,513 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using use_exit_signal: True
+2026-09-13 21:31:00,513 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using exit_profit_only: False
+2026-09-13 21:31:00,513 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using ignore_roi_if_entry_signal: False
+2026-09-13 21:31:00,514 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using exit_profit_offset: 0.0
+2026-09-13 21:31:00,514 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using disable_dataframe_checks: False
+2026-09-13 21:31:00,514 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using ignore_buying_expired_candle_after: 0
+2026-09-13 21:31:00,515 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using position_adjustment_enable: False
+2026-09-13 21:31:00,515 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using max_entry_position_adjustment: 0
+2026-09-13 21:31:00,515 - freqtrade.resolvers.strategy_resolver - INFO - Strategy using max_open_trades: 1
+2026-09-13 21:31:00,515 - freqtrade.configuration.config_validation - INFO - Validating configuration ...
+2026-09-13 21:31:00,522 - freqtrade.resolvers.iresolver - INFO - Using resolved pairlist StaticPairList from 
+'/home/runner/work/ai-trading-agent/ai-trading-agent/.venv/lib/python3.12/site-packages/freqtrade/plugins/pairlist/StaticPairList.py'...
+2026-09-13 21:31:00,549 - freqtrade.optimize.backtesting - INFO - Using fee 0.1500% from config.
+2026-09-13 21:31:00,550 - freqtrade.strategy.hyper - INFO - Strategy Parameter: adx_min = 27
+2026-09-13 21:31:00,551 - freqtrade.strategy.hyper - INFO - Strategy Parameter: atr_floor = 0.011
+2026-09-13 21:31:00,551 - freqtrade.strategy.hyper - INFO - Strategy Parameter: breakout_buffer = 0.001
+2026-09-13 21:31:00,552 - freqtrade.strategy.hyper - INFO - Strategy Parameter: breakout_lookback = 88
+2026-09-13 21:31:00,552 - freqtrade.strategy.hyper - INFO - Strategy Parameter: ema_fast = 22
+2026-09-13 21:31:00,552 - freqtrade.strategy.hyper - INFO - Strategy Parameter: ema_slow = 91
+2026-09-13 21:31:00,552 - freqtrade.strategy.hyper - INFO - Strategy Parameter: family_mode = volatility_expansion
+2026-09-13 21:31:00,553 - freqtrade.strategy.hyper - INFO - Strategy Parameter: pullback_depth = 0.016
+2026-09-13 21:31:00,553 - freqtrade.strategy.hyper - INFO - Strategy Parameter: rsi_entry = 35
+2026-09-13 21:31:00,553 - freqtrade.strategy.hyper - INFO - Strategy Parameter: volume_ratio = 1.32
+2026-09-13 21:31:00,554 - freqtrade.strategy.hyper - INFO - Strategy Parameter: exit_ema = 51
+2026-09-13 21:31:00,554 - freqtrade.strategy.hyper - INFO - Strategy Parameter: rsi_exit = 83
+2026-09-13 21:31:00,555 - freqtrade.resolvers.iresolver - INFO - Using resolved hyperoptloss TenDayChallengeLoss from 
+'/home/runner/work/ai-trading-agent/ai-trading-agent/runtime/user_data/hyperopts/TenDayChallengeLoss.py'...
+2026-09-13 21:31:00,728 - freqtrade.optimize.hyperopt.hyperopt_optimizer - INFO - manager queue <class 'multiprocessing.managers.AutoProxy[Queue]'>
+2026-09-13 21:31:00,729 - freqtrade.optimize.hyperopt.hyperopt - INFO - Using optimizer random state: 227590
+2026-09-13 21:31:00,729 - freqtrade.optimize.hyperopt.hyperopt_interface - INFO - Min roi table: {0: 0.046, 30: 0.031, 60: 0.015, 90: 0}
+2026-09-13 21:31:00,730 - freqtrade.optimize.hyperopt.hyperopt_interface - INFO - Max roi table: {0: 0.48, 120: 0.17, 300: 0.062, 660: 0}
+2026-09-13 21:31:00,941 - freqtrade.optimize.backtesting - INFO - Loading data from 2023-03-14 15:00:00 up to 2024-03-14 00:00:00 (365 days).
+2026-09-13 21:31:02,678 - freqtrade.optimize.hyperopt.hyperopt_optimizer - INFO - Dataload complete. Calculating indicators
+2026-09-13 21:31:02,952 - freqtrade.optimize.hyperopt.hyperopt - INFO - Found 4 CPU cores. Let's make them scream!
+2026-09-13 21:31:02,953 - freqtrade.optimize.hyperopt.hyperopt - INFO - Number of parallel jobs set as: -1
+2026-09-13 21:31:02,954 - freqtrade.optimize.hyperopt.hyperopt_optimizer - INFO - Using optuna sampler NSGAIIISampler.
+[I 2026-09-13 21:31:02,954] A new study created in memory with name: no-name-817c942c-99c8-4989-b5fd-d1233eaa3414
+2026-09-13 21:31:02,959 - freqtrade.optimize.hyperopt.hyperopt - INFO - Effective number of parallel workers used: 4
+2026-09-13 21:31:03,083 - freqtrade.plugins.protectionmanager - INFO - No protection Handlers defined.
+/home/runner/work/ai-trading-agent/ai-trading-agent/.venv/lib/python3.12/site-packages/joblib/externals/loky/process_executor.py:782: UserWarning: A worker stopped while some jobs were given to the executor. This can be caused by a too short worker timeout or by a memory leak.
+  warnings.warn(
+                                                                                           Hyperopt results                                                                                             
+                            ┏━━━━━━━━┳━━━━━━━┳━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━━━┳━━━━━━━━━━━━━━━━━━━━━━━━┓                             
+                            ┃ Best   ┃ Epoch ┃ Trades ┃  Win  Draw  Loss  Win% ┃ Avg profit ┃                  Profit ┃ Avg duration ┃ Objective ┃    Max Drawdown (Acct) ┃                             
+                            ┡━━━━━━━━╇━━━━━━━╇━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━━╇━━━━━━━━━━━━━━╇━━━━━━━━━━━╇━━━━━━━━━━━━━━━━━━━━━━━━┩                             
+                            │ * Best │  1/75 │      1 │    0     0     1     0 │     -0.38% │  -0.377 USDT   (-0.38%) │      3:00:00 │   0.97232 │  0.377 USDT    (0.38%) │                             
+                            │ * Best │  2/75 │      1 │    1     0     0   100 │      5.81% │   5.822 USDT    (5.82%) │      2:15:00 │   0.97197 │                     -- │                             
+                            │ * Best │  5/75 │      2 │    0     0     2     0 │     -1.48% │  -2.946 USDT   (-2.95%) │      1:22:00 │   0.94477 │  2.946 USDT    (2.95%) │                             
+                            │ * Best │  6/75 │     25 │    9     0    16  36.0 │     -0.45% │ -10.844 USDT  (-10.84%) │      1:02:00 │   0.30813 │ 12.783 USDT   (12.61%) │                             
+                            │ * Best │ 14/75 │    215 │   95     0   120  44.2 │     -0.41% │ -61.486 USDT  (-61.49%) │      4:34:00 │   0.02423 │ 66.121 USDT   (63.43%) │                             
+                            │ * Best │ 18/75 │    307 │  122     0   185  39.7 │     -0.08% │ -24.448 USDT  (-24.45%) │      3:35:00 │   0.00959 │ 43.024 USDT   (38.57%) │                             
+                            │ Best   │ 34/75 │     76 │   34     0    42  44.7 │      0.33% │  26.231 USDT   (26.23%) │      2:58:00 │  -0.00143 │ 10.504 USDT    (7.74%) │                             
+                            └────────┴───────┴────────┴────────────────────────┴────────────┴─────────────────────────┴──────────────┴───────────┴────────────────────────┘                             
+Epochs ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 75/75 100% • 0:01:50 • 0:00:00
+2026-09-13 21:32:54,082 - freqtrade.optimize.hyperopt.hyperopt - INFO - 75 epochs saved to 
+'/home/runner/work/ai-trading-agent/ai-trading-agent/runtime/user_data/hyperopt_results/strategy_TenDayAdaptiveV2_2026-09-13_21-30-58.fthypt'.
+2026-09-13 21:32:54,097 - freqtrade.optimize.hyperopt_tools - INFO - Dumping parameters to 
+/home/runner/work/ai-trading-agent/ai-trading-agent/runtime/user_data/strategies/candidates/TenDayAdaptiveV2.json
+
+Best result:
+
+    34/75:     76 trades. 34/0/42 Wins/Draws/Losses. Avg profit   0.33%. Median profit  -0.36%. Total profit 26.23078595 USDT (  26.23%). Avg duration 2:58:00 min. Objective: -0.00143
+
+
+    # Buy parameters:
+    buy_params = {
+        "adx_min": 30,
+        "atr_floor": 0.006,
+        "breakout_buffer": 0.007,
+        "breakout_lookback": 44,
+        "ema_fast": 31,
+        "ema_slow": 231,
+        "family_mode": "mean_reversion",
+        "pullback_depth": 0.006,
+        "rsi_entry": 58,
+        "volume_ratio": 0.85,
+    }
+
+    # Sell parameters:
+    sell_params = {
+        "exit_ema": 60,
+        "rsi_exit": 65,
+    }
+
+    # ROI parameters:
+    minimal_roi = {
+        "0": 0.238,
+        "108": 0.161,
+        "276": 0.062,
+        "313": 0
+    }
+
+    # Stoploss parameters:
+    stoploss = -0.121
+
+    # Trailing stop parameters:
+    trailing_stop = False  # value loaded from strategy
+    trailing_stop_positive = None  # value loaded from strategy
+    trailing_stop_positive_offset = 0.0  # value loaded from strategy
+    trailing_only_offset_is_reached = False  # value loaded from strategy
+    
+
+    # max_open_trades parameters:
+    max_open_trades = 1  # value loaded from strategy
