@@ -54,6 +54,17 @@ def fetch_repo_json(repository: str, ref: str, path: str, token: str) -> dict:
     return json.loads(base64.b64decode(encoded).decode("utf-8"))
 
 
+def load_state(repository: str, ref: str, token: str) -> dict:
+    try:
+        return fetch_repo_json(repository, ref, STATE_PATH, token)
+    except HTTPError as exc:
+        if exc.code == 404:
+            return {}
+        raise SystemExit(f"failed to read walk-forward state: HTTP {exc.code}") from exc
+    except RuntimeError as exc:
+        raise SystemExit(f"failed to read walk-forward state: {exc}") from exc
+
+
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--repository", required=True)
@@ -85,20 +96,25 @@ def main() -> int:
         )
         return 0
 
+    state = load_state(args.repository, args.ref, token)
+    run_count = int(state.get("run_count") or 0)
+    max_total_runs = control.get("max_total_runs")
+    if max_total_runs is not None and run_count >= max(1, int(max_total_runs)):
+        print(
+            json.dumps(
+                {
+                    "status": "max_total_runs_reached",
+                    "run_count": run_count,
+                    "max_total_runs": int(max_total_runs),
+                    "continuous": False,
+                },
+                sort_keys=True,
+            )
+        )
+        return 0
+
     if bool(control.get("stop_after_required_hits", True)):
         required_hits = max(1, int(control.get("required_hits") or 1))
-        try:
-            state = fetch_repo_json(args.repository, args.ref, STATE_PATH, token)
-        except HTTPError as exc:
-            if exc.code == 404:
-                state = {}
-            else:
-                raise SystemExit(
-                    f"failed to read walk-forward state: HTTP {exc.code}"
-                ) from exc
-        except RuntimeError as exc:
-            raise SystemExit(f"failed to read walk-forward state: {exc}") from exc
-
         hit_count = int(state.get("hit_count") or 0)
         if hit_count >= required_hits:
             print(
@@ -141,6 +157,8 @@ def main() -> int:
                 "status": "next_segment_dispatched",
                 "current_segment": args.current_segment,
                 "next_segment": next_segment,
+                "run_count": run_count,
+                "max_total_runs": max_total_runs,
                 "continuous": True,
             },
             sort_keys=True,
