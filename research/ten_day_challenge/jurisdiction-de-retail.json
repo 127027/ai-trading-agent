@@ -1,0 +1,92 @@
+{
+  "schema_version": 1,
+  "jurisdiction": "Germany",
+  "region": "Saarland",
+  "client_class": "retail",
+  "as_of": "2026-09-13",
+  "policy": "Only research market classes whose historical data, transaction-cost model, margin/liquidation model, and plausible German-retail execution path are all verified. Regulatory leverage caps are hard ceilings, never targets.",
+  "market_classes": {
+    "crypto_spot": {
+      "enabled_for_backtest": true,
+      "max_leverage": 1,
+      "data_adapter_verified": true,
+      "cost_model_verified": true,
+      "margin_model_verified": true,
+      "execution_path_status": "research_data_only_live_venue_to_be_selected"
+    },
+    "crypto_cfd": {
+      "enabled_for_backtest": false,
+      "max_leverage": 2,
+      "data_adapter_verified": false,
+      "cost_model_verified": false,
+      "margin_model_verified": false,
+      "execution_path_status": "broker_specific_adapter_required"
+    },
+    "major_fx_cfd": {
+      "enabled_for_backtest": false,
+      "max_leverage": 30,
+      "data_adapter_verified": false,
+      "cost_model_verified": false,
+      "margin_model_verified": false,
+      "execution_path_status": "broker_specific_adapter_required"
+    },
+    "gold_cfd": {
+      "enabled_for_backtest": false,
+      "max_leverage": 20,
+      "data_adapter_verified": false,
+      "cost_model_verified": false,
+      "margin_model_verified": false,
+      "execution_path_status": "broker_specific_adapter_required"
+    },
+    "major_index_cfd": {
+      "enabled_for_backtest": false,
+      "max_leverage": 20,
+      "data_adapter_verified": false,
+      "cost_model_verified": false,
+      "margin_model_verified": false,
+      "execution_path_status": "broker_specific_adapter_required"
+    },
+    "other_commodity_cfd": {
+      "enabled_for_backtest": false,
+      "max_leverage": 10,
+      "data_adapter_verified": false,
+      "cost_model_verified": false,
+      "margin_model_verified": false,
+      "execution_path_status": "broker_specific_adapter_required"
+    },
+    "single_equity_cfd": {
+      "enabled_for_backtest": false,
+      "max_leverage": 5,
+      "data_adapter_verified": false,
+      "cost_model_verified": false,
+      "margin_model_verified": false,
+      "execution_path_status": "broker_specific_adapter_required"
+    },
+    "exchange_traded_futures": {
+      "enabled_for_backtest": false,
+      "max_leverage": null,
+      "data_adapter_verified": false,
+      "cost_model_verified": false,
+      "margin_model_verified": false,
+      "execution_path_status": "instrument_specific_margin_and_100_capital_eligibility_required"
+    }
+  },
+  "retail_cfd_protections": {
+    "margin_closeout_required": true,
+    "negative_balance_protection_required": true,
+    "no_regulatory_cap_bypass_via_perpetual_label": true
+  },
+  "sources": [
+    {
+      "authority": "ESMA",
+      "title": "CFD product intervention leverage limits",
+      "rule_summary": "30:1 major FX; 20:1 non-major FX, gold and major indices; 10:1 other commodities and indices; 5:1 individual equities/other; 2:1 crypto"
+    },
+    {
+      "authority": "ESMA",
+      "date": "2026-02-24",
+      "title": "Perpetual futures reminder",
+      "rule_summary": "Products economically within CFD scope remain subject to CFD protections and leverage limits"
+    }
+  ]
+}
