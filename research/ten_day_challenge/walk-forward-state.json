@@ -8,14 +8,14 @@
   "last_failure": null,
   "last_run": {
     "agent_council": {
-      "council_score": -0.12444198000000008,
+      "council_score": 0.0,
       "primary_objective": "maximize_hit_rate_200",
       "promotion_eligible": true,
       "reviews": [
         {
           "agent": "QuantAgent",
           "reason": "Primary objective is repeatable >=200 USDT outcomes in 10 days; 150/175/250 thresholds are secondary learning signals.",
-          "score": -0.12444198000000008,
+          "score": 0.0,
           "veto": false
         },
         {
@@ -26,7 +26,7 @@
         },
         {
           "agent": "RiskAgent",
-          "reason": "Research diagnostic only: near-ruin=0.00%, median drawdown=6.22%. Aggressive valid candidates are not vetoed.",
+          "reason": "Research diagnostic only: near-ruin=0.00%, median drawdown=0.00%. Aggressive valid candidates are not vetoed.",
           "score": 0.0,
           "veto": false
         }
@@ -35,36 +35,36 @@
       "veto": false,
       "veto_agents": []
     },
-    "allowed_history_end": "2024-03-22",
-    "allowed_history_start": "2023-03-23",
-    "blind_test_end": "2024-04-01",
-    "blind_test_start": "2024-03-22",
-    "completed_at_utc": "2026-09-13T06:41:54.956252+00:00",
-    "final_balance": 93.777901,
+    "allowed_history_end": "2026-06-15",
+    "allowed_history_start": "2025-06-15",
+    "blind_test_end": "2026-06-25",
+    "blind_test_start": "2026-06-15",
+    "completed_at_utc": "2026-09-13T06:43:56.290527+00:00",
+    "final_balance": 100.0,
     "hyperopt_epochs": 60,
-    "learning_directive_for_next_run": "negative_return_improve_entry_quality_without_becoming_passive",
-    "max_drawdown_pct": 6.222099,
+    "learning_directive_for_next_run": "increase_signal_recall_and_trade_activity",
+    "max_drawdown_pct": 0.0,
     "near_ruin": false,
-    "optimization_timerange_start": "2023-03-27",
+    "optimization_timerange_start": "2025-06-19",
     "outcome": "MISS",
-    "parameter_fingerprint": "864414b66485c0b2319924d852efb5bd59bcbfc8eb2aec0f94f0764bfcc14c03",
+    "parameter_fingerprint": "94f3d69c69fda9f938c1506a2fb3ba50c5968d92862ec07a9354435203ec0fd3",
     "raster_restart_attempts": 0,
-    "return_pct": -6.222099000000004,
-    "run": 28,
+    "return_pct": 0.0,
+    "run": 29,
     "safety": {
       "blind_window_used_for_raster_2": false,
       "exchange_secrets": false,
       "live_trading": false,
       "research_only": true
     },
-    "search_seed": 87335,
+    "search_seed": 129526,
     "starting_balance": 100.0,
     "target_balance": 200.0,
     "target_hit_at": null,
-    "trades": 4
+    "trades": 0
   },
-  "learning_directive": "negative_return_improve_entry_quality_without_becoming_passive",
-  "miss_count": 28,
+  "learning_directive": "increase_signal_recall_and_trade_activity",
+  "miss_count": 29,
   "next_raster": 1,
   "parameter_fingerprints": [
     "059373dbd1ffea4d833a1e33b94472f892084d8a5d47ee1bc5eec16acda6ef48",
@@ -94,7 +94,8 @@
     "ec6cfc8869f2e08be9c63c6f5712540f0f8528d188046053a9255c5f39ae6027",
     "004b71917420eaa2c79ae2afb767618764a88415fd4c650331a0d908c75d654d",
     "bbaf18ad2c62567f18544d0dd9327007b0aa69da2f05dd85d0f81d3a77218d3b",
-    "864414b66485c0b2319924d852efb5bd59bcbfc8eb2aec0f94f0764bfcc14c03"
+    "864414b66485c0b2319924d852efb5bd59bcbfc8eb2aec0f94f0764bfcc14c03",
+    "94f3d69c69fda9f938c1506a2fb3ba50c5968d92862ec07a9354435203ec0fd3"
   ],
   "raster_history": [
     {
@@ -1440,14 +1441,62 @@
       "raster": 6,
       "run": 28,
       "status": "passed"
+    },
+    {
+      "agent": "OpsWatchdog",
+      "at_utc": "2026-09-13T06:42:01.428828+00:00",
+      "detail": "health and research memory valid",
+      "raster": 1,
+      "run": 29,
+      "status": "passed"
+    },
+    {
+      "agent": "ResearchAgent",
+      "at_utc": "2026-09-13T06:43:42.904720+00:00",
+      "detail": "trained only on 2025-06-15..2026-06-15 with fingerprint 94f3d69c69fd",
+      "raster": 2,
+      "run": 29,
+      "status": "passed"
+    },
+    {
+      "agent": "QuantAgent",
+      "at_utc": "2026-09-13T06:43:56.283395+00:00",
+      "detail": "MISS final=100.00000000 trades=0",
+      "raster": 3,
+      "run": 29,
+      "status": "passed"
+    },
+    {
+      "agent": "ValidationCritic",
+      "at_utc": "2026-09-13T06:43:56.285813+00:00",
+      "detail": "blind window complete and reproducible",
+      "raster": 4,
+      "run": 29,
+      "status": "passed"
+    },
+    {
+      "agent": "RiskAgent",
+      "at_utc": "2026-09-13T06:43:56.288030+00:00",
+      "detail": "near_ruin=False drawdown=0.0",
+      "raster": 5,
+      "run": 29,
+      "status": "passed"
+    },
+    {
+      "agent": "TenDaySupervisor",
+      "at_utc": "2026-09-13T06:43:56.291869+00:00",
+      "detail": "checkpointed MISS; next run starts at raster 1",
+      "raster": 6,
+      "run": 29,
+      "status": "passed"
     }
   ],
   "raster_status": "ready_for_next_run",
-  "run_count": 28,
-  "run_in_progress": 28,
+  "run_count": 29,
+  "run_in_progress": 29,
   "schema_version": 1,
   "supervisor": "TenDaySupervisor",
-  "updated_at_utc": "2026-09-13T06:41:54.958660+00:00",
+  "updated_at_utc": "2026-09-13T06:43:56.293026+00:00",
   "used_test_windows": [
     "2025-10-10",
     "2024-06-06",
@@ -1476,6 +1525,7 @@
     "2024-05-14",
     "2025-03-16",
     "2026-02-05",
-    "2024-03-22"
+    "2024-03-22",
+    "2026-06-15"
   ]
 }
