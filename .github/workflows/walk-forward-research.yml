@@ -98,6 +98,21 @@ jobs:
         run: |
           .venv/bin/python research/ten_day_challenge/jurisdiction_policy.py --root "$GITHUB_WORKSPACE"
 
+      - name: Raster 1 safe lint self-heal
+        run: |
+          .venv/bin/ruff check --fix \
+            research/ten_day_challenge/agentic_walk_forward.py \
+            research/ten_day_challenge/evolution.py \
+            research/ten_day_challenge/walk_forward.py \
+            research/ten_day_challenge/rolling_windows.py \
+            research/ten_day_challenge/council.py \
+            research/ten_day_challenge/watchdog.py \
+            research/ten_day_challenge/binance_vision.py \
+            research/ten_day_challenge/jurisdiction_policy.py \
+            research/ten_day_challenge/continue_research.py \
+            runtime/user_data/strategies/candidates/TenDayAdaptiveV2.py \
+            tests/research/test_agentic_evolution.py
+
       - name: Validate agentic raster implementation
         run: |
           .venv/bin/python -m pytest \
