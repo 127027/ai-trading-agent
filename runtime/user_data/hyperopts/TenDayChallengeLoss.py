@@ -1,20 +1,24 @@
 """Hyperopt objective for repeatable 100-to-200 ten-day research.
 
-The 200 target remains dominant, but catastrophic ten-day outcomes are explicit
-negative evidence. This keeps the search aggressive without rewarding a policy
-that reaches 200 rarely while destroying most starting wallets.
+The 200 target remains dominant, catastrophic ten-day outcomes are explicit negative
+evidence, and training uses the same per-entry 1x..10x leverage encoded at signal time.
 """
 
 from __future__ import annotations
 
 import math
-import os
+import re
 from datetime import datetime
 from typing import Any
 
 import numpy as np
 import pandas as pd
 from freqtrade.optimize.hyperopt import IHyperOptLoss
+
+
+def _tag_leverage(value: Any) -> float:
+    match = re.search(r"(?:^|\|)lev=(10|[1-9])(?:\||$)", str(value or ""))
+    return float(match.group(1)) if match else 1.0
 
 
 class TenDayChallengeLoss(IHyperOptLoss):
@@ -35,17 +39,25 @@ class TenDayChallengeLoss(IHyperOptLoss):
         if trade_count <= 0 or results.empty:
             return 1000.0
 
-        leverage = max(1.0, float(os.getenv("TEN_DAY_RESEARCH_LEVERAGE", "1")))
-        frame = results.loc[:, ["close_date", "profit_ratio"]].copy()
+        columns = ["close_date", "profit_ratio"]
+        if "enter_tag" in results.columns:
+            columns.append("enter_tag")
+        frame = results.loc[:, columns].copy()
         frame["close_date"] = pd.to_datetime(frame["close_date"], utc=True, errors="coerce")
         frame["profit_ratio"] = pd.to_numeric(frame["profit_ratio"], errors="coerce")
-        frame = frame.dropna()
+        if "enter_tag" not in frame.columns:
+            frame["enter_tag"] = ""
+        frame = frame.dropna(subset=["close_date", "profit_ratio"])
         if frame.empty:
             return 1000.0
 
-        # Training-side leverage proxy. Raster 5 still performs strict margin,
-        # interest and intratrade-liquidation accounting on the blind window.
-        frame["levered_profit_ratio"] = np.maximum(-1.0, frame["profit_ratio"] * leverage)
+        # Training-side leverage proxy mirrors the leverage encoded at entry time.
+        # Raster 5 still performs strict borrow-interest and intratrade liquidation.
+        frame["entry_leverage"] = frame["enter_tag"].map(_tag_leverage)
+        frame["levered_profit_ratio"] = np.maximum(
+            -1.0,
+            frame["profit_ratio"] * frame["entry_leverage"],
+        )
         frame["day"] = frame["close_date"].dt.floor("D")
         daily = frame.groupby("day")["levered_profit_ratio"].apply(
             lambda values: float(np.prod(1.0 + values) - 1.0)
@@ -74,8 +86,6 @@ class TenDayChallengeLoss(IHyperOptLoss):
         mean_return = float(returns.mean())
         best_return = float(returns.max())
 
-        # Hitting 200 is still by far the strongest term. Severe losses matter,
-        # however, so a 5% hit-rate / 95% account-destruction policy cannot win.
         reward = (
             340.0 * hit_200
             + 40.0 * hit_250
@@ -87,8 +97,7 @@ class TenDayChallengeLoss(IHyperOptLoss):
         )
         tail_penalty = 35.0 * collapse_50 + 80.0 * collapse_75 + 140.0 * total_loss
 
-        # Selectivity is allowed. Only near-total inactivity is discouraged; the
-        # optimizer is no longer forced toward 1-2 trades/day irrespective of setup quality.
+        # Selectivity is allowed. Only near-total inactivity is discouraged.
         days = max((max_date - min_date).total_seconds() / 86400.0, 1.0)
         trades_per_day = trade_count / days
         inactivity_penalty = max(0.0, 0.20 - trades_per_day) * 25.0
