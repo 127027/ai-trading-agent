@@ -18,7 +18,7 @@ from evolution import classify_regime as original_classify_regime
 from hit_lock import lock_first_target
 
 GENERATION = "contextual-signal-v6-clean"
-RESET_EPOCH = "balanced-tail-expected-return-reset-2026-09-14"
+RESET_EPOCH = "family-calibrated-positive-expectancy-reset-2026-09-14"
 _ORIGINAL_MARGIN_RUN_WINDOW = engine.run_margin_window
 
 
@@ -79,7 +79,7 @@ def _adaptive_leverage_ceiling(
         "regime_confidence_diagnostic_only": confidence,
         "evidence_cutoff": regime.get("evidence_cutoff"),
         "blind_window_seen": False,
-        "method": "entry_time_signal_confidence_selects_1_to_10_ceiling_only",
+        "method": "entry_time_family_calibrated_confidence_selects_1_to_10",
     }
 
 
@@ -142,12 +142,12 @@ def execute_one_run(args: argparse.Namespace) -> dict[str, Any]:
         "maximum": 10,
         "decision_time": "entry",
         "future_information_used": False,
-        "confidence_mapping": "convex_power_2.2",
+        "confidence_mapping": "family_calibrated_breakout2.0_pullback2.45_meanrev2.75_volexp2.60",
     }
     state["optimization_objective"] = {
         "primary": "repeatable_200_hit_rate",
         "secondary": "positive_expected_10_day_balance",
-        "tail_control": "penalize_20_30_50_75_95_percent_losses",
+        "tail_control": "penalize_10_20_30_50_75_95_percent_losses",
     }
     _write(state_path, state)
 
