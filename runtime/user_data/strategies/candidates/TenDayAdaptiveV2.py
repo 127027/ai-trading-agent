@@ -5,6 +5,7 @@ from __future__ import annotations
 import os
 from typing import Any, ClassVar
 
+import numpy as np
 import talib.abstract as ta
 from freqtrade.strategy import CategoricalParameter, DecimalParameter, IntParameter, IStrategy
 from pandas import DataFrame
@@ -80,6 +81,27 @@ class TenDayAdaptiveV2(IStrategy):
         dataframe["bb_upper"] = bb["upperband"]
         dataframe["bb_middle"] = bb["middleband"]
         dataframe["bb_lower"] = bb["lowerband"]
+
+        # Entry-time confidence uses only current/past indicators. No future MAE/MFE,
+        # close price or blind-window outcome is available here.
+        trend_gap = ((dataframe["ema_fast"] / dataframe["ema_slow"]) - 1.0).clip(-0.10, 0.10)
+        trend_strength = (trend_gap.clip(lower=0.0) / 0.05).clip(0.0, 1.0)
+        adx_strength = ((dataframe["adx"] - 10.0) / 30.0).clip(0.0, 1.0)
+        volume_strength = (
+            (dataframe["volume"] / dataframe["volume_mean"].replace(0.0, np.nan) - 0.6) / 1.4
+        ).clip(0.0, 1.0)
+        volatility_strength = (
+            (dataframe["atr_pct"] / dataframe["atr_mean"].replace(0.0, np.nan) - 0.7) / 1.3
+        ).clip(0.0, 1.0)
+        rsi_quality = (1.0 - ((dataframe["rsi"] - 55.0).abs() / 35.0)).clip(0.0, 1.0)
+        dataframe["entry_confidence"] = (
+            0.30 * trend_strength.fillna(0.0)
+            + 0.25 * adx_strength.fillna(0.0)
+            + 0.20 * volume_strength.fillna(0.0)
+            + 0.15 * volatility_strength.fillna(0.0)
+            + 0.10 * rsi_quality.fillna(0.0)
+        ).clip(0.0, 1.0)
+        dataframe["entry_leverage"] = (1.0 + 9.0 * dataframe["entry_confidence"]).round().clip(1, 10).astype(int)
         return dataframe
 
     def populate_entry_trend(self, dataframe: DataFrame, metadata: dict) -> DataFrame:
@@ -98,7 +120,7 @@ class TenDayAdaptiveV2(IStrategy):
                 & (dataframe["ema_fast"] > dataframe["ema_slow"])
                 & (dataframe["adx"] >= int(self.adx_min.value))
             )
-            tag = "adaptive_breakout"
+            base_tag = "adaptive_breakout"
         elif family == "trend_pullback":
             distance = (dataframe["close"] / dataframe["ema_fast"] - 1.0).abs()
             signal = (
@@ -109,7 +131,7 @@ class TenDayAdaptiveV2(IStrategy):
                 & (dataframe["rsi"] >= 32)
                 & (dataframe["rsi"] <= int(self.rsi_entry.value) + 12)
             )
-            tag = "adaptive_trend_pullback"
+            base_tag = "adaptive_trend_pullback"
         elif family == "mean_reversion":
             signal = (
                 common
@@ -117,7 +139,7 @@ class TenDayAdaptiveV2(IStrategy):
                 & (dataframe["rsi"] <= int(self.rsi_entry.value))
                 & (dataframe["close"] > dataframe["rolling_low"] * 0.94)
             )
-            tag = "adaptive_mean_reversion"
+            base_tag = "adaptive_mean_reversion"
         else:
             signal = (
                 common
@@ -126,9 +148,14 @@ class TenDayAdaptiveV2(IStrategy):
                 & (dataframe["close"] > dataframe["ema_fast"] * 0.997)
                 & (dataframe["rsi"] >= 45)
             )
-            tag = "adaptive_volatility_expansion"
+            base_tag = "adaptive_volatility_expansion"
 
-        dataframe.loc[signal, ["enter_long", "enter_tag"]] = (1, tag)
+        for leverage in range(1, 11):
+            selected = signal & (dataframe["entry_leverage"] == leverage)
+            dataframe.loc[selected, ["enter_long", "enter_tag"]] = (
+                1,
+                f"{base_tag}|lev={leverage}",
+            )
         return dataframe
 
     def populate_exit_trend(self, dataframe: DataFrame, metadata: dict) -> DataFrame:
