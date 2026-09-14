@@ -82,8 +82,9 @@ class TenDayAdaptiveV2(IStrategy):
         dataframe["bb_middle"] = bb["middleband"]
         dataframe["bb_lower"] = bb["lowerband"]
 
-        # Entry-time confidence uses only current/past indicators. No future MAE/MFE,
-        # close price or blind-window outcome is available here.
+        # Entry-time confidence uses only current/past indicators. High leverage
+        # now requires genuinely exceptional agreement instead of a near-linear
+        # mapping that promoted mediocre setups into 6x-8x exposure too easily.
         trend_gap = ((dataframe["ema_fast"] / dataframe["ema_slow"]) - 1.0).clip(-0.10, 0.10)
         trend_strength = (trend_gap.clip(lower=0.0) / 0.05).clip(0.0, 1.0)
         adx_strength = ((dataframe["adx"] - 10.0) / 30.0).clip(0.0, 1.0)
@@ -101,7 +102,11 @@ class TenDayAdaptiveV2(IStrategy):
             + 0.15 * volatility_strength.fillna(0.0)
             + 0.10 * rsi_quality.fillna(0.0)
         ).clip(0.0, 1.0)
-        dataframe["entry_leverage"] = (1.0 + 9.0 * dataframe["entry_confidence"]).round().clip(1, 10).astype(int)
+
+        # Convex mapping: 0.50 confidence -> ~3x, 0.70 -> ~5x,
+        # 0.85 -> ~7x, and only ~0.95+ approaches 9x-10x.
+        leverage_score = dataframe["entry_confidence"].pow(2.2)
+        dataframe["entry_leverage"] = (1.0 + 9.0 * leverage_score).round().clip(1, 10).astype(int)
         return dataframe
 
     def populate_entry_trend(self, dataframe: DataFrame, metadata: dict) -> DataFrame:
