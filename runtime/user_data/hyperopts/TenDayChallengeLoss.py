@@ -1,4 +1,9 @@
-"""Aggressive Hyperopt objective for the 100-to-200 ten-day research challenge."""
+"""Hyperopt objective for repeatable 100-to-200 ten-day research.
+
+The 200 target remains dominant, but catastrophic ten-day outcomes are explicit
+negative evidence. This keeps the search aggressive without rewarding a policy
+that reaches 200 rarely while destroying most starting wallets.
+"""
 
 from __future__ import annotations
 
@@ -38,9 +43,8 @@ class TenDayChallengeLoss(IHyperOptLoss):
         if frame.empty:
             return 1000.0
 
-        # Training-side leverage proxy: blind Raster 5 performs the strict margin,
-        # borrow-interest and intratrade liquidation accounting. Hyperopt must still
-        # search for signals with enough return velocity for the intended leverage.
+        # Training-side leverage proxy. Raster 5 still performs strict margin,
+        # interest and intratrade-liquidation accounting on the blind window.
         frame["levered_profit_ratio"] = np.maximum(-1.0, frame["profit_ratio"] * leverage)
         frame["day"] = frame["close_date"].dt.floor("D")
         daily = frame.groupby("day")["levered_profit_ratio"].apply(
@@ -63,29 +67,32 @@ class TenDayChallengeLoss(IHyperOptLoss):
         hit_175 = float((returns >= 0.75).mean())
         hit_200 = float((returns >= 1.00).mean())
         hit_250 = float((returns >= 1.50).mean())
+        collapse_50 = float((returns <= -0.50).mean())
+        collapse_75 = float((returns <= -0.75).mean())
+        total_loss = float((returns <= -0.95).mean())
         median_return = float(returns.median())
         mean_return = float(returns.mean())
         best_return = float(returns.max())
 
-        # Before the first validated 200 hit, return velocity dominates. Drawdown
-        # and near-ruin are intentionally not optimization penalties.
+        # Hitting 200 is still by far the strongest term. Severe losses matter,
+        # however, so a 5% hit-rate / 95% account-destruction policy cannot win.
         reward = (
-            320.0 * hit_200
+            340.0 * hit_200
             + 40.0 * hit_250
-            + 10.0 * hit_175
-            + 4.0 * hit_150
+            + 12.0 * hit_175
+            + 5.0 * hit_150
             + 1.0 * max(-1.0, min(4.0, best_return))
-            + 0.5 * max(-1.0, min(3.0, median_return))
-            + 0.2 * max(-1.0, min(3.0, mean_return))
+            + 0.7 * max(-1.0, min(3.0, median_return))
+            + 0.3 * max(-1.0, min(3.0, mean_return))
         )
+        tail_penalty = 35.0 * collapse_50 + 80.0 * collapse_75 + 140.0 * total_loss
 
-        # A ten-day 100->200 mission needs substantially more opportunity than a
-        # handful of trades. Encourage roughly 1-2 closed trades/day while keeping
-        # the binary 200-hit reward dominant, so overtrading cannot beat real hits.
+        # Selectivity is allowed. Only near-total inactivity is discouraged; the
+        # optimizer is no longer forced toward 1-2 trades/day irrespective of setup quality.
         days = max((max_date - min_date).total_seconds() / 86400.0, 1.0)
         trades_per_day = trade_count / days
-        inactivity_penalty = max(0.0, 1.0 - trades_per_day) * 45.0
-        activity_reward = min(2.0, trades_per_day) * 2.0
+        inactivity_penalty = max(0.0, 0.20 - trades_per_day) * 25.0
+        useful_activity_reward = min(1.0, trades_per_day) * 0.75
 
-        loss = -reward - activity_reward + inactivity_penalty
+        loss = -reward + tail_penalty - useful_activity_reward + inactivity_penalty
         return float(loss) if math.isfinite(loss) else 1000.0
