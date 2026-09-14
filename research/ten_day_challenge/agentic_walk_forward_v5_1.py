@@ -18,7 +18,7 @@ from evolution import classify_regime as original_classify_regime
 from hit_lock import lock_first_target
 
 GENERATION = "contextual-signal-v6-clean"
-RESET_EPOCH = "family-calibrated-positive-expectancy-reset-2026-09-14"
+RESET_EPOCH = "adaptive-tail-risk-reset-2026-09-14"
 _ORIGINAL_MARGIN_RUN_WINDOW = engine.run_margin_window
 
 
@@ -144,10 +144,18 @@ def execute_one_run(args: argparse.Namespace) -> dict[str, Any]:
         "future_information_used": False,
         "confidence_mapping": "family_calibrated_breakout2.0_pullback2.45_meanrev2.75_volexp2.60",
     }
+    state["adaptive_tail_risk"] = {
+        "enabled": True,
+        "target_max_equity_risk_per_trade": 0.18,
+        "minimum_spot_stop": 0.0225,
+        "maximum_spot_stop": 0.12,
+        "uses_entry_leverage_only": True,
+        "future_information_used": False,
+    }
     state["optimization_objective"] = {
         "primary": "repeatable_200_hit_rate",
         "secondary": "positive_expected_10_day_balance",
-        "tail_control": "penalize_10_20_30_50_75_95_percent_losses",
+        "tail_control": "leverage_aware_stoploss_plus_penalize_10_20_30_50_75_95_percent_losses",
     }
     _write(state_path, state)
 
