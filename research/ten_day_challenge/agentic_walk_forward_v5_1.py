@@ -18,7 +18,7 @@ from evolution import classify_regime as original_classify_regime
 from hit_lock import lock_first_target
 
 GENERATION = "contextual-signal-v6-clean"
-RESET_EPOCH = "adaptive-leverage-1-10-balanced-reset-2026-09-14"
+RESET_EPOCH = "adaptive-leverage-convex-confidence-reset-2026-09-14"
 _ORIGINAL_MARGIN_RUN_WINDOW = engine.run_margin_window
 
 
@@ -142,6 +142,7 @@ def execute_one_run(args: argparse.Namespace) -> dict[str, Any]:
         "maximum": 10,
         "decision_time": "entry",
         "future_information_used": False,
+        "confidence_mapping": "convex_power_2.2",
     }
     _write(state_path, state)
 
