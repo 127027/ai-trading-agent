@@ -3,10 +3,13 @@
 from __future__ import annotations
 
 import os
+import re
+from datetime import datetime
 from typing import Any, ClassVar
 
 import numpy as np
 import talib.abstract as ta
+from freqtrade.persistence import Trade
 from freqtrade.strategy import CategoricalParameter, DecimalParameter, IntParameter, IStrategy
 from pandas import DataFrame
 
@@ -47,6 +50,7 @@ class TenDayAdaptiveV2(IStrategy):
 
     minimal_roi: ClassVar[dict[str, float]] = {"0": 0.08, "180": 0.04, "720": 0.0}
     stoploss = -0.12
+    use_custom_stoploss = True
     trailing_stop = False
     use_exit_signal = True
     exit_profit_only = False
@@ -104,12 +108,7 @@ class TenDayAdaptiveV2(IStrategy):
 
     @staticmethod
     def _family_leverage(confidence: DataFrame | Any, family: str) -> Any:
-        """Map entry confidence to 1x..10x with family-specific aggressiveness.
-
-        Breakouts preserve the strongest observed 200-hit behavior. Other families
-        require more confidence before receiving the same leverage, reducing the
-        medium-quality high-leverage losses that pulled down average 10-day equity.
-        """
+        """Map entry confidence to 1x..10x with family-specific aggressiveness."""
         power = {
             "breakout": 2.0,
             "trend_pullback": 2.45,
@@ -118,6 +117,34 @@ class TenDayAdaptiveV2(IStrategy):
         }.get(family, 2.5)
         score = confidence.pow(power)
         return (1.0 + 9.0 * score).round().clip(1, 10).astype(int)
+
+    @staticmethod
+    def _tag_leverage(tag: str | None) -> int:
+        match = re.search(r"\|lev=(10|[1-9])(?:$|\|)", str(tag or ""))
+        return int(match.group(1)) if match else 1
+
+    def custom_stoploss(
+        self,
+        pair: str,
+        trade: Trade,
+        current_time: datetime,
+        current_rate: float,
+        current_profit: float,
+        after_fill: bool,
+        **kwargs: Any,
+    ) -> float | None:
+        """Limit leveraged tail damage without suppressing the high-upside entries.
+
+        The historical 200-hit had winning trades at 5x-8x with roughly 1-2% spot MAE.
+        A flat -12% spot stop therefore gave high-leverage losers far too much room.
+        This cap targets about 18% maximum equity risk per trade while retaining a
+        minimum 2.25% spot allowance for normal crypto noise. It uses only the
+        leverage encoded at entry and no future information.
+        """
+        del pair, current_time, current_rate, current_profit, after_fill, kwargs
+        leverage = self._tag_leverage(getattr(trade, "enter_tag", None))
+        spot_stop = max(0.0225, min(0.12, 0.18 / max(1, leverage)))
+        return -float(spot_stop)
 
     def populate_entry_trend(self, dataframe: DataFrame, metadata: dict) -> DataFrame:
         del metadata
