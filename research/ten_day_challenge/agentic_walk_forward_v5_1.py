@@ -18,7 +18,7 @@ from evolution import classify_regime as original_classify_regime
 from hit_lock import lock_first_target
 
 GENERATION = "contextual-signal-v6-clean"
-RESET_EPOCH = "hit-lock-reset-2026-09-14"
+RESET_EPOCH = "adaptive-leverage-1-10-balanced-reset-2026-09-14"
 _ORIGINAL_MARGIN_RUN_WINDOW = engine.run_margin_window
 
 
@@ -62,6 +62,27 @@ def _reset_old_generation(root: Path) -> None:
             shutil.rmtree(directory)
 
 
+def _adaptive_leverage_ceiling(
+    challenge: dict[str, Any], state: dict[str, Any], regime: dict[str, Any]
+) -> tuple[int, dict[str, Any]]:
+    """Keep 10x available; each entry independently chooses 1x..10x."""
+    del state
+    allowed = sorted({int(value) for value in challenge["leverage_research"]["allowed_leverage"]})
+    ceiling = max(allowed)
+    confidence = engine._regime_confidence(regime)
+    return ceiling, {
+        "selected_leverage": ceiling,
+        "leverage_ceiling": ceiling,
+        "adaptive_per_entry": True,
+        "entry_leverage_range": [min(allowed), ceiling],
+        "regime": str(regime.get("label") or "unknown"),
+        "regime_confidence_diagnostic_only": confidence,
+        "evidence_cutoff": regime.get("evidence_cutoff"),
+        "blind_window_seen": False,
+        "method": "entry_time_signal_confidence_selects_1_to_10_ceiling_only",
+    }
+
+
 def _run_margin_window_with_hit_lock(*args: Any, **kwargs: Any) -> Any:
     result, margin = _ORIGINAL_MARGIN_RUN_WINDOW(*args, **kwargs)
     if not margin:
@@ -83,6 +104,7 @@ def execute_one_run(args: argparse.Namespace) -> dict[str, Any]:
     enriched = make_enriched_classifier(original_classify_regime)
     base.classify_regime = enriched
     engine.classify_regime = enriched
+    engine._select_leverage = _adaptive_leverage_ceiling
     engine.run_margin_window = _run_margin_window_with_hit_lock
 
     original_validate = base.validate_candidate
@@ -114,6 +136,13 @@ def execute_one_run(args: argparse.Namespace) -> dict[str, Any]:
     state["clean_generation_started_at_run"] = 1
     state["inherited_run_state"] = False
     state["inherited_research_memory"] = False
+    state["adaptive_entry_leverage"] = {
+        "enabled": True,
+        "minimum": 1,
+        "maximum": 10,
+        "decision_time": "entry",
+        "future_information_used": False,
+    }
     _write(state_path, state)
 
     record["supervisor_meta_learning"] = report
