@@ -1,16 +1,15 @@
 """Research-only Binance isolated-margin accounting for blind backtests.
 
-This module never talks to Binance and never places orders. It applies documented
-isolated-margin leverage/liquidation rules to Freqtrade-exported trades so the
-research loop cannot claim a leveraged HIT by merely multiplying a spot balance.
-It also emits per-trade evidence for later runs. That evidence is written only
-after the blind window has completed and is never used to redesign the current run.
+This module never talks to Binance and never places orders. It applies realistic
+isolated-margin leverage/liquidation accounting to exported trades. Per-trade
+leverage may be encoded by the strategy at entry time as ``|lev=N`` with N=1..10.
 """
 
 from __future__ import annotations
 
 import json
 import os
+import re
 import subprocess
 import tempfile
 from dataclasses import dataclass
@@ -58,10 +57,37 @@ def _duration_days(trade: dict[str, Any]) -> float:
     return max(0.0, float(minutes)) / 1440.0
 
 
+def _entry_leverage(trade: dict[str, Any], fallback: int) -> int:
+    """Read entry-time leverage encoded by the strategy without future information."""
+    tag = str(trade.get("enter_tag") or "")
+    match = re.search(r"(?:^|\|)lev=(10|[1-9])(?:\||$)", tag)
+    if not match:
+        return max(1, min(10, int(fallback)))
+    return int(match.group(1))
+
+
+def _liquidation_margin_level(leverage: int) -> float:
+    """Conservative research proxy between documented 3x/5x/10x anchors.
+
+    1x has no borrowing. 2x uses the conservative 3x anchor. Intermediate levels
+    are linearly interpolated between the existing 3x=1.18, 5x=1.15 and 10x=1.05
+    research anchors so 1..10 can be tested without pretending to know an
+    account-specific Binance maintenance schedule.
+    """
+    if leverage <= 1:
+        return 0.0
+    if leverage <= 3:
+        return 1.18
+    if leverage <= 5:
+        return 1.18 + (1.15 - 1.18) * ((leverage - 3) / 2.0)
+    return 1.15 + (1.05 - 1.15) * ((leverage - 5) / 5.0)
+
+
 def _trade_evidence(
     trade: dict[str, Any],
     *,
     leverage: int,
+    liquidation_margin_level: float,
     liquidated: bool,
     interest_paid: float,
     equity_before: float,
@@ -92,6 +118,7 @@ def _trade_evidence(
         "mfe_pct": mfe_pct,
         "trade_duration_minutes": float(trade.get("trade_duration") or 0.0),
         "leverage": leverage,
+        "liquidation_margin_level": liquidation_margin_level,
         "interest_paid": interest_paid,
         "equity_before": equity_before,
         "equity_after": equity_after,
@@ -109,12 +136,12 @@ def apply_isolated_margin(
     near_ruin_balance: float,
     spec: MarginSpec,
 ) -> dict[str, Any]:
-    """Apply sequential long exposure with 1x no-borrow or isolated-margin economics."""
+    """Apply sequential long exposure with adaptive 1x..10x entry-time leverage."""
 
     if spec.direction != "long":
         raise ValueError("only long isolated-margin research is implemented")
     if spec.leverage < 1:
-        raise ValueError("research leverage must be >= 1")
+        raise ValueError("research leverage ceiling must be >= 1")
 
     equity = float(starting_balance)
     peak = equity
@@ -126,13 +153,7 @@ def apply_isolated_margin(
     total_interest = 0.0
     trades_processed = 0
     trade_evidence: list[dict[str, Any]] = []
-
-    # 1x is the explicit no-borrow baseline. No debt means no margin liquidation.
-    liquidation_price_ratio = (
-        0.0
-        if spec.leverage == 1
-        else spec.liquidation_margin_level * (spec.leverage - 1) / spec.leverage
-    )
+    leverage_counts = {str(value): 0 for value in range(1, 11)}
 
     for index, trade in enumerate(trades):
         if equity <= 0.0:
@@ -143,17 +164,20 @@ def apply_isolated_margin(
         if open_rate <= 0.0:
             raise ValueError("open_rate must be positive")
 
-        debt = equity * (spec.leverage - 1)
+        leverage = min(_entry_leverage(trade, spec.leverage), int(spec.leverage))
+        leverage = max(1, min(10, leverage))
+        leverage_counts[str(leverage)] += 1
+        margin_level = _liquidation_margin_level(leverage)
+        liquidation_price_ratio = (
+            0.0 if leverage == 1 else margin_level * (leverage - 1) / leverage
+        )
+
+        debt = equity * (leverage - 1)
         interest = debt * spec.borrow_interest_apr * _duration_days(trade) / 365.0
         total_interest += interest
 
-        if spec.leverage > 1 and min_rate / open_rate <= liquidation_price_ratio:
-            residual = (
-                spec.liquidation_margin_level * debt
-                - debt
-                - spec.liquidation_fee_fraction * debt
-                - interest
-            )
+        if leverage > 1 and min_rate / open_rate <= liquidation_price_ratio:
+            residual = margin_level * debt - debt - spec.liquidation_fee_fraction * debt - interest
             equity = max(0.0, residual)
             liquidated = True
             liquidation_trade_index = index
@@ -164,7 +188,8 @@ def apply_isolated_margin(
             trade_evidence.append(
                 _trade_evidence(
                     trade,
-                    leverage=spec.leverage,
+                    leverage=leverage,
+                    liquidation_margin_level=margin_level,
                     liquidated=True,
                     interest_paid=interest,
                     equity_before=equity_before,
@@ -174,7 +199,7 @@ def apply_isolated_margin(
             break
 
         profit_ratio = _float(trade, "profit_ratio")
-        equity = max(0.0, equity + equity * spec.leverage * profit_ratio - interest)
+        equity = max(0.0, equity + equity * leverage * profit_ratio - interest)
         trades_processed += 1
         lowest = min(lowest, equity)
         peak = max(peak, equity)
@@ -185,7 +210,8 @@ def apply_isolated_margin(
         trade_evidence.append(
             _trade_evidence(
                 trade,
-                leverage=spec.leverage,
+                leverage=leverage,
+                liquidation_margin_level=margin_level,
                 liquidated=False,
                 interest_paid=interest,
                 equity_before=equity_before,
@@ -202,13 +228,15 @@ def apply_isolated_margin(
         "max_drawdown_pct": max_drawdown * 100.0,
         "liquidated": liquidated,
         "liquidation_trade_index": liquidation_trade_index,
-        "liquidation_price_ratio": liquidation_price_ratio,
         "borrow_interest_paid": total_interest,
         "trades_processed": trades_processed,
         "trade_evidence": trade_evidence,
+        "leverage_counts": leverage_counts,
         "product": spec.product,
         "direction": spec.direction,
         "leverage": spec.leverage,
+        "adaptive_leverage": True,
+        "leverage_range": [1, int(spec.leverage)],
     }
 
 
@@ -285,10 +313,7 @@ def run_margin_window(
             if not isinstance(stats, dict):
                 raise KeyError(f"Strategy {strategy!r} missing from export")
             trades = list(stats.get("trades", []))
-            trades.sort(
-                key=lambda item: close_time(item)
-                or datetime.max.replace(tzinfo=UTC)
-            )
+            trades.sort(key=lambda item: close_time(item) or datetime.max.replace(tzinfo=UTC))
             margin = apply_isolated_margin(
                 trades,
                 starting_balance=starting_balance,
@@ -322,12 +347,4 @@ def run_margin_window(
                 f"Unable to apply isolated-margin model to {export_path.name}: "
                 f"{exc}\n{diagnostic}"
             )
-            return (
-                error_result(
-                    window,
-                    starting_balance,
-                    target_balance,
-                    message,
-                ),
-                {},
-            )
+            return error_result(window, starting_balance, target_balance, message), {}
