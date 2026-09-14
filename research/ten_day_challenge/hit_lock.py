@@ -1,8 +1,9 @@
-"""Freeze a blind research run at the first valid target-balance hit.
+"""Freeze scored success at the first target hit while preserving shadow diagnostics.
 
-The binary challenge is complete as soon as simulated equity reaches the target.
-Any trades exported after that point belong to the same blind market window but are
-not part of the scored run and must not be allowed to give the target back.
+The challenge is passed as soon as simulated equity first reaches the target. Later
+trades therefore cannot revoke the HIT. For live-readiness learning, however, the
+full-window outcome is retained as shadow evidence so strategies that would give
+all gains back after the hit remain visible to the research loop.
 """
 
 from __future__ import annotations
@@ -29,13 +30,14 @@ def lock_first_target(
     target_balance: float,
     near_ruin_balance: float,
 ) -> tuple[Any, dict[str, Any]]:
-    """Score the run only through the trade that first reaches the target."""
+    """Score only through first target hit, but retain full-window shadow outcome."""
 
     hit_index = margin.get("target_hit_trade_index")
     evidence = list(margin.get("trade_evidence") or [])
     if hit_index is None:
         margin["target_locked"] = False
         margin["post_hit_trades_discarded"] = 0
+        margin["post_hit_shadow"] = None
         return result, margin
 
     index = int(hit_index)
@@ -48,6 +50,18 @@ def lock_first_target(
         raise ValueError("target hit evidence does not reach target balance")
 
     original_count = len(evidence)
+    shadow = {
+        "full_window_final_balance": float(margin.get("final_balance") or 0.0),
+        "full_window_return_pct": float(margin.get("return_pct") or 0.0),
+        "full_window_max_drawdown_pct": float(margin.get("max_drawdown_pct") or 0.0),
+        "full_window_liquidated": bool(margin.get("liquidated")),
+        "full_window_liquidation_trade_index": margin.get("liquidation_trade_index"),
+        "full_window_trades_processed": int(margin.get("trades_processed") or original_count),
+        "post_hit_trade_count": max(0, original_count - len(scored_evidence)),
+        "gave_back_below_target": float(margin.get("final_balance") or 0.0) < float(target_balance),
+        "gave_back_below_start": float(margin.get("final_balance") or 0.0) < float(starting_balance),
+    }
+
     total_interest = sum(float(item.get("interest_paid") or 0.0) for item in scored_evidence)
     lowest = min(
         [float(starting_balance)]
@@ -70,6 +84,7 @@ def lock_first_target(
             "trade_evidence": scored_evidence,
             "target_locked": True,
             "post_hit_trades_discarded": max(0, original_count - len(scored_evidence)),
+            "post_hit_shadow": shadow,
         }
     )
 
