@@ -1,6 +1,7 @@
 import sys
 from importlib.util import module_from_spec, spec_from_file_location
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -14,6 +15,12 @@ assert SPEC and SPEC.loader
 margin_model = module_from_spec(SPEC)
 sys.modules[SPEC.name] = margin_model
 SPEC.loader.exec_module(margin_model)
+
+HIT_LOCK_SPEC = spec_from_file_location("hit_lock", RESEARCH / "hit_lock.py")
+assert HIT_LOCK_SPEC and HIT_LOCK_SPEC.loader
+hit_lock = module_from_spec(HIT_LOCK_SPEC)
+sys.modules[HIT_LOCK_SPEC.name] = hit_lock
+HIT_LOCK_SPEC.loader.exec_module(hit_lock)
 
 
 def trade(profit_ratio: float, min_rate: float = 100.0) -> dict:
@@ -110,3 +117,59 @@ def test_trade_evidence_contains_context_for_future_learning():
     assert item["mfe_pct"] == pytest.approx(12.0)
     assert item["equity_change"] > 0.0
     assert item["profitable"] is True
+
+
+def test_first_200_hit_is_locked_and_later_losses_are_discarded():
+    evidence = [
+        {
+            "equity_after": 150.0,
+            "interest_paid": 0.10,
+        },
+        {
+            "equity_after": 225.0,
+            "interest_paid": 0.20,
+        },
+        {
+            "equity_after": 50.0,
+            "interest_paid": 0.30,
+        },
+    ]
+    margin = {
+        "final_balance": 50.0,
+        "return_pct": -50.0,
+        "target_hit": True,
+        "target_hit_trade_index": 1,
+        "near_ruin": False,
+        "max_drawdown_pct": 77.78,
+        "liquidated": False,
+        "liquidation_trade_index": None,
+        "borrow_interest_paid": 0.60,
+        "trades_processed": 3,
+        "trade_evidence": evidence,
+    }
+    result = SimpleNamespace(
+        final_balance=50.0,
+        return_pct=-50.0,
+        target_hit=True,
+        trades=3,
+        max_drawdown_pct=77.78,
+        near_ruin=False,
+    )
+
+    result, margin = hit_lock.lock_first_target(
+        result,
+        margin,
+        starting_balance=100.0,
+        target_balance=200.0,
+        near_ruin_balance=10.0,
+    )
+
+    assert result.final_balance == 225.0
+    assert result.return_pct == 125.0
+    assert result.trades == 2
+    assert margin["final_balance"] == 225.0
+    assert margin["trades_processed"] == 2
+    assert len(margin["trade_evidence"]) == 2
+    assert margin["borrow_interest_paid"] == pytest.approx(0.30)
+    assert margin["target_locked"] is True
+    assert margin["post_hit_trades_discarded"] == 1
