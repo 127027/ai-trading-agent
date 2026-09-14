@@ -10,17 +10,17 @@
         "zero_trade_runs": 0
       },
       "mean_reversion": {
-        "attempts": 1,
-        "best_final_balance": 99.72768695424902,
-        "hits": 0,
-        "sum_final_balance": 99.72768695424902,
-        "zero_trade_runs": 0
-      },
-      "trend_pullback": {
         "attempts": 0,
         "best_final_balance": null,
         "hits": 0,
         "sum_final_balance": 0.0,
+        "zero_trade_runs": 0
+      },
+      "trend_pullback": {
+        "attempts": 1,
+        "best_final_balance": 70.12160798265484,
+        "hits": 0,
+        "sum_final_balance": 70.12160798265484,
         "zero_trade_runs": 0
       },
       "volatility_expansion": {
@@ -34,19 +34,19 @@
   },
   "hypothesis_history": [
     {
-      "final_balance": 99.72768695424902,
+      "final_balance": 70.12160798265484,
       "hypothesis_id": "cd088d5cb512bdb0",
       "outcome": "MISS",
-      "parameter_fingerprint": "6fbfd80c70bcc1d4b160dd3b0ebadae4418ead7476cb64a3c84384649542285f",
+      "parameter_fingerprint": "4fc8c73f2cdf37591a9c8f2be1bd17f850985bd5ca3a4c2844a2d4b3bfb2b4f0",
       "regime": "sideways_low_vol",
       "run": 1,
-      "selected_family": "mean_reversion"
+      "selected_family": "trend_pullback"
     }
   ],
   "recent_completed_runs": [
     {
       "agent_council": {
-        "council_score": -0.00544626091501943,
+        "council_score": -0.5975678403469034,
         "primary_objective": "maximize_hit_rate_200",
         "promotion_eligible": true,
         "reviews": [
@@ -54,7 +54,7 @@
             "agent": "QuantExperimentAgent",
             "reason": "Primary objective is repeatable >=200 USDT outcomes in 10 days; 150/175/250 thresholds are secondary learning signals.",
             "review_role": "outcome_scoring",
-            "score": -0.00544626091501943,
+            "score": -0.5975678403469034,
             "veto": false
           },
           {
@@ -66,7 +66,7 @@
           },
           {
             "agent": "TenDaySupervisor",
-            "reason": "Research diagnostic only: near-ruin=0.00%, median drawdown=0.27%. Aggressive valid candidates are not vetoed.",
+            "reason": "Research diagnostic only: near-ruin=0.00%, median drawdown=29.88%. Aggressive valid candidates are not vetoed.",
             "review_role": "risk_diagnostic",
             "score": 0.0,
             "veto": false
@@ -80,8 +80,8 @@
       "allowed_history_start": "2024-10-10",
       "blind_test_end": "2025-10-20",
       "blind_test_start": "2025-10-10",
-      "completed_at_utc": "2026-09-14T09:47:30.064952+00:00",
-      "final_balance": 99.72768695424902,
+      "completed_at_utc": "2026-09-14T09:56:36.289906+00:00",
+      "final_balance": 70.12160798265484,
       "hyperopt_epochs": 187,
       "hypothesis": {
         "allowed_families": [
@@ -173,13 +173,13 @@
           }
         }
       },
-      "max_drawdown_pct": 0.2723130457509768,
+      "max_drawdown_pct": 29.878392017345163,
       "near_ruin": false,
       "optimization_timerange_start": "2024-10-14",
       "outcome": "MISS",
-      "parameter_fingerprint": "6fbfd80c70bcc1d4b160dd3b0ebadae4418ead7476cb64a3c84384649542285f",
+      "parameter_fingerprint": "4fc8c73f2cdf37591a9c8f2be1bd17f850985bd5ca3a4c2844a2d4b3bfb2b4f0",
       "raster_restart_attempts": 0,
-      "return_pct": -0.2723130457509715,
+      "return_pct": -29.878392017345167,
       "run": 1,
       "safety": {
         "blind_window_used_before_raster_5": false,
@@ -188,7 +188,7 @@
         "research_only": true
       },
       "search_seed": 96900,
-      "selected_family": "mean_reversion",
+      "selected_family": "trend_pullback",
       "starting_balance": 100.0,
       "target_balance": 200.0,
       "target_hit_at": null,
@@ -197,14 +197,14 @@
   ],
   "recent_signal_evidence": [
     {
-      "enter_tag": "adaptive_mean_reversion|lev=1",
-      "equity_change": -0.2723130457509768,
+      "enter_tag": "adaptive_trend_pullback|lev=7",
+      "equity_change": -29.878392017345163,
       "exit_reason": "adaptive_exit",
-      "family": "mean_reversion",
-      "leverage": 1,
+      "family": "trend_pullback",
+      "leverage": 7,
       "liquidated": false,
-      "mae_pct": -0.10513854279635693,
-      "mfe_pct": 1.223580836637872,
+      "mae_pct": -4.279449569030691,
+      "mfe_pct": 0.09980341751096855,
       "pair": "BNB/USDT",
       "profitable": false,
       "regime": "sideways_low_vol",
@@ -214,24 +214,24 @@
   "schema_version": 2,
   "signal_context_stats": {
     "sideways_low_vol": {
-      "mean_reversion": {
+      "trend_pullback": {
         "BNB/USDT": {
-          "adaptive_mean_reversion|lev=1": {
+          "adaptive_trend_pullback|lev=7": {
             "exit_reasons": {
               "adaptive_exit": 1
             },
             "liquidations": 0,
             "mfe_observations": 1,
             "profitable_trades": 0,
-            "sum_duration_minutes": 165.0,
-            "sum_equity_change": -0.2723130457509768,
-            "sum_mae_pct": -0.10513854279635693,
-            "sum_mfe_pct": 1.223580836637872,
+            "sum_duration_minutes": 60.0,
+            "sum_equity_change": -29.878392017345163,
+            "sum_mae_pct": -4.279449569030691,
+            "sum_mfe_pct": 0.09980341751096855,
             "trades": 1
           }
         }
       }
     }
   },
-  "updated_at_utc": "2026-09-14T09:47:30.065318+00:00"
+  "updated_at_utc": "2026-09-14T09:56:36.290276+00:00"
 }
