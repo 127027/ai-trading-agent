@@ -1,8 +1,8 @@
 """Hyperopt objective for repeatable 100-to-200 ten-day research.
 
-The 200 target remains dominant, but the optimizer now explicitly protects the
-expected ten-day outcome from repeated medium and catastrophic drawdowns. Training
-uses the same per-entry 1x..10x leverage encoded at signal time.
+The 200 target remains dominant, but the optimizer explicitly protects expected
+10-day equity from repeated medium and catastrophic losses. Training consumes the
+same per-entry leverage tags used by the blind margin model.
 """
 
 from __future__ import annotations
@@ -80,9 +80,7 @@ class TenDayChallengeLoss(IHyperOptLoss):
         hit_200 = float((returns >= 1.00).mean())
         hit_250 = float((returns >= 1.50).mean())
 
-        # Loss tails are graded instead of waiting for a near-wipeout. This is
-        # specifically aimed at improving the mean ten-day balance without making
-        # the search passive or weakening the 200-hit objective.
+        loss_10 = float((returns <= -0.10).mean())
         loss_20 = float((returns <= -0.20).mean())
         loss_30 = float((returns <= -0.30).mean())
         collapse_50 = float((returns <= -0.50).mean())
@@ -94,29 +92,34 @@ class TenDayChallengeLoss(IHyperOptLoss):
         best_return = float(returns.max())
         downside_mean = float(np.minimum(returns.to_numpy(), 0.0).mean())
 
+        # 200 remains the primary objective. Positive median/mean expectancy now
+        # matters materially so a rare 200 hit cannot compensate for a strategy
+        # that destroys most fresh 100-USDT windows.
         reward = (
-            360.0 * hit_200
+            380.0 * hit_200
             + 45.0 * hit_250
-            + 14.0 * hit_175
-            + 6.0 * hit_150
-            + 2.0 * hit_125
+            + 15.0 * hit_175
+            + 7.0 * hit_150
+            + 2.5 * hit_125
             + 1.5 * max(-1.0, min(4.0, best_return))
-            + 2.0 * max(-1.0, min(3.0, median_return))
-            + 2.5 * max(-1.0, min(3.0, mean_return))
+            + 6.0 * max(-1.0, min(3.0, median_return))
+            + 8.0 * max(-1.0, min(3.0, mean_return))
         )
         tail_penalty = (
-            14.0 * loss_20
-            + 28.0 * loss_30
-            + 55.0 * collapse_50
-            + 100.0 * collapse_75
-            + 180.0 * total_loss
-            + 35.0 * abs(min(0.0, downside_mean))
+            8.0 * loss_10
+            + 20.0 * loss_20
+            + 42.0 * loss_30
+            + 85.0 * collapse_50
+            + 140.0 * collapse_75
+            + 240.0 * total_loss
+            + 60.0 * abs(min(0.0, downside_mean))
         )
 
         days = max((max_date - min_date).total_seconds() / 86400.0, 1.0)
         trades_per_day = trade_count / days
-        inactivity_penalty = max(0.0, 0.15 - trades_per_day) * 20.0
-        useful_activity_reward = min(1.0, trades_per_day) * 0.50
+        # Avoid pure inactivity, but do not force marginal trades just to increase count.
+        inactivity_penalty = max(0.0, 0.10 - trades_per_day) * 18.0
+        useful_activity_reward = min(0.8, trades_per_day) * 0.35
 
         loss = -reward + tail_penalty - useful_activity_reward + inactivity_penalty
         return float(loss) if math.isfinite(loss) else 1000.0
