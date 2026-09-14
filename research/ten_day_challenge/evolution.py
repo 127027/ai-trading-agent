@@ -152,6 +152,56 @@ def _stats(memory: dict[str, Any], regime: str, family: str) -> dict[str, Any]:
     )
 
 
+def _cross_generation_prior(regime: str, family: str) -> float:
+    """Small meta-prior from completed earlier research; current evidence can override it."""
+
+    priors: dict[str, dict[str, float]] = {
+        "transition": {
+            "trend_pullback": 18.0,
+            "volatility_expansion": 8.0,
+            "mean_reversion": 0.0,
+            "breakout": -2.0,
+        },
+        "bull_trend": {
+            "volatility_expansion": 6.0,
+            "trend_pullback": 4.0,
+            "breakout": 2.0,
+            "mean_reversion": 0.0,
+        },
+        "bull_trend_high_vol": {
+            "trend_pullback": 5.0,
+            "breakout": 3.0,
+            "volatility_expansion": 2.0,
+            "mean_reversion": 0.0,
+        },
+        "bear_trend": {
+            "mean_reversion": 5.0,
+            "trend_pullback": 1.0,
+            "breakout": -4.0,
+            "volatility_expansion": -6.0,
+        },
+        "bear_trend_high_vol": {
+            "mean_reversion": 6.0,
+            "trend_pullback": 2.0,
+            "breakout": -4.0,
+            "volatility_expansion": -10.0,
+        },
+        "sideways_high_vol": {
+            "mean_reversion": 5.0,
+            "volatility_expansion": 2.0,
+            "breakout": 0.0,
+            "trend_pullback": -1.0,
+        },
+        "sideways_low_vol": {
+            "mean_reversion": 4.0,
+            "trend_pullback": 2.0,
+            "breakout": 0.0,
+            "volatility_expansion": -2.0,
+        },
+    }
+    return float(priors.get(regime, {}).get(family, 0.0))
+
+
 def _family_score(memory: dict[str, Any], regime: str, family: str, total: int) -> float:
     item = _stats(memory, regime, family)
     attempts = int(item["attempts"])
@@ -163,19 +213,23 @@ def _family_score(memory: dict[str, Any], regime: str, family: str, total: int) 
         exploration = 12.0 * math.sqrt(math.log(total + 2.0) / attempts)
         inactivity_penalty = 3.0 * (float(item["zero_trade_runs"]) / attempts)
         base = (avg_balance - 100.0) + hit_bonus + exploration - inactivity_penalty
-    return base + family_signal_score(memory, regime, family)
+    return (
+        base
+        + family_signal_score(memory, regime, family)
+        + _cross_generation_prior(regime, family)
+    )
 
 
 def _regime_priors(regime: str) -> list[str]:
     if regime.startswith("bull_trend"):
         return ["breakout", "trend_pullback", "volatility_expansion", "mean_reversion"]
     if regime.startswith("bear_trend"):
-        return ["mean_reversion", "volatility_expansion", "trend_pullback", "breakout"]
+        return ["mean_reversion", "trend_pullback", "breakout", "volatility_expansion"]
     if regime == "sideways_high_vol":
         return ["mean_reversion", "volatility_expansion", "breakout", "trend_pullback"]
     if regime == "sideways_low_vol":
-        return ["mean_reversion", "trend_pullback", "volatility_expansion", "breakout"]
-    return ["volatility_expansion", "trend_pullback", "mean_reversion", "breakout"]
+        return ["mean_reversion", "trend_pullback", "breakout", "volatility_expansion"]
+    return ["trend_pullback", "volatility_expansion", "mean_reversion", "breakout"]
 
 
 def plan_hypothesis(
@@ -201,7 +255,7 @@ def plan_hypothesis(
     reasons = [
         f"regime={label}",
         "binary objective: >=200 is HIT; every lower final balance is MISS learning evidence",
-        "rank families by regime-level results plus completed trade-level signal evidence",
+        "rank families by current regime evidence plus retained cross-generation meta-priors",
     ]
     for family in ranked[:2]:
         summary = signal_evidence[family]
@@ -217,7 +271,7 @@ def plan_hypothesis(
     directive = str(state.get("learning_directive") or "initial_broad_search")
     if int(last.get("trades") or 0) == 0:
         reasons.append("previous run had zero trades; widen signal-producing families")
-        active = {"mean_reversion", "trend_pullback", "volatility_expansion"}
+        active = {"mean_reversion", "trend_pullback", "volatility_expansion", "breakout"}
         ranked = [f for f in ranked if f in active] + [f for f in ranked if f not in active]
     elif float(last.get("final_balance") or 100.0) > 110.0:
         reasons.append("previous MISS had useful positive evidence; preserve one nearby family while exploring")
@@ -234,7 +288,11 @@ def plan_hypothesis(
                 reasons.append(f"consume external research idea {idea_id}")
                 break
 
-    allowed = ranked[:2]
+    stagnating = directive == "break_stagnation_force_materially_new_signal_hypothesis"
+    allowed_count = 3 if stagnating else 2
+    if stagnating:
+        reasons.append("stagnation detected; widen Raster 3 search from two to three families")
+    allowed = ranked[:allowed_count]
     canonical = json.dumps(
         {
             "run": run_id,
