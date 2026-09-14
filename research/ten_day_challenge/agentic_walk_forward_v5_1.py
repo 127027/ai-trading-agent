@@ -15,8 +15,11 @@ from agent_quality import (
     validate_research_plan,
 )
 from evolution import classify_regime as original_classify_regime
+from hit_lock import lock_first_target
 
 GENERATION = "contextual-signal-v6-clean"
+RESET_EPOCH = "hit-lock-reset-2026-09-14"
+_ORIGINAL_MARGIN_RUN_WINDOW = engine.run_margin_window
 
 
 def _load(path: Path) -> dict[str, Any]:
@@ -33,11 +36,14 @@ def _write(path: Path, payload: dict[str, Any]) -> None:
 
 
 def _reset_old_generation(root: Path) -> None:
-    """Remove persisted V4/V5/V5.1 research evidence before V6 Run 1."""
+    """Remove persisted evidence before the current clean reset epoch Run 1."""
     research_root = root / "research" / "ten_day_challenge"
     state_path = research_root / "walk-forward-state.json"
     state = _load(state_path)
-    if state.get("agent_generation") == GENERATION:
+    if (
+        state.get("agent_generation") == GENERATION
+        and state.get("reset_epoch") == RESET_EPOCH
+    ):
         return
 
     for path in (
@@ -56,6 +62,19 @@ def _reset_old_generation(root: Path) -> None:
             shutil.rmtree(directory)
 
 
+def _run_margin_window_with_hit_lock(*args: Any, **kwargs: Any) -> Any:
+    result, margin = _ORIGINAL_MARGIN_RUN_WINDOW(*args, **kwargs)
+    if not margin:
+        return result, margin
+    return lock_first_target(
+        result,
+        margin,
+        starting_balance=float(kwargs["starting_balance"]),
+        target_balance=float(kwargs["target_balance"]),
+        near_ruin_balance=float(kwargs["near_ruin_balance"]),
+    )
+
+
 def execute_one_run(args: argparse.Namespace) -> dict[str, Any]:
     root = args.root.resolve()
     research_root = root / "research" / "ten_day_challenge"
@@ -64,6 +83,7 @@ def execute_one_run(args: argparse.Namespace) -> dict[str, Any]:
     enriched = make_enriched_classifier(original_classify_regime)
     base.classify_regime = enriched
     engine.classify_regime = enriched
+    engine.run_margin_window = _run_margin_window_with_hit_lock
 
     original_validate = base.validate_candidate
 
@@ -90,6 +110,7 @@ def execute_one_run(args: argparse.Namespace) -> dict[str, Any]:
     if report.get("directive"):
         state["learning_directive"] = report["directive"]
     state["agent_generation"] = GENERATION
+    state["reset_epoch"] = RESET_EPOCH
     state["clean_generation_started_at_run"] = 1
     state["inherited_run_state"] = False
     state["inherited_research_memory"] = False
@@ -97,6 +118,7 @@ def execute_one_run(args: argparse.Namespace) -> dict[str, Any]:
 
     record["supervisor_meta_learning"] = report
     record["agent_generation"] = GENERATION
+    record["reset_epoch"] = RESET_EPOCH
     record["inherited_run_state"] = False
     record["inherited_research_memory"] = False
     run_path = (
