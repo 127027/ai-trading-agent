@@ -167,10 +167,10 @@
         "zero_trade_runs": 0
       },
       "trend_pullback": {
-        "attempts": 9,
+        "attempts": 10,
         "best_final_balance": 132.24291620528098,
         "hits": 0,
-        "sum_final_balance": 780.5183699937348,
+        "sum_final_balance": 911.6921987962536,
         "zero_trade_runs": 0
       },
       "volatility_expansion": {
@@ -842,6 +842,15 @@
       "regime": "sideways_high_vol",
       "run": 70,
       "selected_family": "breakout"
+    },
+    {
+      "final_balance": 131.17382880251876,
+      "hypothesis_id": "71910e45394ebe12",
+      "outcome": "MISS",
+      "parameter_fingerprint": "1eadf03db62f550628dbe0fedba929beba3aa4c536387e4a03001fbcec131729",
+      "regime": "sideways_low_vol",
+      "run": 71,
+      "selected_family": "trend_pullback"
     }
   ],
   "recent_completed_runs": [
@@ -11368,6 +11377,157 @@
       "target_balance": 200.0,
       "target_hit_at": null,
       "trades": 12
+    },
+    {
+      "agent_council": {
+        "council_score": 0.6234765760503751,
+        "primary_objective": "maximize_hit_rate_200",
+        "promotion_eligible": true,
+        "reviews": [
+          {
+            "agent": "QuantExperimentAgent",
+            "reason": "Primary objective is repeatable >=200 USDT outcomes in 10 days; 150/175/250 thresholds are secondary learning signals.",
+            "review_role": "outcome_scoring",
+            "score": 0.6234765760503751,
+            "veto": false
+          },
+          {
+            "agent": "BuildValidationAgent",
+            "reason": "Validation evidence is complete enough to review.",
+            "review_role": "completed_experiment_validation",
+            "score": 0.0,
+            "veto": false
+          },
+          {
+            "agent": "TenDaySupervisor",
+            "reason": "Research diagnostic only: near-ruin=0.00%, median drawdown=16.39%. Aggressive valid candidates are not vetoed.",
+            "review_role": "risk_diagnostic",
+            "score": 0.0,
+            "veto": false
+          }
+        ],
+        "supervisor": "TenDaySupervisor",
+        "veto": false,
+        "veto_agents": []
+      },
+      "allowed_history_end": "2023-10-16",
+      "allowed_history_start": "2022-10-16",
+      "blind_test_end": "2023-10-26",
+      "blind_test_start": "2023-10-16",
+      "completed_at_utc": "2026-09-14T04:12:28.032920+00:00",
+      "final_balance": 131.17382880251876,
+      "hyperopt_epochs": 150,
+      "hypothesis": {
+        "allowed_families": [
+          "breakout",
+          "trend_pullback"
+        ],
+        "blind_window_seen": false,
+        "external_research_id": null,
+        "hypothesis_id": "71910e45394ebe12",
+        "learning_directive": "break_stagnation_force_materially_new_signal_hypothesis",
+        "reasons": [
+          "regime=sideways_low_vol",
+          "binary objective: >=200 is HIT; every lower final balance is MISS learning evidence",
+          "rank families by regime-level results plus completed trade-level signal evidence",
+          "signal-memory breakout: trades=39 win_rate=0.359 avg_equity_change=-0.3153 score=-1.409",
+          "signal-memory trend_pullback: trades=146 win_rate=0.281 avg_equity_change=-0.8184 score=-2.301"
+        ],
+        "regime": "sideways_low_vol",
+        "signal_evidence": {
+          "breakout": {
+            "average_equity_change": -0.3152505283858001,
+            "liquidation_rate": 0.0,
+            "score": -1.4094862592426505,
+            "trades": 39,
+            "win_rate": 0.358974358974359
+          },
+          "trend_pullback": {
+            "average_equity_change": -0.8183673288100357,
+            "liquidation_rate": 0.0,
+            "score": -2.300582116338498,
+            "trades": 146,
+            "win_rate": 0.2808219178082192
+          }
+        }
+      },
+      "learning_directive_for_next_run": "positive_but_slow_increase_return_velocity",
+      "market_regime": {
+        "blind_window_seen": false,
+        "context_quality": {
+          "cross_asset_return_dispersion_30d": 0.06457000374257602,
+          "evidence_strength": 0.6168718084210489,
+          "pair_count": 6,
+          "positive_breadth_30d": 0.3333333333333333,
+          "positive_breadth_90d": 0.0,
+          "trend_direction_persistence": 0.6666666666666666,
+          "trend_gap_agreement": 0.6666666666666666
+        },
+        "evidence_cutoff": "2023-10-16",
+        "label": "sideways_low_vol",
+        "median_annualized_vol_30d": 0.30486222550479214,
+        "median_return_30d": -0.016662797711443078,
+        "median_return_90d": -0.1833210595203139,
+        "median_trend_gap": -0.012825022045427903,
+        "pair_features": {
+          "ADA/USDT": {
+            "annualized_vol_30d": 0.2974042759161397,
+            "return_30d": -0.012774451097804396,
+            "return_90d": -0.2068633739576653,
+            "trend_gap": -0.011627078777734945
+          },
+          "BNB/USDT": {
+            "annualized_vol_30d": 0.20610228874129033,
+            "return_30d": -0.02055114432508176,
+            "return_90d": -0.1409258500614502,
+            "trend_gap": -0.014022965313120861
+          },
+          "BTC/USDT": {
+            "annualized_vol_30d": 0.245564627809271,
+            "return_30d": 0.020832706766917397,
+            "return_90d": -0.09900623797199548,
+            "trend_gap": 0.002852363983670392
+          },
+          "ETH/USDT": {
+            "annualized_vol_30d": 0.3123201750934445,
+            "return_30d": -0.0508868024541671,
+            "return_90d": -0.18492570113018003,
+            "trend_gap": -0.020631259610701447
+          },
+          "SOL/USDT": {
+            "annualized_vol_30d": 0.6071560948908925,
+            "return_30d": 0.14576802507836994,
+            "return_90d": -0.1817164179104478,
+            "trend_gap": 0.025169881522848048
+          },
+          "XRP/USDT": {
+            "annualized_vol_30d": 0.3396582077242541,
+            "return_30d": -0.02617382617382602,
+            "return_90d": -0.33902902088418774,
+            "trend_gap": -0.021529341574788807
+          }
+        }
+      },
+      "max_drawdown_pct": 16.387823873932383,
+      "near_ruin": false,
+      "optimization_timerange_start": "2022-10-20",
+      "outcome": "MISS",
+      "parameter_fingerprint": "1eadf03db62f550628dbe0fedba929beba3aa4c536387e4a03001fbcec131729",
+      "raster_restart_attempts": 0,
+      "return_pct": 31.173828802518756,
+      "run": 71,
+      "safety": {
+        "blind_window_used_before_raster_5": false,
+        "exchange_secrets": false,
+        "live_trading": false,
+        "research_only": true
+      },
+      "search_seed": 168002,
+      "selected_family": "trend_pullback",
+      "starting_balance": 100.0,
+      "target_balance": 200.0,
+      "target_hit_at": null,
+      "trades": 37
     }
   ],
   "recent_signal_evidence": [
@@ -28338,6 +28498,524 @@
       "profitable": false,
       "regime": "sideways_high_vol",
       "run": 70
+    },
+    {
+      "enter_tag": "adaptive_trend_pullback",
+      "equity_change": 8.997433965115974,
+      "exit_reason": "adaptive_exit",
+      "family": "trend_pullback",
+      "leverage": 3,
+      "liquidated": false,
+      "mae_pct": -0.22747952684258888,
+      "mfe_pct": 3.5941765241128243,
+      "pair": "SOL/USDT",
+      "profitable": true,
+      "regime": "sideways_low_vol",
+      "run": 71
+    },
+    {
+      "enter_tag": "adaptive_trend_pullback",
+      "equity_change": -0.8669986870526145,
+      "exit_reason": "adaptive_exit",
+      "family": "trend_pullback",
+      "leverage": 3,
+      "liquidated": false,
+      "mae_pct": -0.04080799836767568,
+      "mfe_pct": 0.8161599673536024,
+      "pair": "XRP/USDT",
+      "profitable": false,
+      "regime": "sideways_low_vol",
+      "run": 71
+    },
+    {
+      "enter_tag": "adaptive_trend_pullback",
+      "equity_change": -2.188939713462773,
+      "exit_reason": "adaptive_exit",
+      "family": "trend_pullback",
+      "leverage": 3,
+      "liquidated": false,
+      "mae_pct": -1.5174859917113759,
+      "mfe_pct": 0.7213246715677135,
+      "pair": "ETH/USDT",
+      "profitable": false,
+      "regime": "sideways_low_vol",
+      "run": 71
+    },
+    {
+      "enter_tag": "adaptive_trend_pullback",
+      "equity_change": -1.5475314798726316,
+      "exit_reason": "adaptive_exit",
+      "family": "trend_pullback",
+      "leverage": 3,
+      "liquidated": false,
+      "mae_pct": -0.3278688524590123,
+      "mfe_pct": 0.04683840749413193,
+      "pair": "BNB/USDT",
+      "profitable": false,
+      "regime": "sideways_low_vol",
+      "run": 71
+    },
+    {
+      "enter_tag": "adaptive_trend_pullback",
+      "equity_change": -2.6853428140964866,
+      "exit_reason": "adaptive_exit",
+      "family": "trend_pullback",
+      "leverage": 3,
+      "liquidated": false,
+      "mae_pct": -0.8161512027491491,
+      "mfe_pct": 0.3865979381443285,
+      "pair": "SOL/USDT",
+      "profitable": false,
+      "regime": "sideways_low_vol",
+      "run": 71
+    },
+    {
+      "enter_tag": "adaptive_trend_pullback",
+      "equity_change": 0.07901800672455295,
+      "exit_reason": "roi",
+      "family": "trend_pullback",
+      "leverage": 3,
+      "liquidated": false,
+      "mae_pct": -0.3009525849823169,
+      "mfe_pct": 2.1802658101192973,
+      "pair": "BTC/USDT",
+      "profitable": true,
+      "regime": "sideways_low_vol",
+      "run": 71
+    },
+    {
+      "enter_tag": "adaptive_trend_pullback",
+      "equity_change": 1.04992124058208,
+      "exit_reason": "adaptive_exit",
+      "family": "trend_pullback",
+      "leverage": 3,
+      "liquidated": false,
+      "mae_pct": -1.0824313072439584,
+      "mfe_pct": 2.248126561198993,
+      "pair": "SOL/USDT",
+      "profitable": true,
+      "regime": "sideways_low_vol",
+      "run": 71
+    },
+    {
+      "enter_tag": "adaptive_trend_pullback",
+      "equity_change": -1.2077787970502385,
+      "exit_reason": "adaptive_exit",
+      "family": "trend_pullback",
+      "leverage": 3,
+      "liquidated": false,
+      "mae_pct": -0.36096453490067626,
+      "mfe_pct": 0.5305904619495871,
+      "pair": "BTC/USDT",
+      "profitable": false,
+      "regime": "sideways_low_vol",
+      "run": 71
+    },
+    {
+      "enter_tag": "adaptive_trend_pullback",
+      "equity_change": -1.2670919480193419,
+      "exit_reason": "adaptive_exit",
+      "family": "trend_pullback",
+      "leverage": 3,
+      "liquidated": false,
+      "mae_pct": -0.23460223140748804,
+      "mfe_pct": 0.21774710925874796,
+      "pair": "BTC/USDT",
+      "profitable": false,
+      "regime": "sideways_low_vol",
+      "run": 71
+    },
+    {
+      "enter_tag": "adaptive_trend_pullback",
+      "equity_change": -1.9091047944687176,
+      "exit_reason": "adaptive_exit",
+      "family": "trend_pullback",
+      "leverage": 3,
+      "liquidated": false,
+      "mae_pct": -0.45662100456620447,
+      "mfe_pct": 0.6226650062266526,
+      "pair": "SOL/USDT",
+      "profitable": false,
+      "regime": "sideways_low_vol",
+      "run": 71
+    },
+    {
+      "enter_tag": "adaptive_trend_pullback",
+      "equity_change": -3.460843653924954,
+      "exit_reason": "adaptive_exit",
+      "family": "trend_pullback",
+      "leverage": 3,
+      "liquidated": false,
+      "mae_pct": -0.9958506224066466,
+      "mfe_pct": 0.12448132780082943,
+      "pair": "SOL/USDT",
+      "profitable": false,
+      "regime": "sideways_low_vol",
+      "run": 71
+    },
+    {
+      "enter_tag": "adaptive_trend_pullback",
+      "equity_change": 17.38737801353649,
+      "exit_reason": "roi",
+      "family": "trend_pullback",
+      "leverage": 3,
+      "liquidated": false,
+      "mae_pct": -0.2944888514934796,
+      "mfe_pct": 8.413967185527982,
+      "pair": "SOL/USDT",
+      "profitable": true,
+      "regime": "sideways_low_vol",
+      "run": 71
+    },
+    {
+      "enter_tag": "adaptive_trend_pullback",
+      "equity_change": -1.0995052160975831,
+      "exit_reason": "adaptive_exit",
+      "family": "trend_pullback",
+      "leverage": 3,
+      "liquidated": false,
+      "mae_pct": -0.6586206980813802,
+      "mfe_pct": 0.8232845997536264,
+      "pair": "BTC/USDT",
+      "profitable": false,
+      "regime": "sideways_low_vol",
+      "run": 71
+    },
+    {
+      "enter_tag": "adaptive_trend_pullback",
+      "equity_change": -2.074255014551966,
+      "exit_reason": "adaptive_exit",
+      "family": "trend_pullback",
+      "leverage": 3,
+      "liquidated": false,
+      "mae_pct": -0.521669341894071,
+      "mfe_pct": 0.9630818619582593,
+      "pair": "SOL/USDT",
+      "profitable": false,
+      "regime": "sideways_low_vol",
+      "run": 71
+    },
+    {
+      "enter_tag": "adaptive_trend_pullback",
+      "equity_change": -6.361408456513274,
+      "exit_reason": "adaptive_exit",
+      "family": "trend_pullback",
+      "leverage": 3,
+      "liquidated": false,
+      "mae_pct": -1.758454106280194,
+      "mfe_pct": 0.28985507246377384,
+      "pair": "XRP/USDT",
+      "profitable": false,
+      "regime": "sideways_low_vol",
+      "run": 71
+    },
+    {
+      "enter_tag": "adaptive_trend_pullback",
+      "equity_change": 2.7245784120448064,
+      "exit_reason": "roi",
+      "family": "trend_pullback",
+      "leverage": 3,
+      "liquidated": false,
+      "mae_pct": -0.29205607476634476,
+      "mfe_pct": 3.1931464174455026,
+      "pair": "XRP/USDT",
+      "profitable": true,
+      "regime": "sideways_low_vol",
+      "run": 71
+    },
+    {
+      "enter_tag": "adaptive_trend_pullback",
+      "equity_change": -1.2960926821452716,
+      "exit_reason": "adaptive_exit",
+      "family": "trend_pullback",
+      "leverage": 3,
+      "liquidated": false,
+      "mae_pct": -0.1424111640402459,
+      "mfe_pct": 0.10882949217050353,
+      "pair": "ETH/USDT",
+      "profitable": false,
+      "regime": "sideways_low_vol",
+      "run": 71
+    },
+    {
+      "enter_tag": "adaptive_trend_pullback",
+      "equity_change": -1.752550433866361,
+      "exit_reason": "adaptive_exit",
+      "family": "trend_pullback",
+      "leverage": 3,
+      "liquidated": false,
+      "mae_pct": -0.3727171077152369,
+      "mfe_pct": 0.0745434215430496,
+      "pair": "SOL/USDT",
+      "profitable": false,
+      "regime": "sideways_low_vol",
+      "run": 71
+    },
+    {
+      "enter_tag": "adaptive_trend_pullback",
+      "equity_change": -1.5283897960136699,
+      "exit_reason": "adaptive_exit",
+      "family": "trend_pullback",
+      "leverage": 3,
+      "liquidated": false,
+      "mae_pct": -0.6133793367836149,
+      "mfe_pct": 0.4025301897642386,
+      "pair": "XRP/USDT",
+      "profitable": false,
+      "regime": "sideways_low_vol",
+      "run": 71
+    },
+    {
+      "enter_tag": "adaptive_trend_pullback",
+      "equity_change": -2.058176781424663,
+      "exit_reason": "adaptive_exit",
+      "family": "trend_pullback",
+      "leverage": 3,
+      "liquidated": false,
+      "mae_pct": -0.743494423791824,
+      "mfe_pct": 1.6728624535315983,
+      "pair": "SOL/USDT",
+      "profitable": false,
+      "regime": "sideways_low_vol",
+      "run": 71
+    },
+    {
+      "enter_tag": "adaptive_trend_pullback",
+      "equity_change": 18.106806572502833,
+      "exit_reason": "roi",
+      "family": "trend_pullback",
+      "leverage": 3,
+      "liquidated": false,
+      "mae_pct": -0.22304832713754275,
+      "mfe_pct": 7.434944237918217,
+      "pair": "SOL/USDT",
+      "profitable": true,
+      "regime": "sideways_low_vol",
+      "run": 71
+    },
+    {
+      "enter_tag": "adaptive_trend_pullback",
+      "equity_change": 5.937036552467276,
+      "exit_reason": "roi",
+      "family": "trend_pullback",
+      "leverage": 3,
+      "liquidated": false,
+      "mae_pct": -0.4521739130434743,
+      "mfe_pct": 5.426086956521736,
+      "pair": "SOL/USDT",
+      "profitable": true,
+      "regime": "sideways_low_vol",
+      "run": 71
+    },
+    {
+      "enter_tag": "adaptive_trend_pullback",
+      "equity_change": -4.287719884942263,
+      "exit_reason": "adaptive_exit",
+      "family": "trend_pullback",
+      "leverage": 3,
+      "liquidated": false,
+      "mae_pct": -1.5426147319706707,
+      "mfe_pct": 1.5426147319706818,
+      "pair": "ADA/USDT",
+      "profitable": false,
+      "regime": "sideways_low_vol",
+      "run": 71
+    },
+    {
+      "enter_tag": "adaptive_trend_pullback",
+      "equity_change": -1.5223316384269765,
+      "exit_reason": "adaptive_exit",
+      "family": "trend_pullback",
+      "leverage": 3,
+      "liquidated": false,
+      "mae_pct": -0.24726266762145066,
+      "mfe_pct": 0.127915587952665,
+      "pair": "ETH/USDT",
+      "profitable": false,
+      "regime": "sideways_low_vol",
+      "run": 71
+    },
+    {
+      "enter_tag": "adaptive_trend_pullback",
+      "equity_change": 7.925253588396259,
+      "exit_reason": "roi",
+      "family": "trend_pullback",
+      "leverage": 3,
+      "liquidated": false,
+      "mae_pct": -0.11565150346954933,
+      "mfe_pct": 3.7008481110254454,
+      "pair": "ADA/USDT",
+      "profitable": true,
+      "regime": "sideways_low_vol",
+      "run": 71
+    },
+    {
+      "enter_tag": "adaptive_trend_pullback",
+      "equity_change": 3.438552938297363,
+      "exit_reason": "roi",
+      "family": "trend_pullback",
+      "leverage": 3,
+      "liquidated": false,
+      "mae_pct": -0.6106870229007577,
+      "mfe_pct": 2.232824427480895,
+      "pair": "XRP/USDT",
+      "profitable": true,
+      "regime": "sideways_low_vol",
+      "run": 71
+    },
+    {
+      "enter_tag": "adaptive_trend_pullback",
+      "equity_change": 13.562040216221192,
+      "exit_reason": "roi",
+      "family": "trend_pullback",
+      "leverage": 3,
+      "liquidated": false,
+      "mae_pct": -0.9417617923098698,
+      "mfe_pct": 4.288948174259022,
+      "pair": "BTC/USDT",
+      "profitable": true,
+      "regime": "sideways_low_vol",
+      "run": 71
+    },
+    {
+      "enter_tag": "adaptive_trend_pullback",
+      "equity_change": -4.142826800179762,
+      "exit_reason": "adaptive_exit",
+      "family": "trend_pullback",
+      "leverage": 3,
+      "liquidated": false,
+      "mae_pct": -0.9209272785011047,
+      "mfe_pct": 3.429660209590346,
+      "pair": "SOL/USDT",
+      "profitable": false,
+      "regime": "sideways_low_vol",
+      "run": 71
+    },
+    {
+      "enter_tag": "adaptive_trend_pullback",
+      "equity_change": -4.459109118319475,
+      "exit_reason": "adaptive_exit",
+      "family": "trend_pullback",
+      "leverage": 3,
+      "liquidated": false,
+      "mae_pct": -1.4134275618374326,
+      "mfe_pct": 0.5300353356890497,
+      "pair": "ADA/USDT",
+      "profitable": false,
+      "regime": "sideways_low_vol",
+      "run": 71
+    },
+    {
+      "enter_tag": "adaptive_trend_pullback",
+      "equity_change": -6.48161857057967,
+      "exit_reason": "adaptive_exit",
+      "family": "trend_pullback",
+      "leverage": 3,
+      "liquidated": false,
+      "mae_pct": -2.030607362089254,
+      "mfe_pct": 2.385824205826159,
+      "pair": "BTC/USDT",
+      "profitable": false,
+      "regime": "sideways_low_vol",
+      "run": 71
+    },
+    {
+      "enter_tag": "adaptive_trend_pullback",
+      "equity_change": -2.7781805039033287,
+      "exit_reason": "adaptive_exit",
+      "family": "trend_pullback",
+      "leverage": 3,
+      "liquidated": false,
+      "mae_pct": -0.7301869991095278,
+      "mfe_pct": 0.30276046304542614,
+      "pair": "XRP/USDT",
+      "profitable": false,
+      "regime": "sideways_low_vol",
+      "run": 71
+    },
+    {
+      "enter_tag": "adaptive_trend_pullback",
+      "equity_change": -5.424372532681332,
+      "exit_reason": "adaptive_exit",
+      "family": "trend_pullback",
+      "leverage": 3,
+      "liquidated": false,
+      "mae_pct": -1.5114961083076417,
+      "mfe_pct": 0.060738240117541586,
+      "pair": "BTC/USDT",
+      "profitable": false,
+      "regime": "sideways_low_vol",
+      "run": 71
+    },
+    {
+      "enter_tag": "adaptive_trend_pullback",
+      "equity_change": 22.40846322757818,
+      "exit_reason": "roi",
+      "family": "trend_pullback",
+      "leverage": 3,
+      "liquidated": false,
+      "mae_pct": -0.4154682007030952,
+      "mfe_pct": 8.34132310642377,
+      "pair": "SOL/USDT",
+      "profitable": true,
+      "regime": "sideways_low_vol",
+      "run": 71
+    },
+    {
+      "enter_tag": "adaptive_trend_pullback",
+      "equity_change": -1.6324328472085483,
+      "exit_reason": "adaptive_exit",
+      "family": "trend_pullback",
+      "leverage": 3,
+      "liquidated": false,
+      "mae_pct": -0.3913198150124475,
+      "mfe_pct": 3.1661330487370964,
+      "pair": "ADA/USDT",
+      "profitable": false,
+      "regime": "sideways_low_vol",
+      "run": 71
+    },
+    {
+      "enter_tag": "adaptive_trend_pullback",
+      "equity_change": -2.231173623189534,
+      "exit_reason": "adaptive_exit",
+      "family": "trend_pullback",
+      "leverage": 3,
+      "liquidated": false,
+      "mae_pct": -0.2692998204667951,
+      "mfe_pct": 0.08976660682225024,
+      "pair": "XRP/USDT",
+      "profitable": false,
+      "regime": "sideways_low_vol",
+      "run": 71
+    },
+    {
+      "enter_tag": "adaptive_trend_pullback",
+      "equity_change": -3.269804544757676,
+      "exit_reason": "adaptive_exit",
+      "family": "trend_pullback",
+      "leverage": 3,
+      "liquidated": false,
+      "mae_pct": -0.6860751765369821,
+      "mfe_pct": 0.26319275651141005,
+      "pair": "BTC/USDT",
+      "profitable": false,
+      "regime": "sideways_low_vol",
+      "run": 71
+    },
+    {
+      "enter_tag": "adaptive_trend_pullback",
+      "equity_change": -2.909073598199143,
+      "exit_reason": "adaptive_exit",
+      "family": "trend_pullback",
+      "leverage": 3,
+      "liquidated": false,
+      "mae_pct": -0.974067610439866,
+      "mfe_pct": 0.11039804628911742,
+      "pair": "ETH/USDT",
+      "profitable": false,
+      "regime": "sideways_low_vol",
+      "run": 71
     }
   ],
   "schema_version": 2,
@@ -30071,98 +30749,98 @@
         "ADA/USDT": {
           "adaptive_trend_pullback": {
             "exit_reasons": {
-              "adaptive_exit": 46,
-              "roi": 5
+              "adaptive_exit": 49,
+              "roi": 6
             },
             "liquidations": 0,
-            "mfe_observations": 51,
-            "profitable_trades": 19,
-            "sum_duration_minutes": 9010.0,
-            "sum_equity_change": -11.131808971285238,
-            "sum_mae_pct": -36.13116064221079,
-            "sum_mfe_pct": 68.98556143492253,
-            "trades": 51
+            "mfe_observations": 55,
+            "profitable_trades": 20,
+            "sum_duration_minutes": 10465.0,
+            "sum_equity_change": -13.585817233359265,
+            "sum_mae_pct": -39.594174254500885,
+            "sum_mfe_pct": 77.92519266234481,
+            "trades": 55
           }
         },
         "BNB/USDT": {
           "adaptive_trend_pullback": {
             "exit_reasons": {
-              "adaptive_exit": 11,
+              "adaptive_exit": 12,
               "roi": 5
             },
             "liquidations": 0,
-            "mfe_observations": 16,
+            "mfe_observations": 17,
             "profitable_trades": 3,
-            "sum_duration_minutes": 4150.0,
-            "sum_equity_change": -18.60896695002633,
-            "sum_mae_pct": -19.704405091583613,
-            "sum_mfe_pct": 18.15871286775621,
-            "trades": 16
+            "sum_duration_minutes": 4165.0,
+            "sum_equity_change": -20.15649842989896,
+            "sum_mae_pct": -20.032273944042625,
+            "sum_mfe_pct": 18.205551275250343,
+            "trades": 17
           }
         },
         "BTC/USDT": {
           "adaptive_trend_pullback": {
             "exit_reasons": {
-              "adaptive_exit": 4,
-              "roi": 4
+              "adaptive_exit": 10,
+              "roi": 6
             },
             "liquidations": 0,
-            "mfe_observations": 8,
-            "profitable_trades": 3,
-            "sum_duration_minutes": 2030.0,
-            "sum_equity_change": 14.012718292684184,
-            "sum_mae_pct": -7.008883306700575,
-            "sum_mfe_pct": 16.043227697181024,
-            "trades": 8
+            "mfe_observations": 16,
+            "profitable_trades": 5,
+            "sum_duration_minutes": 4690.0,
+            "sum_equity_change": 8.903604906444087,
+            "sum_mae_pct": -13.733963795316182,
+            "sum_mfe_pct": 26.793819054976417,
+            "trades": 16
           }
         },
         "ETH/USDT": {
           "adaptive_trend_pullback": {
             "exit_reasons": {
-              "adaptive_exit": 15,
+              "adaptive_exit": 19,
               "force_exit": 1,
               "roi": 3
             },
             "liquidations": 0,
-            "mfe_observations": 19,
+            "mfe_observations": 23,
             "profitable_trades": 3,
-            "sum_duration_minutes": 3965.0,
-            "sum_equity_change": -34.262462881219975,
-            "sum_mae_pct": -18.06266804497368,
-            "sum_mfe_pct": 17.033882038787418,
-            "trades": 19
+            "sum_duration_minutes": 4255.0,
+            "sum_equity_change": -42.17890051345414,
+            "sum_mae_pct": -20.943895478786622,
+            "sum_mfe_pct": 18.102349836767416,
+            "trades": 23
           }
         },
         "SOL/USDT": {
           "adaptive_trend_pullback": {
             "exit_reasons": {
-              "adaptive_exit": 35,
-              "roi": 8
+              "adaptive_exit": 44,
+              "roi": 12
             },
             "liquidations": 0,
-            "mfe_observations": 43,
-            "profitable_trades": 12,
-            "sum_duration_minutes": 7980.0,
-            "sum_equity_change": -53.51897886342918,
-            "sum_mae_pct": -40.94710348055997,
-            "sum_mfe_pct": 56.43843402753553,
-            "trades": 43
+            "mfe_observations": 56,
+            "profitable_trades": 18,
+            "sum_duration_minutes": 11095.0,
+            "sum_equity_change": 2.284960415840743,
+            "sum_mae_pct": -48.46962458864833,
+            "sum_mfe_pct": 99.17095081803411,
+            "trades": 56
           }
         },
         "XRP/USDT": {
           "adaptive_trend_pullback": {
             "exit_reasons": {
-              "adaptive_exit": 8,
-              "roi": 1
+              "adaptive_exit": 13,
+              "roi": 3
             },
             "liquidations": 0,
-            "mfe_observations": 9,
-            "profitable_trades": 1,
-            "sum_duration_minutes": 995.0,
-            "sum_equity_change": -15.97213063298868,
-            "sum_mae_pct": -6.872059161868815,
-            "sum_mfe_pct": 3.9358194616568865,
-            "trades": 9
+            "mfe_observations": 16,
+            "profitable_trades": 3,
+            "sum_duration_minutes": 2650.0,
+            "sum_equity_change": -23.575150349318932,
+            "sum_mae_pct": -11.186930520543724,
+            "sum_mfe_pct": 11.262862606032575,
+            "trades": 16
           }
         }
       },
@@ -30594,5 +31272,5 @@
       }
     }
   },
-  "updated_at_utc": "2026-09-14T04:07:41.236643+00:00"
+  "updated_at_utc": "2026-09-14T04:12:28.033239+00:00"
 }
