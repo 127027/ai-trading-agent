@@ -23,10 +23,18 @@ sys.modules[HIT_LOCK_SPEC.name] = hit_lock
 HIT_LOCK_SPEC.loader.exec_module(hit_lock)
 
 
-def trade(profit_ratio: float, min_rate: float = 100.0) -> dict:
+def trade(
+    profit_ratio: float,
+    min_rate: float = 100.0,
+    *,
+    leverage_tag: int | None = None,
+) -> dict:
+    tag = "adaptive_breakout"
+    if leverage_tag is not None:
+        tag += f"|lev={leverage_tag}"
     return {
         "pair": "BTC/USDT",
-        "enter_tag": "adaptive_breakout",
+        "enter_tag": tag,
         "exit_reason": "roi",
         "open_rate": 100.0,
         "close_rate": 100.0 * (1.0 + profit_ratio),
@@ -51,7 +59,7 @@ def spec(leverage: int = 10) -> object:
 
 def test_exact_200_is_hit_under_10x_research_accounting():
     result = margin_model.apply_isolated_margin(
-        [trade(0.10)],
+        [trade(0.10, leverage_tag=10)],
         starting_balance=100.0,
         target_balance=200.0,
         near_ruin_balance=10.0,
@@ -63,7 +71,7 @@ def test_exact_200_is_hit_under_10x_research_accounting():
 
 def test_199_99_is_still_miss():
     result = margin_model.apply_isolated_margin(
-        [trade(0.09999)],
+        [trade(0.09999, leverage_tag=10)],
         starting_balance=100.0,
         target_balance=200.0,
         near_ruin_balance=10.0,
@@ -73,9 +81,43 @@ def test_199_99_is_still_miss():
     assert result["target_hit"] is False
 
 
+def test_same_signal_profit_scales_with_entry_time_leverage():
+    low = margin_model.apply_isolated_margin(
+        [trade(0.05, leverage_tag=1)],
+        starting_balance=100.0,
+        target_balance=200.0,
+        near_ruin_balance=10.0,
+        spec=spec(10),
+    )
+    high = margin_model.apply_isolated_margin(
+        [trade(0.05, leverage_tag=10)],
+        starting_balance=100.0,
+        target_balance=200.0,
+        near_ruin_balance=10.0,
+        spec=spec(10),
+    )
+    assert low["final_balance"] == pytest.approx(105.0)
+    assert high["final_balance"] == pytest.approx(150.0)
+    assert low["trade_evidence"][0]["leverage"] == 1
+    assert high["trade_evidence"][0]["leverage"] == 10
+
+
+def test_intermediate_entry_leverage_is_preserved():
+    result = margin_model.apply_isolated_margin(
+        [trade(0.05, leverage_tag=7)],
+        starting_balance=100.0,
+        target_balance=200.0,
+        near_ruin_balance=10.0,
+        spec=spec(10),
+    )
+    assert result["final_balance"] == pytest.approx(135.0)
+    assert result["trade_evidence"][0]["leverage"] == 7
+    assert result["leverage_counts"]["7"] == 1
+
+
 def test_10x_adverse_excursion_triggers_liquidation_before_profitable_close():
     result = margin_model.apply_isolated_margin(
-        [trade(0.20, min_rate=94.0)],
+        [trade(0.20, min_rate=94.0, leverage_tag=10)],
         starting_balance=100.0,
         target_balance=200.0,
         near_ruin_balance=10.0,
@@ -86,9 +128,21 @@ def test_10x_adverse_excursion_triggers_liquidation_before_profitable_close():
     assert result["final_balance"] < 100.0
 
 
+def test_one_x_never_margin_liquidates_same_adverse_excursion():
+    result = margin_model.apply_isolated_margin(
+        [trade(-0.06, min_rate=94.0, leverage_tag=1)],
+        starting_balance=100.0,
+        target_balance=200.0,
+        near_ruin_balance=10.0,
+        spec=spec(10),
+    )
+    assert result["liquidated"] is False
+    assert result["final_balance"] == pytest.approx(94.0)
+
+
 def test_total_loss_is_valid_miss_not_success():
     result = margin_model.apply_isolated_margin(
-        [trade(-0.50, min_rate=100.0)],
+        [trade(-0.50, min_rate=100.0, leverage_tag=10)],
         starting_balance=100.0,
         target_balance=200.0,
         near_ruin_balance=10.0,
@@ -101,17 +155,17 @@ def test_total_loss_is_valid_miss_not_success():
 
 def test_trade_evidence_contains_context_for_future_learning():
     result = margin_model.apply_isolated_margin(
-        [trade(0.05, min_rate=98.0)],
+        [trade(0.05, min_rate=98.0, leverage_tag=5)],
         starting_balance=100.0,
         target_balance=200.0,
         near_ruin_balance=10.0,
-        spec=spec(5),
+        spec=spec(10),
     )
     evidence = result["trade_evidence"]
     assert len(evidence) == 1
     item = evidence[0]
     assert item["pair"] == "BTC/USDT"
-    assert item["enter_tag"] == "adaptive_breakout"
+    assert item["enter_tag"].endswith("lev=5")
     assert item["exit_reason"] == "roi"
     assert item["mae_pct"] == pytest.approx(-2.0)
     assert item["mfe_pct"] == pytest.approx(12.0)
@@ -119,20 +173,11 @@ def test_trade_evidence_contains_context_for_future_learning():
     assert item["profitable"] is True
 
 
-def test_first_200_hit_is_locked_and_later_losses_are_discarded():
+def test_first_200_hit_is_locked_but_shadow_keeps_later_damage():
     evidence = [
-        {
-            "equity_after": 150.0,
-            "interest_paid": 0.10,
-        },
-        {
-            "equity_after": 225.0,
-            "interest_paid": 0.20,
-        },
-        {
-            "equity_after": 50.0,
-            "interest_paid": 0.30,
-        },
+        {"equity_after": 150.0, "interest_paid": 0.10},
+        {"equity_after": 225.0, "interest_paid": 0.20},
+        {"equity_after": 50.0, "interest_paid": 0.30},
     ]
     margin = {
         "final_balance": 50.0,
@@ -173,3 +218,6 @@ def test_first_200_hit_is_locked_and_later_losses_are_discarded():
     assert margin["borrow_interest_paid"] == pytest.approx(0.30)
     assert margin["target_locked"] is True
     assert margin["post_hit_trades_discarded"] == 1
+    assert margin["post_hit_shadow"]["full_window_final_balance"] == 50.0
+    assert margin["post_hit_shadow"]["gave_back_below_target"] is True
+    assert margin["post_hit_shadow"]["gave_back_below_start"] is True
