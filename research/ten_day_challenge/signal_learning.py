@@ -82,7 +82,13 @@ def update_signal_memory(memory: dict[str, Any], record: dict[str, Any]) -> None
 
 
 def family_signal_score(memory: dict[str, Any], regime: str, family: str) -> float:
-    """Return a bounded contextual bonus/penalty from completed trade evidence."""
+    """Return a bounded contextual bonus/penalty from completed trade evidence.
+
+    A high win rate must not hide negative monetary expectancy. Once a family has
+    enough observations, persistent negative average equity change receives an
+    additional sample-weighted penalty. Sparse families stay explorable so a new
+    high-upside hypothesis is not suppressed before there is evidence against it.
+    """
 
     family_data = (
         memory.get("signal_context_stats", {}).get(regime, {}).get(family, {})
@@ -110,12 +116,21 @@ def family_signal_score(memory: dict[str, Any], regime: str, family: str) -> flo
     avg_change = equity_change / trades
     avg_mae = mae / trades
     avg_mfe = mfe / mfe_n if mfe_n else 0.0
+
+    # Keep early exploration intact. From 5 to 16 observations, progressively
+    # trust negative expectancy more. Positive expectancy is never capped here.
+    evidence_reliability = max(0.0, min(1.0, (trades - 4) / 12.0))
+    negative_expectancy_penalty = 0.0
+    if avg_change < 0.0:
+        negative_expectancy_penalty = 2.0 * abs(avg_change) * evidence_reliability
+
     raw = (
         10.0 * (win_rate - 0.5)
         + 0.20 * avg_change
         + 0.08 * avg_mfe
         + 0.05 * avg_mae
         - 15.0 * liquidation_rate
+        - negative_expectancy_penalty
     )
     return max(-20.0, min(20.0, raw))
 
