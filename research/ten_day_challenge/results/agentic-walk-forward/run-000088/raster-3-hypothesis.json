@@ -1,0 +1,35 @@
+{
+  "allowed_families": [
+    "mean_reversion",
+    "breakout"
+  ],
+  "blind_window_seen": false,
+  "external_research_id": null,
+  "hypothesis_id": "5d3e1d1ca344a5bb",
+  "learning_directive": "positive_but_slow_increase_return_velocity",
+  "reasons": [
+    "regime=bull_trend",
+    "binary objective: >=200 is HIT; every lower final balance is MISS learning evidence",
+    "rank families by current regime evidence plus retained cross-generation meta-priors",
+    "signal-memory mean_reversion: trades=2 win_rate=0.500 avg_equity_change=-0.5030 score=-0.036",
+    "signal-memory breakout: trades=5 win_rate=0.400 avg_equity_change=-2.2340 score=-1.770",
+    "previous MISS had useful positive evidence; preserve one nearby family while exploring"
+  ],
+  "regime": "bull_trend",
+  "signal_evidence": {
+    "breakout": {
+      "average_equity_change": -2.2339905209303397,
+      "liquidation_rate": 0.0,
+      "score": -1.7703241257104998,
+      "trades": 5,
+      "win_rate": 0.4
+    },
+    "mean_reversion": {
+      "average_equity_change": -0.5030273947829542,
+      "liquidation_rate": 0.0,
+      "score": -0.03551616804441256,
+      "trades": 2,
+      "win_rate": 0.5
+    }
+  }
+}
