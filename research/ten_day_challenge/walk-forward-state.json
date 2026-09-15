@@ -30,16 +30,16 @@
   },
   "first_hit_run": 68,
   "hit_count": 1,
-  "hit_rate": 0.007575757575757576,
-  "holdout_runs_completed_after_first_hit": 64,
+  "hit_rate": 0.007518796992481203,
+  "holdout_runs_completed_after_first_hit": 65,
   "inherited_research_memory": false,
   "inherited_run_state": false,
-  "last_completed_hypothesis": "196ad5b17abc0019",
+  "last_completed_hypothesis": "b4c0c870d8f2c41b",
   "last_failure": null,
   "last_leverage_used": 10,
   "last_run": {
     "agent_council": {
-      "council_score": 0.0,
+      "council_score": -0.019082295599642585,
       "primary_objective": "maximize_hit_rate_200",
       "promotion_eligible": true,
       "reviews": [
@@ -47,7 +47,7 @@
           "agent": "QuantExperimentAgent",
           "reason": "Primary objective is repeatable >=200 USDT outcomes in 10 days; 150/175/250 thresholds are secondary learning signals.",
           "review_role": "outcome_scoring",
-          "score": 0.0,
+          "score": -0.019082295599642585,
           "veto": false
         },
         {
@@ -59,7 +59,7 @@
         },
         {
           "agent": "TenDaySupervisor",
-          "reason": "Research diagnostic only: near-ruin=0.00%, median drawdown=0.00%. Aggressive valid candidates are not vetoed.",
+          "reason": "Research diagnostic only: near-ruin=0.00%, median drawdown=0.95%. Aggressive valid candidates are not vetoed.",
           "review_role": "risk_diagnostic",
           "score": 0.0,
           "veto": false
@@ -69,57 +69,58 @@
       "veto": false,
       "veto_agents": []
     },
-    "allowed_history_end": "2025-04-08",
-    "allowed_history_start": "2024-04-08",
-    "blind_test_end": "2025-04-18",
-    "blind_test_start": "2025-04-08",
-    "completed_at_utc": "2026-09-15T14:08:15.639666+00:00",
-    "final_balance": 100.0,
-    "hyperopt_epochs": 150,
+    "allowed_history_end": "2026-01-26",
+    "allowed_history_start": "2025-01-26",
+    "blind_test_end": "2026-02-05",
+    "blind_test_start": "2026-01-26",
+    "completed_at_utc": "2026-09-15T14:15:29.352397+00:00",
+    "final_balance": 99.04588522001787,
+    "hyperopt_epochs": 187,
     "hypothesis": {
       "allowed_families": [
         "trend_pullback",
-        "mean_reversion",
-        "breakout"
+        "breakout",
+        "mean_reversion"
       ],
       "blind_window_seen": false,
       "external_research_id": null,
-      "hypothesis_id": "196ad5b17abc0019",
+      "hypothesis_id": "b4c0c870d8f2c41b",
       "learning_directive": "break_stagnation_force_materially_new_signal_hypothesis",
       "reasons": [
-        "regime=bear_trend_high_vol",
+        "regime=sideways_low_vol",
         "binary objective: >=200 is HIT; every lower final balance is MISS learning evidence",
         "rank families by current regime evidence plus retained cross-generation meta-priors",
-        "signal-memory trend_pullback: trades=12 win_rate=0.417 avg_equity_change=-0.2132 score=-1.130",
-        "signal-memory mean_reversion: trades=7 win_rate=0.143 avg_equity_change=-1.7742 score=-4.795",
+        "signal-memory trend_pullback: trades=7 win_rate=0.286 avg_equity_change=-0.0291 score=-2.117",
+        "signal-memory breakout: trades=13 win_rate=0.385 avg_equity_change=-0.6758 score=-2.200",
+        "previous run had zero trades; widen signal-producing families",
         "stagnation detected; widen Raster 3 search from two to three families"
       ],
-      "regime": "bear_trend_high_vol",
+      "regime": "sideways_low_vol",
       "signal_evidence": {
         "breakout": {
-          "average_equity_change": -10.37312550208631,
+          "average_equity_change": -0.6757601943800554,
           "liquidation_rate": 0.0,
-          "score": -7.142391099632025,
-          "trades": 1,
-          "win_rate": 0.0
+          "score": -2.199605961042459,
+          "trades": 13,
+          "win_rate": 0.38461538461538464
         },
         "mean_reversion": {
-          "average_equity_change": -1.774157978326944,
+          "average_equity_change": -1.8696642951523519,
           "liquidation_rate": 0.0,
-          "score": -4.7954452468829585,
-          "trades": 7,
-          "win_rate": 0.14285714285714285
+          "score": -5.430746021059162,
+          "trades": 3,
+          "win_rate": 0.0
         },
         "trend_pullback": {
-          "average_equity_change": -0.2131832942201631,
+          "average_equity_change": -0.0290559155716364,
           "liquidation_rate": 0.0,
-          "score": -1.1299169343181963,
-          "trades": 12,
-          "win_rate": 0.4166666666666667
+          "score": -2.1168922625237885,
+          "trades": 7,
+          "win_rate": 0.2857142857142857
         }
       }
     },
-    "learning_directive_for_next_run": "increase_signal_recall_and_trade_activity",
+    "learning_directive_for_next_run": "negative_return_improve_entry_quality_without_becoming_passive",
     "learning_generation": "contextual-signal-v5",
     "leverage_decision": {
       "adaptive_per_entry": true,
@@ -128,11 +129,11 @@
         1,
         10
       ],
-      "evidence_cutoff": "2025-04-08",
+      "evidence_cutoff": "2026-01-26",
       "leverage_ceiling": 10,
       "method": "entry_time_family_calibrated_confidence_selects_1_to_10",
-      "regime": "bear_trend_high_vol",
-      "regime_confidence_diagnostic_only": 0.7222684277939375,
+      "regime": "sideways_low_vol",
+      "regime_confidence_diagnostic_only": 0.2525257063152109,
       "selected_leverage": 10
     },
     "leverage_used": 10,
@@ -142,10 +143,10 @@
       "borrow_interest_apr_proxy": 0.3,
       "borrow_interest_paid": 0.0,
       "direction": "long",
-      "final_balance": 100.0,
+      "final_balance": 99.04588522001787,
       "leverage": 10,
       "leverage_counts": {
-        "1": 0,
+        "1": 1,
         "10": 0,
         "2": 0,
         "3": 0,
@@ -163,11 +164,11 @@
           1,
           10
         ],
-        "evidence_cutoff": "2025-04-08",
+        "evidence_cutoff": "2026-01-26",
         "leverage_ceiling": 10,
         "method": "entry_time_family_calibrated_confidence_selects_1_to_10",
-        "regime": "bear_trend_high_vol",
-        "regime_confidence_diagnostic_only": 0.7222684277939375,
+        "regime": "sideways_low_vol",
+        "regime_confidence_diagnostic_only": 0.2525257063152109,
         "selected_leverage": 10
       },
       "leverage_range": [
@@ -179,97 +180,120 @@
       "liquidation_margin_level": 1.05,
       "liquidation_trade_index": null,
       "live_release_allowed": false,
-      "max_drawdown_pct": 0.0,
+      "max_drawdown_pct": 0.9541147799821346,
       "model_is_not_spot_multiplier_only": true,
       "near_ruin": false,
       "post_hit_shadow": null,
       "post_hit_trades_discarded": 0,
       "product": "binance_isolated_margin",
       "research_only": true,
-      "return_pct": 0.0,
+      "return_pct": -0.9541147799821292,
       "target_hit": false,
       "target_hit_trade_index": null,
       "target_locked": false,
-      "trade_evidence": [],
-      "trades_processed": 0
+      "trade_evidence": [
+        {
+          "close_date": "2026-02-02 03:00:00+00:00",
+          "close_rate": 0.2875,
+          "enter_tag": "adaptive_trend_pullback|lev=1",
+          "equity_after": 99.04588522001787,
+          "equity_before": 100.0,
+          "equity_change": -0.9541147799821346,
+          "exit_reason": "adaptive_exit",
+          "interest_paid": 0.0,
+          "leverage": 1,
+          "leveraged_profit_ratio_before_interest": -0.009541147799821416,
+          "liquidated": false,
+          "liquidation_margin_level": 0.0,
+          "mae_pct": -0.8984105044920532,
+          "mfe_pct": 0.8293020041465038,
+          "open_date": "2026-02-02 02:15:00+00:00",
+          "open_rate": 0.2894,
+          "pair": "ADA/USDT",
+          "profit_ratio_spot": -0.009541147799821416,
+          "profitable": false,
+          "trade_duration_minutes": 45.0
+        }
+      ],
+      "trades_processed": 1
     },
     "market_regime": {
       "blind_window_seen": false,
       "context_quality": {
-        "cross_asset_return_dispersion_30d": 0.0874500162892682,
-        "evidence_strength": 0.9631676331572843,
+        "cross_asset_return_dispersion_30d": 0.025081430921396,
+        "evidence_strength": 0.8204443345673698,
         "pair_count": 6,
-        "positive_breadth_30d": 0.0,
+        "positive_breadth_30d": 0.16666666666666666,
         "positive_breadth_90d": 0.0,
-        "trend_direction_persistence": 1.0,
+        "trend_direction_persistence": 0.8333333333333334,
         "trend_gap_agreement": 1.0
       },
-      "evidence_cutoff": "2025-04-08",
-      "label": "bear_trend_high_vol",
-      "median_annualized_vol_30d": 0.8117208492369778,
-      "median_return_30d": -0.20142456002547177,
-      "median_return_90d": -0.30632662238863295,
-      "median_trend_gap": -0.07173413984223609,
+      "evidence_cutoff": "2026-01-26",
+      "label": "sideways_low_vol",
+      "median_annualized_vol_30d": 0.5141834390736502,
+      "median_return_30d": -0.017947083134536967,
+      "median_return_90d": -0.3097134311784783,
+      "median_trend_gap": -0.0234832986280194,
       "pair_features": {
         "ADA/USDT": {
-          "annualized_vol_30d": 0.8640712089343638,
-          "return_30d": -0.2717337307501242,
-          "return_90d": -0.40719773554387384,
-          "trend_gap": -0.07606674493433874
+          "annualized_vol_30d": 0.813271314079323,
+          "return_30d": -0.03003432494279179,
+          "return_90d": -0.4916041979010495,
+          "trend_gap": -0.04122205535883661
         },
         "BNB/USDT": {
-          "annualized_vol_30d": 0.557951951593211,
-          "return_30d": -0.06491316809981451,
-          "return_90d": -0.20545550923339206,
-          "trend_gap": -0.026155722456976616
+          "annualized_vol_30d": 0.3041562608152255,
+          "return_30d": 0.037497603986965666,
+          "return_90d": -0.2395862601854455,
+          "trend_gap": -0.0024432678833183896
         },
         "BTC/USDT": {
-          "annualized_vol_30d": 0.5352699263485232,
-          "return_30d": -0.08187206464209718,
-          "return_90d": -0.18350205317725476,
-          "trend_gap": -0.02712890626368103
+          "annualized_vol_30d": 0.3207166074517581,
+          "return_30d": -0.008002787240773523,
+          "return_90d": -0.240450925069441,
+          "trend_gap": -0.008968467353465459
         },
         "ETH/USDT": {
-          "annualized_vol_30d": 0.7649673481647575,
-          "return_30d": -0.2952195972009185,
-          "return_90d": -0.5406987232758902,
-          "trend_gap": -0.09352315625507024
+          "annualized_vol_30d": 0.5081033992334876,
+          "return_30d": -0.03794411866160741,
+          "return_90d": -0.3163137264419984,
+          "trend_gap": -0.02184271858212483
         },
         "SOL/USDT": {
-          "annualized_vol_30d": 0.9459705409413248,
-          "return_30d": -0.21910809429968614,
-          "return_90d": -0.47079190780036606,
-          "trend_gap": -0.08854721970022639
+          "annualized_vol_30d": 0.5202634789138126,
+          "return_30d": -0.02789137902830041,
+          "return_90d": -0.4018621036738802,
+          "trend_gap": -0.02512387867391397
         },
         "XRP/USDT": {
-          "annualized_vol_30d": 0.858474350309198,
-          "return_30d": -0.1837410257512574,
-          "return_90d": -0.16401021486438883,
-          "trend_gap": -0.06740153475013344
+          "annualized_vol_30d": 0.6845956555345185,
+          "return_30d": -0.004393339480392666,
+          "return_90d": -0.30311313591495825,
+          "trend_gap": -0.027383728119441453
         }
       }
     },
-    "max_drawdown_pct": 0.0,
+    "max_drawdown_pct": 0.9541147799821346,
     "near_ruin": false,
-    "optimization_timerange_start": "2024-04-12",
+    "optimization_timerange_start": "2025-01-30",
     "outcome": "MISS",
-    "parameter_fingerprint": "0ad53768a3ff08ec1bea97ab6c7bfe0a1015af6af2c6b18e574e35793147f101",
+    "parameter_fingerprint": "cf6acf44747be8c0ee42eb9ba28d3866fbb3bc3f8b6f544072d3352e6d6e7221",
     "raster_restart_attempts": 0,
     "research_product": "binance_isolated_margin",
-    "return_pct": 0.0,
-    "run": 132,
+    "return_pct": -0.9541147799821292,
+    "run": 133,
     "safety": {
       "blind_window_used_before_raster_5": false,
       "exchange_secrets": false,
       "live_trading": false,
       "research_only": true
     },
-    "search_seed": 264534,
-    "selected_family": "mean_reversion",
+    "search_seed": 199522,
+    "selected_family": "trend_pullback",
     "starting_balance": 100.0,
     "target_balance": 200.0,
     "target_hit_at": null,
-    "trades": 0
+    "trades": 1
   },
   "learning_directive": "break_stagnation_force_materially_new_signal_hypothesis",
   "learning_generation": "contextual-signal-v5",
@@ -1329,9 +1353,17 @@
       "regime": "bear_trend_high_vol",
       "run": 132,
       "target_hit": false
+    },
+    {
+      "final_balance": 99.04588522001787,
+      "leverage": 10,
+      "liquidated": false,
+      "regime": "sideways_low_vol",
+      "run": 133,
+      "target_hit": false
     }
   ],
-  "miss_count": 131,
+  "miss_count": 132,
   "next_raster": 1,
   "ops_watchdog_policy": {
     "blind_window_consumed_on_technical_timeout": false,
@@ -1475,58 +1507,11 @@
     "8c0dc7badca7f9ec92f29c7c2371b576d0eaf1c207e1c6edf33eb76fff23f4d8",
     "900857515a7da2f22e7a8159172eca29ad23c75b508270bd2c4f7092561b86dc",
     "50233f89989f5aa43a1db54b407e118dc7482caa04ef0d32b829d64d952d35d8",
-    "0ad53768a3ff08ec1bea97ab6c7bfe0a1015af6af2c6b18e574e35793147f101"
+    "0ad53768a3ff08ec1bea97ab6c7bfe0a1015af6af2c6b18e574e35793147f101",
+    "cf6acf44747be8c0ee42eb9ba28d3866fbb3bc3f8b6f544072d3352e6d6e7221"
   ],
   "phase": "post_first_hit_holdout_measurement",
   "raster_history": [
-    {
-      "agent": "OpsWatchdog",
-      "at_utc": "2026-09-14T23:21:59.767897+00:00",
-      "detail": "technical health and checkpoints valid",
-      "raster": 1,
-      "run": 33,
-      "status": "passed"
-    },
-    {
-      "agent": "EvidenceRegimeAgent",
-      "at_utc": "2026-09-14T23:21:59.955245+00:00",
-      "detail": "pre-window regime=sideways_low_vol cutoff=2024-05-22",
-      "raster": 2,
-      "run": 33,
-      "status": "passed"
-    },
-    {
-      "agent": "EvolutionResearchAgent",
-      "at_utc": "2026-09-14T23:27:23.515064+00:00",
-      "detail": "hypothesis=001f5a7e740a75d5 families=['trend_pullback', 'mean_reversion', 'breakout'] fingerprint=973c8951e44a",
-      "raster": 3,
-      "run": 33,
-      "status": "passed"
-    },
-    {
-      "agent": "BuildValidationAgent",
-      "at_utc": "2026-09-14T23:27:23.520825+00:00",
-      "detail": "candidate valid selected_family=breakout; blind window still sealed",
-      "raster": 4,
-      "run": 33,
-      "status": "passed"
-    },
-    {
-      "agent": "QuantExperimentAgent",
-      "at_utc": "2026-09-14T23:27:36.317378+00:00",
-      "detail": "MISS final=100.00000000 trades=0 family=breakout",
-      "raster": 5,
-      "run": 33,
-      "status": "passed"
-    },
-    {
-      "agent": "TenDaySupervisor",
-      "at_utc": "2026-09-14T23:27:36.329413+00:00",
-      "detail": "checkpointed MISS; full cycle restarts at raster 1",
-      "raster": 6,
-      "run": 33,
-      "status": "passed"
-    },
     {
       "agent": "OpsWatchdog",
       "at_utc": "2026-09-14T23:27:50.021212+00:00",
@@ -6278,27 +6263,75 @@
       "raster": 6,
       "run": 132,
       "status": "passed"
+    },
+    {
+      "agent": "OpsWatchdog",
+      "at_utc": "2026-09-15T14:08:28.892847+00:00",
+      "detail": "technical health and checkpoints valid",
+      "raster": 1,
+      "run": 133,
+      "status": "passed"
+    },
+    {
+      "agent": "EvidenceRegimeAgent",
+      "at_utc": "2026-09-15T14:08:29.094828+00:00",
+      "detail": "pre-window regime=sideways_low_vol cutoff=2026-01-26",
+      "raster": 2,
+      "run": 133,
+      "status": "passed"
+    },
+    {
+      "agent": "EvolutionResearchAgent",
+      "at_utc": "2026-09-15T14:15:17.977224+00:00",
+      "detail": "hypothesis=b4c0c870d8f2c41b families=['trend_pullback', 'breakout', 'mean_reversion'] fingerprint=cf6acf44747b",
+      "raster": 3,
+      "run": 133,
+      "status": "passed"
+    },
+    {
+      "agent": "BuildValidationAgent",
+      "at_utc": "2026-09-15T14:15:17.993196+00:00",
+      "detail": "candidate valid selected_family=trend_pullback; blind window still sealed",
+      "raster": 4,
+      "run": 133,
+      "status": "passed"
+    },
+    {
+      "agent": "QuantExperimentAgent",
+      "at_utc": "2026-09-15T14:15:29.343402+00:00",
+      "detail": "MISS final=99.04588522 trades=1 family=trend_pullback",
+      "raster": 5,
+      "run": 133,
+      "status": "passed"
+    },
+    {
+      "agent": "TenDaySupervisor",
+      "at_utc": "2026-09-15T14:15:29.379414+00:00",
+      "detail": "checkpointed MISS; full cycle restarts at raster 1",
+      "raster": 6,
+      "run": 133,
+      "status": "passed"
     }
   ],
   "raster_status": "ready_for_next_run",
   "reset_epoch": "expectancy-aware-family-scoring-reset-2026-09-14",
-  "run_count": 132,
-  "run_in_progress": 132,
+  "run_count": 133,
+  "run_in_progress": 133,
   "schema_version": 2,
   "supervisor": "TenDaySupervisor",
   "supervisor_meta_learning": {
-    "balance_improvement": 0.9594563967334864,
+    "balance_improvement": -1.9586197078136394,
     "best_final_balance": 110.8918125779377,
     "directive": "break_stagnation_force_materially_new_signal_hypothesis",
-    "early_average_balance": 98.38746033501826,
+    "early_average_balance": 100.1209437037734,
     "hit_rate": 0.0,
-    "late_average_balance": 99.34691673175175,
+    "late_average_balance": 98.16232399595977,
     "runs": 20,
     "stagnating": true,
     "unique_fingerprints": 20,
     "zero_trade_runs": 7
   },
-  "updated_at_utc": "2026-09-15T14:08:15.670212+00:00",
+  "updated_at_utc": "2026-09-15T14:15:29.383565+00:00",
   "used_test_windows": [
     "2025-10-10",
     "2024-06-06",
@@ -6431,6 +6464,7 @@
     "2024-01-07",
     "2025-05-11",
     "2024-04-14",
-    "2025-04-08"
+    "2025-04-08",
+    "2026-01-26"
   ]
 }
