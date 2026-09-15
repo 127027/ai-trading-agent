@@ -1,0 +1,44 @@
+{
+  "allowed_families": [
+    "mean_reversion",
+    "volatility_expansion",
+    "breakout"
+  ],
+  "blind_window_seen": false,
+  "external_research_id": null,
+  "hypothesis_id": "7efd2c7278d82516",
+  "learning_directive": "break_stagnation_force_materially_new_signal_hypothesis",
+  "reasons": [
+    "regime=bull_trend",
+    "binary objective: >=200 is HIT; every lower final balance is MISS learning evidence",
+    "rank families by current regime evidence plus retained cross-generation meta-priors",
+    "signal-memory mean_reversion: trades=2 win_rate=0.500 avg_equity_change=-0.5030 score=-0.036",
+    "signal-memory volatility_expansion: trades=8 win_rate=0.500 avg_equity_change=-1.7226 score=-1.453",
+    "previous run had zero trades; widen signal-producing families",
+    "stagnation detected; widen Raster 3 search from two to three families"
+  ],
+  "regime": "bull_trend",
+  "signal_evidence": {
+    "breakout": {
+      "average_equity_change": -2.2339905209303397,
+      "liquidation_rate": 0.0,
+      "score": -1.7703241257104998,
+      "trades": 5,
+      "win_rate": 0.4
+    },
+    "mean_reversion": {
+      "average_equity_change": -0.5030273947829542,
+      "liquidation_rate": 0.0,
+      "score": -0.03551616804441256,
+      "trades": 2,
+      "win_rate": 0.5
+    },
+    "volatility_expansion": {
+      "average_equity_change": -1.7225667297329998,
+      "liquidation_rate": 0.0,
+      "score": -1.4531090926954437,
+      "trades": 8,
+      "win_rate": 0.5
+    }
+  }
+}
